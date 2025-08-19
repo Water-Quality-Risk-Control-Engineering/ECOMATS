@@ -25,11 +25,17 @@ def load_prompt(file_path):
         return """你是一位资深的材料科学专家，具有丰富的项目评审和方案验证经验。
         你能够综合各专家的评估结果，计算平均分并应用权重，生成最终的材料评估报告。"""
 
-# 最终验证专家
-final_validator = Agent(
-    role="最终验证专家",
-    goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告",
-    backstory=load_prompt("final_validator_prompt.md"),
-    verbose=True,
-    allow_delegation=False
-)
+# 最终验证专家类
+class FinalValidator:
+    def __init__(self, llm):
+        self.llm = llm
+    
+    def create_agent(self):
+        return Agent(
+            role="最终验证专家",
+            goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告",
+            backstory=load_prompt("final_validator_prompt.md"),
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm
+        )

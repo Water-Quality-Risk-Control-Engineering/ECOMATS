@@ -25,11 +25,17 @@ def load_prompt(file_path):
         return """你是一位专业的材料机理分析专家，熟悉各种材料的催化机理和作用机制。
         你能够结合材料的结构特征，深入分析其催化过程和反应机理。"""
 
-# 机理分析专家
-mechanism_expert = Agent(
-    role="机理分析专家",
-    goal="分析材料的催化机理和作用机制，提供理论支持",
-    backstory=load_prompt("mechanism_expert_prompt.md"),
-    verbose=True,
-    allow_delegation=False,
-)
+# 机理分析专家类
+class MechanismExpert:
+    def __init__(self, llm):
+        self.llm = llm
+    
+    def create_agent(self):
+        return Agent(
+            role="机理分析专家",
+            goal="分析材料的催化机理和作用机制，提供理论支持",
+            backstory=load_prompt("mechanism_expert_prompt.md"),
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm
+        )

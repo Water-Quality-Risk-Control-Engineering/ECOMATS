@@ -25,11 +25,17 @@ def load_prompt(file_path):
         return """你是一位专业的文献处理专家，熟悉科技文献的处理和分析方法。
         你能够快速提取文献中的关键信息，为材料设计和评估提供参考。"""
 
-# 文献处理专家
-literature_processor = Agent(
-    role="文献处理专家",
-    goal="处理和分析相关技术文献，为材料评估提供背景信息",
-    backstory=load_prompt("literature_processor_prompt.md"),
-    verbose=True,
-    allow_delegation=False,
-)
+# 文献处理专家类
+class LiteratureProcessor:
+    def __init__(self, llm):
+        self.llm = llm
+    
+    def create_agent(self):
+        return Agent(
+            role="文献处理专家",
+            goal="处理和分析相关技术文献，为材料评估提供背景信息",
+            backstory=load_prompt("literature_processor_prompt.md"),
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm
+        )

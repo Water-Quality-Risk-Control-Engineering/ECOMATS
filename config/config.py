@@ -25,16 +25,3 @@ class Config:
     EAS_ENDPOINT = os.getenv("EAS_ENDPOINT", "")
     EAS_TOKEN = os.getenv("EAS_TOKEN", "")
     EAS_MODEL_NAME = os.getenv("EAS_MODEL_NAME", "")
-    
-    @classmethod
-    def validate(cls):
-        """验证必要的配置项"""
-        errors = []
-        
-        if not cls.QWEN_API_KEY or cls.QWEN_API_KEY == "YOUR_API_KEY":
-            errors.append("QWEN_API_KEY未正确设置")
-            
-        if not cls.OPENAI_API_KEY or cls.OPENAI_API_KEY == "YOUR_API_KEY":
-            errors.append("OPENAI_API_KEY未正确设置")
-            
-        return errors

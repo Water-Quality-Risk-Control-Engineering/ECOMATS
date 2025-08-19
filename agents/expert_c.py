@@ -4,7 +4,7 @@ from crewai import Agent
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from llm_config import create_eas_llm
+from utils.llm_config import create_eas_llm
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -29,27 +29,32 @@ def load_prompt(file_path):
         return """你是一位专业的材料评估专家，具有丰富的材料科学知识和评估经验。
         你会从所有五个维度全面评估水处理材料方案。"""
 
-# 创建EAS模型实例
-try:
-    eas_llm = create_eas_llm()
-    logger.info("成功创建EAS LLM实例")
+# 专家C类
+class ExpertC:
+    def __init__(self, llm):
+        self.llm = llm
     
-    # 专家C
-    expert_c = Agent(
-        role="专家C",
-        goal="全面评估材料方案的各个方面",
-        backstory=load_prompt("expert_c_prompt.md"),
-        verbose=True,
-        allow_delegation=False,
-        llm=eas_llm
-    )
-except Exception as e:
-    logger.error(f"创建EAS模型实例失败: {e}")
-    # 如果EAS配置失败，使用默认配置
-    expert_c = Agent(
-        role="专家C",
-        goal="全面评估材料方案的各个方面",
-        backstory=load_prompt("expert_c_prompt.md"),
-        verbose=True,
-        allow_delegation=False
-    )
+    def create_agent(self):
+        # 尝试创建EAS模型实例
+        try:
+            eas_llm = create_eas_llm()
+            logger.info("成功创建EAS LLM实例")
+            return Agent(
+                role="专家C",
+                goal="全面评估材料方案的各个方面",
+                backstory=load_prompt("expert_c_prompt.md"),
+                verbose=True,
+                allow_delegation=False,
+                llm=eas_llm
+            )
+        except Exception as e:
+            logger.error(f"创建EAS模型实例失败: {e}")
+            # 如果EAS配置失败，使用传入的LLM
+            return Agent(
+                role="专家C",
+                goal="全面评估材料方案的各个方面",
+                backstory=load_prompt("expert_c_prompt.md"),
+                verbose=True,
+                allow_delegation=False,
+                llm=self.llm
+            )

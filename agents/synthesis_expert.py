@@ -25,11 +25,17 @@ def load_prompt(file_path):
         return """你是一位专业的材料合成专家，熟悉各种材料的合成方法和工艺流程。
         你能够根据材料的结构特点，设计合理的合成路线和工艺参数。"""
 
-# 合成方法专家
-synthesis_expert = Agent(
-    role="合成方法专家",
-    goal="设计材料的合成方法和工艺流程",
-    backstory=load_prompt("synthesis_expert_prompt.md"),
-    verbose=True,
-    allow_delegation=False,
-)
+# 合成方法专家类
+class SynthesisExpert:
+    def __init__(self, llm):
+        self.llm = llm
+    
+    def create_agent(self):
+        return Agent(
+            role="合成方法专家",
+            goal="设计材料的合成方法和工艺流程",
+            backstory=load_prompt("synthesis_expert_prompt.md"),
+            verbose=True,
+            allow_delegation=False,
+            llm=self.llm
+        )

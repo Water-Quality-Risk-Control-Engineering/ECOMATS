@@ -17,15 +17,15 @@ from config.config import Config
 import dashscope
 
 # 智能体导入
-from agents.coordinator import coordinator
-from agents.material_designer import material_designer
-from agents.expert_a import expert_a
-from agents.expert_b import expert_b
-from agents.expert_c import expert_c
-from agents.final_validator import final_validator
-from agents.literature_processor import literature_processor
-from agents.mechanism_expert import mechanism_expert
-from agents.synthesis_expert import synthesis_expert
+from agents.coordinator import Coordinator
+from agents.material_designer import MaterialDesigner
+from agents.expert_a import ExpertA
+from agents.expert_b import ExpertB
+from agents.expert_c import ExpertC
+from agents.final_validator import FinalValidator
+from agents.literature_processor import LiteratureProcessor
+from agents.mechanism_expert import MechanismExpert
+from agents.synthesis_expert import SynthesisExpert
 
 # 任务导入
 from tasks.design_task import DesignTask
@@ -42,12 +42,9 @@ def main():
     print(f"OPENAI_API_BASE: {Config.OPENAI_API_BASE}")
     print(f"OPENAI_API_KEY: {Config.OPENAI_API_KEY}")
     
-    # 验证配置
-    validation_errors = Config.validate()
-    if validation_errors:
-        print("配置错误：")
-        for error in validation_errors:
-            print(f"  - {error}")
+    # 验证API密钥是否存在
+    if not Config.QWEN_API_KEY or Config.QWEN_API_KEY == "YOUR_API_KEY":
+        print("错误：API密钥未正确设置")
         return
     
     # 设置dashscope的API密钥
@@ -57,22 +54,22 @@ def main():
     llm = ChatOpenAI(
         base_url=Config.OPENAI_API_BASE,
         api_key=Config.OPENAI_API_KEY,  # 使用原始API密钥
-        model=f"openai/{Config.QWEN_MODEL_NAME}",  # 指定openai提供商
+        model="openai/" + Config.QWEN_MODEL_NAME,  # 使用配置的模型名称，加上提供商前缀
         temperature=Config.MODEL_TEMPERATURE,
         streaming=False,
         max_tokens=Config.MODEL_MAX_TOKENS
     )
     
     # 创建智能体
-    coordinator_agent = coordinator
-    material_designer_agent = material_designer
-    expert_a_agent = expert_a
-    expert_b_agent = expert_b
-    expert_c_agent = expert_c
-    final_validator_agent = final_validator
-    literature_processor_agent = literature_processor
-    mechanism_expert_agent = mechanism_expert
-    synthesis_expert_agent = synthesis_expert
+    coordinator_agent = Coordinator(llm).create_agent()
+    material_designer_agent = MaterialDesigner(llm).create_agent()
+    expert_a_agent = ExpertA(llm).create_agent()
+    expert_b_agent = ExpertB(llm).create_agent()
+    expert_c_agent = ExpertC(llm).create_agent()
+    final_validator_agent = FinalValidator(llm).create_agent()
+    literature_processor_agent = LiteratureProcessor(llm).create_agent()
+    mechanism_expert_agent = MechanismExpert(llm).create_agent()
+    synthesis_expert_agent = SynthesisExpert(llm).create_agent()
     
     # 创建任务
     # 首先创建材料设计任务

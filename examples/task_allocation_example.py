@@ -61,6 +61,7 @@ def main():
     
     # 演示任务分配
     print("演示任务分配:")
+    print("-" * 20)
     
     # 为材料设计任务分配智能体
     design_agent = task_allocator.get_agent_for_task("material_design")
@@ -101,6 +102,7 @@ def main():
     
     # 演示协调者委派任务
     print("\n演示协调者委派任务:")
+    print("-" * 20)
     coordinator = Coordinator(llm)
     
     # 协调者委派材料设计任务

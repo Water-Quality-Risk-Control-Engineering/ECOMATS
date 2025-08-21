@@ -22,14 +22,35 @@ def create_eas_llm():
     # 检查模型名称
     model_name = Config.EAS_MODEL_NAME if Config.EAS_MODEL_NAME and Config.EAS_MODEL_NAME != "your-model-name" else "qwen3-30b-a3b-instruct-2507"
     
-    # 创建EAS模型实例
-    eas_llm = ChatOpenAI(
-        base_url=Config.EAS_ENDPOINT,
-        api_key=Config.EAS_TOKEN,
-        model=model_name,
-        temperature=Config.MODEL_TEMPERATURE,
-        streaming=False,
-        max_tokens=Config.MODEL_MAX_TOKENS
-    )
+    # 为EAS模型添加正确的前缀
+    if not model_name.startswith("openai/"):
+        model_name = "openai/" + model_name
     
-    return eas_llm
+    # 使用配置的EAS端点URL（不添加额外路径）
+    base_url = Config.EAS_ENDPOINT
+    
+    try:
+        # 创建EAS模型实例
+        # 直接使用API密钥进行认证
+        api_key = Config.EAS_TOKEN
+        
+        eas_llm = ChatOpenAI(
+            base_url=base_url,
+            api_key=api_key,
+            model=model_name,
+            temperature=Config.MODEL_TEMPERATURE,
+            streaming=False,
+            max_tokens=Config.MODEL_MAX_TOKENS
+        )
+        return eas_llm
+    except Exception as e:
+        print(f"创建EAS模型实例失败: {e}")
+        # 如果EAS配置失败，回退到默认配置
+        return ChatOpenAI(
+            base_url=Config.OPENAI_API_BASE,
+            api_key=Config.OPENAI_API_KEY,
+            model="openai/" + Config.QWEN_MODEL_NAME,
+            temperature=Config.MODEL_TEMPERATURE,
+            streaming=False,
+            max_tokens=Config.MODEL_MAX_TOKENS
+        )

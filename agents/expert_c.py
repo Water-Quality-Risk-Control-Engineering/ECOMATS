@@ -19,7 +19,7 @@ class ExpertC(BaseAgent):
         # 尝试创建EAS模型实例
         try:
             eas_llm = create_eas_llm()
-            logger.info("成功创建EAS LLM实例")
+            logger.warning("成功创建EAS LLM实例")
             # Update the llm attribute to use EAS
             self.llm = eas_llm
         except Exception as e:

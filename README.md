@@ -15,6 +15,7 @@
 - 采用全面评估模式，每个专家评估所有维度
 - 使用详细的Prompt文件定义专家行为
 - 支持智能体任务分配机制，根据任务类型自动选择合适的智能体
+- 支持阿里云EAS自部署模型集成
 
 ## 核心智能体
 
@@ -34,8 +35,8 @@
 
 系统支持两种工作模式：
 
-### 1. 顺序执行模式（默认）
-任务按照预定义顺序执行，当前包括材料设计和评估两个主要阶段。
+### 1. 预设工作流模式（默认）
+任务按照预定义顺序执行，包括材料设计、评估、验证、机理分析和合成方法设计等阶段。
 
 工作流程：
 1. 材料设计专家设计材料方案
@@ -44,7 +45,7 @@
 4. 机理分析专家分析材料的催化机理
 5. 合成方法专家设计材料的合成方法
 
-### 2. 分层执行模式
+### 2. 智能体自主调度模式
 由协调专家动态决定任务执行顺序，实现更灵活的任务调度。
 
 评估维度及权重：
@@ -66,17 +67,17 @@
 ## Prompt文件
 
 每个专家都有对应的Prompt文件，定义了专家的详细行为和评估标准：
-- [coordinator_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/coordinator_prompt.md) - 协调者Prompt
-- [material_designer_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/material_designer_prompt.md) - 材料设计专家Prompt
-- [expert_a_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/expert_a_prompt.md) - 专家A Prompt
-- [expert_b_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/expert_b_prompt.md) - 专家B Prompt
-- [expert_c_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/expert_c_prompt.md) - 专家C Prompt
-- [final_validator_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/final_validator_prompt.md) - 最终验证专家Prompt
-- [literature_processor_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/literature_processor_prompt.md) - 文献处理专家Prompt
-- [mechanism_expert_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/mechanism_expert_prompt.md) - 机理分析专家Prompt
-- [synthesis_expert_prompt.md](file:///home/axlhuang/crewai_ecomats/prompt/synthesis_expert_prompt.md) - 合成方法专家Prompt
+- [coordinator_prompt.md](prompt/coordinator_prompt.md) - 协调者Prompt
+- [material_designer_prompt.md](prompt/material_designer_prompt.md) - 材料设计专家Prompt
+- [expert_a_prompt.md](prompt/expert_a_prompt.md) - 专家A Prompt
+- [expert_b_prompt.md](prompt/expert_b_prompt.md) - 专家B Prompt
+- [expert_c_prompt.md](prompt/expert_c_prompt.md) - 专家C Prompt
+- [final_validator_prompt.md](prompt/final_validator_prompt.md) - 最终验证专家Prompt
+- [literature_processor_prompt.md](prompt/literature_processor_prompt.md) - 文献处理专家Prompt
+- [mechanism_expert_prompt.md](prompt/mechanism_expert_prompt.md) - 机理分析专家Prompt
+- [synthesis_expert_prompt.md](prompt/synthesis_expert_prompt.md) - 合成方法专家Prompt
 
-这些Prompt文件现在统一存放在[prompt](file:///home/axlhuang/crewai_ecomats/prompt)目录中，与[agents](file:///home/axlhuang/crewai_ecomats/agents)目录同级，在系统运行时会被自动加载，作为各专家的详细行为指导。
+这些Prompt文件现在统一存放在[prompt](prompt)目录中，与[agents](agents)目录同级，在系统运行时会被自动加载，作为各专家的详细行为指导。
 
 ## 使用说明
 
@@ -91,12 +92,19 @@
    MATERIALS_PROJECT_API_KEY=你的Materials Project API密钥（可选）
    ```
 
-3. 安装依赖:
+3. （可选）配置阿里云EAS自部署模型:
+   ```env
+   EAS_ENDPOINT=你的EAS模型端点URL
+   EAS_TOKEN=你的EAS模型Token
+   EAS_MODEL_NAME=你的EAS模型名称
+   ```
+
+4. 安装依赖:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. 运行系统:
+5. 运行系统:
    ```bash
    python main.py
    ```
@@ -141,6 +149,16 @@
 3. 在智能体中通过CrewAI的工具机制集成新工具
 4. 更新相关智能体的Prompt文件，指导其如何使用新工具
 
+## EAS模型集成
+
+本系统支持阿里云EAS（Elastic Algorithm Service）自部署模型集成。通过配置EAS_ENDPOINT、EAS_TOKEN和EAS_MODEL_NAME环境变量，系统可以使用用户自部署的模型进行推理，提供更好的性能和定制化能力。
+
+配置步骤：
+1. 在阿里云EAS控制台部署模型
+2. 获取模型的访问端点URL、Token和模型名称
+3. 在`.env`文件中配置相应的环境变量
+4. 系统将自动优先使用EAS模型，如果配置失败则回退到默认的DashScope API
+
 ## 致谢
 
 本项目使用了以下优秀框架和工具：
@@ -150,6 +168,11 @@
 - [LangChain](https://www.langchain.com/) - 大语言模型应用开发框架
 
 ## 最近优化
+
+### EAS模型集成
+- 成功集成阿里云EAS自部署模型支持
+- 实现了EAS模型配置的自动检测和回退机制
+- 优化了模型认证和端点配置
 
 ### 代码结构优化
 - 创建了基础智能体类(`BaseAgent`)，减少代码重复

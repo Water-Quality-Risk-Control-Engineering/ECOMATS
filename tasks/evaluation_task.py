@@ -4,13 +4,13 @@
 基于催化性能、经济可行性、环境友好性、技术可行性和结构合理性五个维度进行评价
 """
 
-class EvaluationTask:
+from tasks.base_task import BaseTask
+
+class EvaluationTask(BaseTask):
     def __init__(self, llm):
-        self.llm = llm
+        super().__init__(llm)
 
     def create_task(self, agent, context_task=None):
-        from crewai import Task
-        
         description = """
         请根据以下五个维度评估材料方案的性能：
         1. 催化性能（权重50%）
@@ -51,15 +51,4 @@ class EvaluationTask:
         4. 如果需要重新设计，提供具体的改进建议
         """
         
-        # 如果有上下文任务，设置依赖关系
-        task_params = {
-            'description': description.strip(),
-            'expected_output': expected_output.strip(),
-            'agent': agent,
-            'verbose': True
-        }
-        
-        if context_task:
-            task_params['context'] = [context_task]
-            
-        return Task(**task_params)
+        return super().create_task(agent, description, expected_output, context_task)

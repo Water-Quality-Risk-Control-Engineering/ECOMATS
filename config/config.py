@@ -7,12 +7,12 @@ load_dotenv()
 class Config:
     # Qwen3模型配置
     QWEN_API_BASE = os.getenv("QWEN_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    QWEN_API_KEY = os.getenv("QWEN_API_KEY", "YOUR_API_KEY")  # 请在.env文件中设置实际的API密钥
+    QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")  # API密钥应通过环境变量设置
     QWEN_MODEL_NAME = os.getenv("QWEN_MODEL_NAME", "qwen3-30b-a3b-instruct-2507")
     
     # 兼容OpenAI的配置（CrewAI需要）
     OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YOUR_API_KEY")  # 请在.env文件中设置实际的API密钥
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # API密钥应通过环境变量设置
     
     # 模型参数配置
     MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.7"))
@@ -25,3 +25,8 @@ class Config:
     EAS_ENDPOINT = os.getenv("EAS_ENDPOINT", "")
     EAS_TOKEN = os.getenv("EAS_TOKEN", "")
     EAS_MODEL_NAME = os.getenv("EAS_MODEL_NAME", "")
+    
+    @classmethod
+    def is_api_key_valid(cls, api_key):
+        """验证API密钥是否有效"""
+        return api_key and api_key.strip() and len(api_key.strip()) > 0

@@ -4,13 +4,13 @@
 负责设计和优化水处理材料方案
 """
 
-class DesignTask:
-    def __init__(self, llm):
-        self.llm = llm
+from tasks.base_task import BaseTask
 
-    def create_task(self, agent, context_task=None, feedback=None):
-        from crewai import Task
-        
+class DesignTask(BaseTask):
+    def __init__(self, llm):
+        super().__init__(llm)
+
+    def create_task(self, agent, context_task=None, feedback=None, user_requirement=None):
         description = """
         根据用户需求设计水处理材料方案。
         
@@ -26,6 +26,10 @@ class DesignTask:
         - 满足目标污染物的降解需求
         """
         
+        # 添加用户自定义需求到描述中
+        if user_requirement:
+            description += f"\n\n用户具体需求：{user_requirement}"
+        
         if feedback:
             description += f"\n\n根据评估反馈进行优化设计：\n{feedback}"
         
@@ -37,15 +41,4 @@ class DesignTask:
         4. 预期的催化性能
         """
         
-        # 如果有上下文任务，设置依赖关系
-        task_params = {
-            'description': description.strip(),
-            'expected_output': expected_output.strip(),
-            'agent': agent,
-            'verbose': True
-        }
-        
-        if context_task:
-            task_params['context'] = [context_task]
-            
-        return Task(**task_params)
+        return super().create_task(agent, description, expected_output, context_task)

@@ -16,7 +16,9 @@ def load_prompt(file_path):
             return file.read()
     except FileNotFoundError:
         logger.warning(f"Prompt文件 {file_path} 未找到，使用默认backstory")
-        return """你是一位专业的专家，熟悉相关领域的原理和方法。"""
+        return """你是一位专业的项目协调专家，熟悉材料设计和评估的各个环节。
+        你能够根据任务需求，智能地选择和协调相关专家参与工作。"""
     except Exception as e:
         logger.error(f"读取Prompt文件时出错: {e}")
-        return """你是一位专业的专家，熟悉相关领域的原理和方法。"""
+        return """你是一位专业的项目协调专家，熟悉材料设计和评估的各个环节。
+        你能够根据任务需求，智能地选择和协调相关专家参与工作。"""

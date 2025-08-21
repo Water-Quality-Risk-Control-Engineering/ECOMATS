@@ -2,7 +2,7 @@ import logging
 import os
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def load_prompt(file_path):

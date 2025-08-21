@@ -67,25 +67,25 @@ class CrewAIMaterialsProjectTool(BaseTool):
             elif action == "get_material":
                 if not material_id:
                     return json.dumps({"error": "获取材料详情需要提供material_id"})
-                result = tool.get_material_by_id(material_id, fields)
+                result = tool.get_material_by_id(material_id)
             elif action == "get_structure":
                 if not material_id:
                     return json.dumps({"error": "获取晶体结构需要提供material_id"})
-                result = tool.get_material_structure(material_id)
+                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
             elif action == "get_electronic":
                 if not material_id:
                     return json.dumps({"error": "获取电子性质需要提供material_id"})
-                result = tool.get_electronic_properties(material_id)
+                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
             elif action == "get_thermo":
                 if not material_id:
                     return json.dumps({"error": "获取热力学性质需要提供material_id"})
-                result = tool.get_therermo_properties(material_id)
+                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
             elif action == "get_elastic":
                 if not material_id:
                     return json.dumps({"error": "获取弹性性质需要提供material_id"})
-                result = tool.get_elastic_properties(material_id)
+                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
             elif action == "get_summary":
-                result = tool.get_database_summary()
+                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
             else:
                 return json.dumps({"error": f"不支持的操作: {action}"})
                 

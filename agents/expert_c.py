@@ -1,8 +1,5 @@
 import logging
-from crewai import Agent
 from agents.base_agent import BaseAgent
-from utils.llm_config import create_eas_llm
-from utils.prompt_loader import load_prompt
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)

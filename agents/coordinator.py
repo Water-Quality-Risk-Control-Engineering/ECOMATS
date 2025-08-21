@@ -3,7 +3,7 @@ from crewai import Agent
 from utils.prompt_loader import load_prompt
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 协调者类
@@ -16,7 +16,7 @@ class Coordinator:
             role="协调者",
             goal="协调各专家工作，确保任务高效完成",
             backstory=load_prompt("coordinator_prompt.md"),
-            verbose=True,
+            verbose=False,
             allow_delegation=True,
             llm=self.llm
         )

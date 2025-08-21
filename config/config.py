@@ -14,9 +14,16 @@ class Config:
     OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # API密钥应通过环境变量设置
     
+    # Materials Project API配置
+    MATERIALS_PROJECT_API_KEY = os.getenv("MATERIALS_PROJECT_API_KEY", "")
+    
     # 模型参数配置
     MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.7"))
     MODEL_MAX_TOKENS = int(os.getenv("MODEL_MAX_TOKENS", "2048"))
+    
+    # 特定智能体的温度配置
+    MATERIAL_DESIGNER_TEMPERATURE = float(os.getenv("MATERIAL_DESIGNER_TEMPERATURE", "0.8"))
+    EXPERT_EVALUATION_TEMPERATURE = float(os.getenv("EXPERT_EVALUATION_TEMPERATURE", "0.3"))
     
     # 其他配置
     VERBOSE = os.getenv("VERBOSE", "True").lower() == "true"

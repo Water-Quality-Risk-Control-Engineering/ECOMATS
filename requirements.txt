@@ -2,3 +2,5 @@ crewai
 langchain
 langchain-openai
 python-dotenv
+requests
+mp-api

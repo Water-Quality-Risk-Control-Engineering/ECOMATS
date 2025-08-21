@@ -5,13 +5,15 @@ from utils.llm_config import create_eas_llm
 from utils.prompt_loader import load_prompt
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 专家C类
 class ExpertC(BaseAgent):
     def __init__(self, llm):
-        super().__init__(llm, "专家C", "全面评估材料方案的各个方面", "expert_c_prompt.md")
+        from config.config import Config
+        super().__init__(llm, "专家C", "全面评估材料方案的各个方面", "expert_c_prompt.md",
+                        temperature=Config.EXPERT_EVALUATION_TEMPERATURE)
     
     def create_agent(self):
         # 尝试创建EAS模型实例

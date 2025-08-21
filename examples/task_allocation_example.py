@@ -30,9 +30,10 @@ def main():
     print("=" * 30)
     
     # 初始化LLM模型
+    # 注意：在示例中使用占位符而不是真实的API密钥
     llm = ChatOpenAI(
         base_url=Config.OPENAI_API_BASE,
-        api_key=Config.OPENAI_API_KEY,
+        api_key="sk-***",  # 隐藏真实的API密钥
         model="openai/" + Config.QWEN_MODEL_NAME,
         temperature=Config.MODEL_TEMPERATURE,
         streaming=False,

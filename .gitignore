@@ -38,3 +38,19 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test files
+test_*.py
+*_test.py
+simple_test.py
+quick_test.py
+full_test.py
+TEST_REPORT.md
+FIX_REPORT.md
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp

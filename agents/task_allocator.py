@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Union
 from crewai import Agent
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class TaskAllocator:

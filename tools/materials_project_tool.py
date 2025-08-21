@@ -48,7 +48,8 @@ class MaterialsProjectTool:
                         band_gap_min: Optional[float] = None,
                         band_gap_max: Optional[float] = None,
                         is_stable: Optional[bool] = None,
-                        limit: int = 100) -> Dict[str, Any]:
+                        limit: int = 100,
+                        skip: int = 0) -> Dict[str, Any]:
         """
         搜索材料
         
@@ -77,20 +78,47 @@ class MaterialsProjectTool:
                 kwargs["exclude_elements"] = exclude_elements
             if crystal_system:
                 kwargs["crystal_system"] = crystal_system
-            if band_gap_min is not None:
-                kwargs["band_gap_min"] = band_gap_min
-            if band_gap_max is not None:
-                kwargs["band_gap_max"] = band_gap_max
-            # 注意：is_stable参数在新版本API中可能不被支持，使用energy_above_hull代替
-            if is_stable is not None:
-                if is_stable:
-                    kwargs["energy_above_hull"] = (0.0, 0.05)  # 稳定材料：能量高于凸包小于0.05 eV/atom
+            # 注意：新版本API不直接支持band_gap_min和band_gap_max参数
+            # 这些参数将在后处理中手动过滤
+            # 注意：is_stable参数在新版本API中可能不被支持，暂时移除该过滤条件
+            # 后处理中手动过滤稳定材料
                 
             # 执行搜索
             docs = self.mpr.materials.search(
                 **kwargs,
                 chunk_size=min(limit, 1000)
             )
+            
+            # 后处理：手动过滤带隙范围
+            if band_gap_min is not None or band_gap_max is not None:
+                filtered_docs = []
+                for doc in docs:
+                    band_gap = getattr(doc, "band_gap", None)
+                    if band_gap is not None:
+                        # 检查是否在指定范围内
+                        if band_gap_min is not None and band_gap < band_gap_min:
+                            continue
+                        if band_gap_max is not None and band_gap > band_gap_max:
+                            continue
+                        filtered_docs.append(doc)
+                    else:
+                        # 如果没有带隙信息，根据参数决定是否包含
+                        if band_gap_min is None and band_gap_max is None:
+                            filtered_docs.append(doc)
+                docs = filtered_docs
+            
+            # 后处理：手动过滤稳定材料
+            if is_stable is not None and is_stable:
+                filtered_docs = []
+                for doc in docs:
+                    energy_above_hull = getattr(doc, "energy_above_hull", None)
+                    if energy_above_hull is not None and energy_above_hull <= 0.05:
+                        filtered_docs.append(doc)
+                docs = filtered_docs
+            
+            # 应用skip参数，跳过前skip个结果
+            if skip > 0:
+                docs = docs[skip:]
             
             # 转换为字典格式
             materials_data = []

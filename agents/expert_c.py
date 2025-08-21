@@ -15,8 +15,9 @@ class ExpertC(BaseAgent):
     def create_agent(self):
         # 尝试创建EAS模型实例
         try:
+            from utils.llm_config import create_eas_llm
             eas_llm = create_eas_llm()
-            logger.warning("成功创建EAS LLM实例")
+            logger.info("成功创建EAS LLM实例")
             # Update the llm attribute to use EAS
             self.llm = eas_llm
         except Exception as e:

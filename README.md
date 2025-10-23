@@ -16,6 +16,67 @@
 - 使用详细的Prompt文件定义专家行为
 - 支持智能体任务分配机制，根据任务类型自动选择合适的智能体
 - 支持阿里云EAS自部署模型集成
+- 集成化学数据库工具验证材料设计合理性
+- 实现三重盲评和一致性分析机制
+- 支持迭代设计优化机制
+
+## 项目结构
+
+```
+ECOMATS/
+├── agents/                    # 智能体实现
+│   ├── Assessment_Screening_agent_A.py
+│   ├── Assessment_Screening_agent_B.py
+│   ├── Assessment_Screening_agent_C.py
+│   ├── Assessment_Screening_agent_Overall.py
+│   ├── Creative_Designing_agent.py
+│   ├── Extracting_agent.py
+│   ├── Mechanism_Mining_agent.py
+│   ├── Operation_Suggesting_agent.py
+│   ├── Synthesis_Guiding_agent.py
+│   ├── base_agent.py
+│   ├── coordinator.py
+│   └── task_allocator.py
+├── config/                    # 配置文件
+│   └── config.py
+├── prompt/                    # Prompt文件
+│   ├── coordinator_prompt.md
+│   ├── expert_a_prompt.md
+│   ├── expert_b_prompt.md
+│   ├── expert_c_prompt.md
+│   ├── final_validator_prompt.md
+│   ├── literature_processor_prompt.md
+│   ├── material_designer_prompt.md
+│   ├── mechanism_expert_prompt.md
+│   ├── operation_suggesting_prompt.md
+│   └── synthesis_expert_prompt.md
+├── tasks/                     # 任务定义
+│   ├── base_task.py
+│   ├── design_task.py
+│   ├── evaluation_task.py
+│   ├── final_validation_task.py
+│   ├── mechanism_analysis_task.py
+│   ├── operation_suggesting_task.py
+│   └── synthesis_method_task.py
+├── tools/                     # 工具实现
+│   ├── __init__.py
+│   ├── crewai_materials_project_tool.py
+│   ├── crewai_pubchem_tool.py
+│   ├── evaluation_tool.py
+│   ├── materials_project_tool.py
+│   └── pubchem_tool.py
+├── utils/                     # 工具函数
+│   ├── __init__.py
+│   ├── llm_config.py
+│   └── prompt_loader.py
+├── examples/                  # 示例文件
+├── .env.example               # 环境变量示例
+├── main.py                    # 主程序入口
+├── generate_catalysts.py      # 催化剂生成脚本
+├── generate_catalysts_advanced.py # 高级催化剂生成脚本
+├── requirements.txt           # 依赖列表
+└── README.md                 # 项目说明文件
+```
 
 ## 核心智能体
 
@@ -30,6 +91,7 @@
 7. **文献处理专家** - 处理和分析相关技术文献
 8. **机理分析专家** - 分析材料的催化机理和作用机制
 9. **合成方法专家** - 设计材料的合成方法和工艺流程
+10. **操作建议专家** - 提供材料合成、生产和应用的详细操作建议
 
 ## 工作模式
 
@@ -44,40 +106,18 @@
 3. 最终验证专家综合评估结果并生成最终报告
 4. 机理分析专家分析材料的催化机理
 5. 合成方法专家设计材料的合成方法
+6. 操作建议专家提供详细的操作指导
 
 ### 2. 智能体自主调度模式
 由协调专家动态决定任务执行顺序，实现更灵活的任务调度。
 
-评估维度及权重：
+## 评估维度及权重
+
 - 催化性能（权重50%）
 - 经济可行性（权重10%）
 - 环境友好性（权重10%）
 - 技术可行性（权重10%）
 - 结构合理性（权重20%）
-
-## 智能体任务分配机制
-
-系统实现了智能体任务分配机制，可以根据任务类型自动选择合适的智能体：
-
-1. **任务类型映射** - 系统定义了任务类型与智能体类型的映射关系
-2. **智能体注册** - 所有可用智能体都会注册到任务分配器中
-3. **自动分配** - 根据任务类型自动选择合适的智能体执行任务
-4. **灵活扩展** - 可以轻松添加新的任务类型和智能体类型
-
-## Prompt文件
-
-每个专家都有对应的Prompt文件，定义了专家的详细行为和评估标准：
-- [coordinator_prompt.md](prompt/coordinator_prompt.md) - 协调者Prompt
-- [material_designer_prompt.md](prompt/material_designer_prompt.md) - 材料设计专家Prompt
-- [expert_a_prompt.md](prompt/expert_a_prompt.md) - 专家A Prompt
-- [expert_b_prompt.md](prompt/expert_b_prompt.md) - 专家B Prompt
-- [expert_c_prompt.md](prompt/expert_c_prompt.md) - 专家C Prompt
-- [final_validator_prompt.md](prompt/final_validator_prompt.md) - 最终验证专家Prompt
-- [literature_processor_prompt.md](prompt/literature_processor_prompt.md) - 文献处理专家Prompt
-- [mechanism_expert_prompt.md](prompt/mechanism_expert_prompt.md) - 机理分析专家Prompt
-- [synthesis_expert_prompt.md](prompt/synthesis_expert_prompt.md) - 合成方法专家Prompt
-
-这些Prompt文件现在统一存放在[prompt](prompt)目录中，与[agents](agents)目录同级，在系统运行时会被自动加载，作为各专家的详细行为指导。
 
 ## 使用说明
 
@@ -109,8 +149,6 @@
    python main.py
    ```
 
-系统将按照预定义的工作流程自动执行材料设计和评估任务。
-
 ## 智能体工具集成
 
 系统集成了以下数据库查询工具，智能体可根据需要自动调用：
@@ -118,7 +156,23 @@
 1. **Materials Project工具** - 访问材料科学数据库获取材料属性，包括带隙、形成能、晶体结构等
 2. **PubChem工具** - 查询化学化合物信息，包括CAS号、分子量、SMILES等
 
-智能体会根据其角色和当前任务自动决定何时使用这些工具，无需人工干预。材料设计专家和评估专家可以利用这些工具获取准确的材料数据，提高设计方案的科学性和可靠性。
+## 迭代设计机制
+
+系统实现了智能迭代设计机制：
+
+1. **评估驱动优化** - 根据专家评估结果自动识别设计不足
+2. **反馈循环** - 将评估反馈整合到下一轮设计中
+3. **多轮优化** - 支持最多3轮设计迭代优化
+4. **质量控制** - 设置最低可接受评分阈值(7.0分)
+
+## 一致性分析机制
+
+系统实现了三重盲评和一致性分析机制：
+
+1. **三重盲评** - 三个评估专家独立评分
+2. **标准差计算** - 计算各维度评分的标准差
+3. **一致性系数** - 计算一致性系数Cj = 1 - (SD/mean)
+4. **融合评分** - 使用一致性系数调整最终得分
 
 ## 开发指南
 
@@ -149,51 +203,7 @@
 3. 在智能体中通过CrewAI的工具机制集成新工具
 4. 更新相关智能体的Prompt文件，指导其如何使用新工具
 
-## EAS模型集成
-
-本系统支持阿里云EAS（Elastic Algorithm Service）自部署模型集成。通过配置EAS_ENDPOINT、EAS_TOKEN和EAS_MODEL_NAME环境变量，系统可以使用用户自部署的模型进行推理，提供更好的性能和定制化能力。
-
-配置步骤：
-1. 在阿里云EAS控制台部署模型
-2. 获取模型的访问端点URL、Token和模型名称
-3. 在`.env`文件中配置相应的环境变量
-4. 系统将自动优先使用EAS模型，如果配置失败则回退到默认的DashScope API
-
-## 致谢
-
-本项目使用了以下优秀框架和工具：
-
-- [CrewAI](https://www.crewai.com/) - 多智能体协作框架
-- [DashScope](https://dashscope.aliyuncs.com/) - 阿里云模型服务
-- [LangChain](https://www.langchain.com/) - 大语言模型应用开发框架
-
-## 最近优化
-
-### EAS模型集成
-- 成功集成阿里云EAS自部署模型支持
-- 实现了EAS模型配置的自动检测和回退机制
-- 优化了模型认证和端点配置
-
-### 代码结构优化
-- 创建了基础智能体类(`BaseAgent`)，减少代码重复
-- 重构了所有专家类以继承基础类
-- 清理了所有冗余的测试文件，保持代码库整洁
-- 优化了项目目录结构，提高可维护性
-
-### 功能改进
-- 完善了Materials Project工具，支持更多材料属性查询
-- 改进了PubChem工具，提供更全面的化合物信息查询
-- 优化了工具的错误处理和稳定性
-- 提高了代码的可维护性和扩展性
-- 简化了智能体的实现方式
-- 智能体可自动调用工具获取化学信息和材料数据
-- 修复了Materials Project工具中的方法调用错误
-- 修复了专家C类中的冗余导入问题
-
-### 性能优化
-- 优化了API查询性能，减少不必要的数据传输
-- 改进了工具的响应处理机制
-- 调整了日志级别，减少冗余日志输出
+## [English Version](README_en.md)
 
 ## 许可证
 

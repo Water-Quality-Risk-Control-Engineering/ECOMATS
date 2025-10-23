@@ -5,12 +5,12 @@ from agents.base_agent import BaseAgent
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 合成方法专家类
-class SynthesisExpert(BaseAgent):
+# 专家A类
+class AssessmentScreeningAgentA(BaseAgent):
     def __init__(self, llm):
         from config.config import Config
-        super().__init__(llm, "合成方法专家", "设计材料的合成方法和工艺流程", "synthesis_expert_prompt.md",
-                        temperature=Config.EXPERT_EVALUATION_TEMPERATURE)
+        super().__init__(llm, "专家A", "全面评估材料方案的各个方面", "expert_a_prompt.md",
+                        temperature=Config.EXPERT_A_TEMPERATURE)
     
     def create_agent(self):
         # 尝试创建EAS模型实例

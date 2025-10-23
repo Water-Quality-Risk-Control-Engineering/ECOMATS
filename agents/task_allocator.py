@@ -14,12 +14,13 @@ class TaskAllocator:
     def __init__(self):
         # 定义任务类型到智能体的映射关系
         self.task_agent_mapping = {
-            "material_design": "MaterialDesigner",
-            "evaluation": "Expert",
-            "final_validation": "FinalValidator",
-            "mechanism_analysis": "MechanismExpert",
-            "synthesis_method": "SynthesisExpert",
-            "literature_processing": "LiteratureProcessor"
+            "material_design": "CreativeDesigningAgent",
+            "evaluation": "AssessmentScreeningAgent",
+            "final_validation": "AssessmentScreeningAgentOverall",
+            "mechanism_analysis": "MechanismMiningAgent",
+            "synthesis_method": "SynthesisGuidingAgent",
+            "literature_processing": "ExtractingAgent",
+            "operation_suggestion": "OperationSuggestingAgent"
         }
         
         # 存储所有可用的智能体

@@ -96,4 +96,9 @@ class Coordinator:
             if synthesis_agent:
                 required_agents.append(("synthesis_method", synthesis_agent))
         
+        # 操作建议专家总是需要参与
+        operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+        if operation_suggesting_agent:
+            required_agents.append(("operation_suggestion", operation_suggesting_agent))
+        
         return required_agents

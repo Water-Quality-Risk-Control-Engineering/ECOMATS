@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 材料设计专家类
-class MaterialDesigner(BaseAgent):
+class CreativeDesigningAgent(BaseAgent):
     def __init__(self, llm):
         from config.config import Config
         super().__init__(llm, "材料设计专家", "设计和优化水处理材料方案", "material_designer_prompt.md", 

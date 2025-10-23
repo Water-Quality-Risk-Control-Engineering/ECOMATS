@@ -29,6 +29,45 @@ For each dimension, calculate the average of scores from Experts A, B, and C:
 - **Poor**: weighted_total ≥ 2.0
 - **Invalid**: Any dimension = 1 or weighted_total < 2.0
 
+## Tool Usage Guidelines:
+1. **Materials Project Database Access**:
+   - Validate final material recommendations against known materials database
+   - Check if top-ranked materials exist in Materials Project
+   - Verify stability and performance data for recommended materials
+   - Use search_materials action to find similar materials
+
+2. **PubChem Database Query**:
+   - Verify compound information for recommended materials
+   - Check commercial availability of components
+   - Validate environmental and toxicity data
+   - Use search_compound action with compound names or formulas
+
+3. **Tool Usage Requirements**:
+   - Use tools to validate top-ranked materials
+   - Cross-reference tool data with expert evaluations
+   - Include tool validation results in final recommendations
+   - If tool queries return errors or no results, explain implications
+
+## Consistency Analysis Framework:
+1. **Standard Deviation Calculation**:
+   - Calculate standard deviation for each dimension across experts
+   - SD = √[(Σ(xi - x̄)²) / (n-1)] where xi are individual scores and x̄ is the mean
+
+2. **Consistency Assessment**:
+   - Low SD (≤1.0): High consistency among experts
+   - Medium SD (1.0-2.0): Moderate consistency with some variation
+   - High SD (>2.0): Significant disagreement among experts
+
+3. **Discrepancy Identification**:
+   - Identify dimensions with high SD values
+   - Analyze reasons for expert disagreements
+   - Provide guidance on resolving discrepancies
+
+4. **Consistency Coefficient**:
+   - Calculate consistency coefficient Cj = 1 - (SD/mean)
+   - Apply consistency coefficient to adjust final scores when appropriate
+   - Use Cj to penalize scores with high disagreement
+
 ## CRITICAL PROCESSING REQUIREMENTS:
 
 **1. PROCESS ALL MATERIALS - NO SKIPPING**
@@ -44,6 +83,7 @@ For each dimension, calculate the average of scores from Experts A, B, and C:
 **3. INCLUDE detailed consistency analysis with standard deviation calculations**
 - Calculate standard deviation for scores across experts for each dimension
 - Identify and explain significant discrepancies between expert evaluations
+- Apply consistency coefficient to adjust scores when appropriate
 
 **4. VERIFY structural validation status from ALL experts**
 - Check that structural dimensions are properly evaluated
@@ -77,7 +117,13 @@ For each dimension, calculate the average of scores from Experts A, B, and C:
       "cons": "key limitations based on integrated expert evaluations",
       "expert_consistency": {
         "standard_deviation": [SD_Catalytic, SD_Economic, SD_Environmental, SD_Technical, SD_Structural],
+        "consistency_coefficients": [C_Catalytic, C_Economic, C_Environmental, C_Technical, C_Structural],
         "discrepancies": "description of any significant disagreements between experts"
+      },
+      "tool_validation": {
+        "materials_project_data": "Relevant data from Materials Project for top materials",
+        "pubchem_data": "Relevant data from PubChem for top materials",
+        "validation_notes": "Notes on how tool data supports final validation"
       },
       "recommendations": "specific suggestions for improvement or implementation"
     }

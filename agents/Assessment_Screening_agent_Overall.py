@@ -6,11 +6,11 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 最终验证专家类
-class FinalValidator(BaseAgent):
+class AssessmentScreeningAgentOverall(BaseAgent):
     def __init__(self, llm):
         from config.config import Config
         super().__init__(llm, "最终验证专家", "综合各专家评估结果，进行加权计算并形成最终材料评估报告", "final_validator_prompt.md",
-                        temperature=Config.EXPERT_EVALUATION_TEMPERATURE)
+                        temperature=Config.FINAL_VALIDATOR_TEMPERATURE)
     
     def create_agent(self):
         # 尝试创建EAS模型实例

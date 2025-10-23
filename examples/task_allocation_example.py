@@ -16,13 +16,14 @@ from config.config import Config
 
 # 智能体导入
 from agents.coordinator import Coordinator
-from agents.material_designer import MaterialDesigner
-from agents.expert_a import ExpertA
-from agents.expert_b import ExpertB
-from agents.expert_c import ExpertC
-from agents.final_validator import FinalValidator
-from agents.mechanism_expert import MechanismExpert
-from agents.synthesis_expert import SynthesisExpert
+from agents.Creative_Designing_agent import CreativeDesigningAgent
+from agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
+from agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
+from agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
+from agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+from agents.Mechanism_Mining_agent import MechanismMiningAgent
+from agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
+from agents.Operation_Suggesting_agent import OperationSuggestingAgent
 from agents.task_allocator import TaskAllocator
 
 def main():
@@ -42,22 +43,24 @@ def main():
     
     # 创建智能体
     coordinator_agent = Coordinator(llm).create_agent()
-    material_designer_agent = MaterialDesigner(llm).create_agent()
-    expert_a_agent = ExpertA(llm).create_agent()
-    expert_b_agent = ExpertB(llm).create_agent()
-    expert_c_agent = ExpertC(llm).create_agent()
-    final_validator_agent = FinalValidator(llm).create_agent()
-    mechanism_expert_agent = MechanismExpert(llm).create_agent()
-    synthesis_expert_agent = SynthesisExpert(llm).create_agent()
+    material_designer_agent = CreativeDesigningAgent(llm).create_agent()
+    expert_a_agent = AssessmentScreeningAgentA(llm).create_agent()
+    expert_b_agent = AssessmentScreeningAgentB(llm).create_agent()
+    expert_c_agent = AssessmentScreeningAgentC(llm).create_agent()
+    final_validator_agent = AssessmentScreeningAgentOverall(llm).create_agent()
+    mechanism_expert_agent = MechanismMiningAgent(llm).create_agent()
+    synthesis_expert_agent = SynthesisGuidingAgent(llm).create_agent()
+    operation_suggesting_agent = OperationSuggestingAgent(llm).create_agent()
     
     # 创建任务分配器并注册所有智能体
     task_allocator = TaskAllocator()
     task_allocator.register_agent("Coordinator", coordinator_agent)
-    task_allocator.register_agent("MaterialDesigner", material_designer_agent)
-    task_allocator.register_agent("Expert", [expert_a_agent, expert_b_agent, expert_c_agent])
-    task_allocator.register_agent("FinalValidator", final_validator_agent)
-    task_allocator.register_agent("MechanismExpert", mechanism_expert_agent)
-    task_allocator.register_agent("SynthesisExpert", synthesis_expert_agent)
+    task_allocator.register_agent("CreativeDesigningAgent", material_designer_agent)
+    task_allocator.register_agent("AssessmentScreeningAgent", [expert_a_agent, expert_b_agent, expert_c_agent])
+    task_allocator.register_agent("AssessmentScreeningAgentOverall", final_validator_agent)
+    task_allocator.register_agent("MechanismMiningAgent", mechanism_expert_agent)
+    task_allocator.register_agent("SynthesisGuidingAgent", synthesis_expert_agent)
+    task_allocator.register_agent("OperationSuggestingAgent", operation_suggesting_agent)
     
     # 演示任务分配
     print("演示任务分配:")
@@ -92,6 +95,13 @@ def main():
         print(f"合成方法任务分配给: {synthesis_agent.role}")
     else:
         print("未找到适合合成方法任务的智能体")
+    
+    # 为操作建议任务分配智能体
+    operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+    if operation_suggesting_agent:
+        print(f"操作建议任务分配给: {operation_suggesting_agent.role}")
+    else:
+        print("未找到适合操作建议任务的智能体")
     
     # 根据名称查找特定智能体
     specific_agent = task_allocator.get_agent_by_name("最终验证专家")

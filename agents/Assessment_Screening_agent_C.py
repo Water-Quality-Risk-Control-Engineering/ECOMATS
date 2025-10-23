@@ -6,11 +6,11 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 专家C类
-class ExpertC(BaseAgent):
+class AssessmentScreeningAgentC(BaseAgent):
     def __init__(self, llm):
         from config.config import Config
         super().__init__(llm, "专家C", "全面评估材料方案的各个方面", "expert_c_prompt.md",
-                        temperature=Config.EXPERT_EVALUATION_TEMPERATURE)
+                        temperature=Config.EXPERT_C_TEMPERATURE)
     
     def create_agent(self):
         # 尝试创建EAS模型实例

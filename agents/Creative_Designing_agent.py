@@ -2,7 +2,7 @@ import logging
 from agents.base_agent import BaseAgent
 from crewai import Agent
 from utils.prompt_loader import load_prompt
-from tools import materials_project_tool, pubchem_tool
+from tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -30,7 +30,7 @@ class CreativeDesigningAgent(BaseAgent):
         
         agent = super().create_agent()
         # 为材料设计专家添加化学数据库查询工具
-        agent.tools = [materials_project_tool, pubchem_tool]
+        agent.tools = [materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool]
         return agent
 
 # 创建实例
@@ -39,7 +39,7 @@ material_designer_instance = None
 def get_material_designer(llm=None):
     global material_designer_instance
     if material_designer_instance is None and llm is not None:
-        material_designer_instance = MaterialDesigner(llm).create_agent()
+        material_designer_instance = CreativeDesigningAgent(llm).create_agent()
     return material_designer_instance
 
 # 兼容旧版本的直接访问方式

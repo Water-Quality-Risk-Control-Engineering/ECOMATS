@@ -1,6 +1,6 @@
 import logging
 from agents.base_agent import BaseAgent
-from tools import pubchem_tool
+from tools import pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -28,5 +28,5 @@ class ExtractingAgent(BaseAgent):
         
         agent = super().create_agent()
         # 为文献处理专家添加化学数据库查询工具
-        agent.tools = [pubchem_tool]
+        agent.tools = [pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool]
         return agent

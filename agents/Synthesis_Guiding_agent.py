@@ -1,5 +1,6 @@
 import logging
 from agents.base_agent import BaseAgent
+from tools import pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -25,4 +26,7 @@ class SynthesisGuidingAgent(BaseAgent):
             # If EAS configuration fails, use the passed LLM
             # Keep self.llm as is
         
-        return super().create_agent()
+        agent = super().create_agent()
+        # 为合成方法专家添加化学数据库查询工具
+        agent.tools = [pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool]
+        return agent

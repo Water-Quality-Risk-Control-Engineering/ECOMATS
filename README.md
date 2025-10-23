@@ -19,61 +19,77 @@
 - 集成化学数据库工具验证材料设计合理性
 - 实现三重盲评和一致性分析机制
 - 支持迭代设计优化机制
+- 实现5个专用AI工具，增强材料属性查询能力
 
 ## 项目结构
 
 ```
 ECOMATS/
-├── agents/                    # 智能体实现
-│   ├── Assessment_Screening_agent_A.py
-│   ├── Assessment_Screening_agent_B.py
-│   ├── Assessment_Screening_agent_C.py
-│   ├── Assessment_Screening_agent_Overall.py
-│   ├── Creative_Designing_agent.py
-│   ├── Extracting_agent.py
-│   ├── Mechanism_Mining_agent.py
-│   ├── Operation_Suggesting_agent.py
-│   ├── Synthesis_Guiding_agent.py
-│   ├── base_agent.py
-│   ├── coordinator.py
-│   └── task_allocator.py
-├── config/                    # 配置文件
-│   └── config.py
-├── prompt/                    # Prompt文件
-│   ├── coordinator_prompt.md
-│   ├── expert_a_prompt.md
-│   ├── expert_b_prompt.md
-│   ├── expert_c_prompt.md
-│   ├── final_validator_prompt.md
-│   ├── literature_processor_prompt.md
-│   ├── material_designer_prompt.md
-│   ├── mechanism_expert_prompt.md
-│   ├── operation_suggesting_prompt.md
-│   └── synthesis_expert_prompt.md
-├── tasks/                     # 任务定义
-│   ├── base_task.py
-│   ├── design_task.py
-│   ├── evaluation_task.py
-│   ├── final_validation_task.py
-│   ├── mechanism_analysis_task.py
-│   ├── operation_suggesting_task.py
-│   └── synthesis_method_task.py
-├── tools/                     # 工具实现
-│   ├── __init__.py
-│   ├── crewai_materials_project_tool.py
-│   ├── crewai_pubchem_tool.py
-│   ├── evaluation_tool.py
-│   ├── materials_project_tool.py
-│   └── pubchem_tool.py
-├── utils/                     # 工具函数
-│   ├── __init__.py
-│   ├── llm_config.py
-│   └── prompt_loader.py
+├── src/                       # 源代码目录
+│   ├── agents/                # 智能体实现
+│   │   ├── Assessment_Screening_agent_A.py
+│   │   ├── Assessment_Screening_agent_B.py
+│   │   ├── Assessment_Screening_agent_C.py
+│   │   ├── Assessment_Screening_agent_Overall.py
+│   │   ├── Creative_Designing_agent.py
+│   │   ├── Extracting_agent.py
+│   │   ├── Mechanism_Mining_agent.py
+│   │   ├── Operation_Suggesting_agent.py
+│   │   ├── Synthesis_Guiding_agent.py
+│   │   ├── base_agent.py
+│   │   ├── coordinator.py
+│   │   └── task_allocator.py
+│   ├── config/                # 配置文件
+│   │   └── config.py
+│   ├── prompts/               # Prompt文件
+│   │   ├── coordinator_prompt.md
+│   │   ├── expert_a_prompt.md
+│   │   ├── expert_b_prompt.md
+│   │   ├── expert_c_prompt.md
+│   │   ├── final_validator_prompt.md
+│   │   ├── literature_processor_prompt.md
+│   │   ├── material_designer_prompt.md
+│   │   ├── mechanism_expert_prompt.md
+│   │   ├── operation_suggesting_prompt.md
+│   │   └── synthesis_expert_prompt.md
+│   ├── tasks/                 # 任务定义
+│   │   ├── base_task.py
+│   │   ├── design_task.py
+│   │   ├── evaluation_task.py
+│   │   ├── final_validation_task.py
+│   │   ├── mechanism_analysis_task.py
+│   │   ├── operation_suggesting_task.py
+│   │   └── synthesis_method_task.py
+│   ├── tools/                 # 工具实现
+│   │   ├── __init__.py
+│   │   ├── crewai_materials_project_tool.py
+│   │   ├── crewai_pubchem_tool.py
+│   │   ├── crewai_name2cas_tool.py
+│   │   ├── crewai_name2properties_tool.py
+│   │   ├── crewai_cid2properties_tool.py
+│   │   ├── crewai_formula2properties_tool.py
+│   │   ├── crewai_material_search_tool.py
+│   │   ├── crewai_pnec_tool.py
+│   │   ├── evaluation_tool.py
+│   │   ├── materials_project_tool.py
+│   │   ├── pubchem_tool.py
+│   │   ├── name2cas_tool.py
+│   │   ├── name2properties_tool.py
+│   │   ├── cid2properties_tool.py
+│   │   ├── formula2properties_tool.py
+│   │   ├── material_search_tool.py
+│   │   └── pnec_tool.py
+│   └── utils/                 # 工具函数
+│       ├── __init__.py
+│       ├── llm_config.py
+│       └── prompt_loader.py
+├── scripts/                   # 脚本文件
+│   ├── main.py                # 主程序入口
+│   ├── generate_catalysts.py  # 催化剂生成脚本
+│   └── generate_catalysts_advanced.py # 高级催化剂生成脚本
 ├── examples/                  # 示例文件
+├── tests/                     # 测试文件
 ├── .env.example               # 环境变量示例
-├── main.py                    # 主程序入口
-├── generate_catalysts.py      # 催化剂生成脚本
-├── generate_catalysts_advanced.py # 高级催化剂生成脚本
 ├── requirements.txt           # 依赖列表
 └── README.md                 # 项目说明文件
 ```
@@ -146,7 +162,7 @@ ECOMATS/
 
 5. 运行系统:
    ```bash
-   python main.py
+   python scripts/main.py
    ```
 
 ## 智能体工具集成
@@ -155,6 +171,12 @@ ECOMATS/
 
 1. **Materials Project工具** - 访问材料科学数据库获取材料属性，包括带隙、形成能、晶体结构等
 2. **PubChem工具** - 查询化学化合物信息，包括CAS号、分子量、SMILES等
+3. **Name2CAS工具** - 将材料名称转换为CAS号
+4. **Name2Properties工具** - 根据材料名称查询理化性质
+5. **CID2Properties工具** - 根据PubChem CID查询性质
+6. **Formula2Properties工具** - 根据化学式预测性质
+7. **MaterialSearch工具** - 检索相似材料的性能数据
+8. **PNEC工具** - 查询化学物质的预测无效应浓度数据，用于环境风险评估
 
 ## 迭代设计机制
 

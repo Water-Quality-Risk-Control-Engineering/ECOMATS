@@ -19,61 +19,77 @@ This is a multi-agent system built using the CrewAI framework, specifically desi
 - Integrates chemical database tools to validate material designs
 - Implements triple-blind review and consistency analysis mechanisms
 - Supports iterative design optimization
+- Implements 5 specialized AI tools to enhance material property querying capabilities
 
 ## Project Structure
 
 ```
 ECOMATS/
-├── agents/                    # Agent implementations
-│   ├── Assessment_Screening_agent_A.py
-│   ├── Assessment_Screening_agent_B.py
-│   ├── Assessment_Screening_agent_C.py
-│   ├── Assessment_Screening_agent_Overall.py
-│   ├── Creative_Designing_agent.py
-│   ├── Extracting_agent.py
-│   ├── Mechanism_Mining_agent.py
-│   ├── Operation_Suggesting_agent.py
-│   ├── Synthesis_Guiding_agent.py
-│   ├── base_agent.py
-│   ├── coordinator.py
-│   └── task_allocator.py
-├── config/                    # Configuration files
-│   └── config.py
-├── prompt/                    # Prompt files
-│   ├── coordinator_prompt.md
-│   ├── expert_a_prompt.md
-│   ├── expert_b_prompt.md
-│   ├── expert_c_prompt.md
-│   ├── final_validator_prompt.md
-│   ├── literature_processor_prompt.md
-│   ├── material_designer_prompt.md
-│   ├── mechanism_expert_prompt.md
-│   ├── operation_suggesting_prompt.md
-│   └── synthesis_expert_prompt.md
-├── tasks/                     # Task definitions
-│   ├── base_task.py
-│   ├── design_task.py
-│   ├── evaluation_task.py
-│   ├── final_validation_task.py
-│   ├── mechanism_analysis_task.py
-│   ├── operation_suggesting_task.py
-│   └── synthesis_method_task.py
-├── tools/                     # Tool implementations
-│   ├── __init__.py
-│   ├── crewai_materials_project_tool.py
-│   ├── crewai_pubchem_tool.py
-│   ├── evaluation_tool.py
-│   ├── materials_project_tool.py
-│   └── pubchem_tool.py
-├── utils/                     # Utility functions
-│   ├── __init__.py
-│   ├── llm_config.py
-│   └── prompt_loader.py
+├── src/                       # Source code directory
+│   ├── agents/                # Agent implementations
+│   │   ├── Assessment_Screening_agent_A.py
+│   │   ├── Assessment_Screening_agent_B.py
+│   │   ├── Assessment_Screening_agent_C.py
+│   │   ├── Assessment_Screening_agent_Overall.py
+│   │   ├── Creative_Designing_agent.py
+│   │   ├── Extracting_agent.py
+│   │   ├── Mechanism_Mining_agent.py
+│   │   ├── Operation_Suggesting_agent.py
+│   │   ├── Synthesis_Guiding_agent.py
+│   │   ├── base_agent.py
+│   │   ├── coordinator.py
+│   │   └── task_allocator.py
+│   ├── config/                # Configuration files
+│   │   └── config.py
+│   ├── prompts/               # Prompt files
+│   │   ├── coordinator_prompt.md
+│   │   ├── expert_a_prompt.md
+│   │   ├── expert_b_prompt.md
+│   │   ├── expert_c_prompt.md
+│   │   ├── final_validator_prompt.md
+│   │   ├── literature_processor_prompt.md
+│   │   ├── material_designer_prompt.md
+│   │   ├── mechanism_expert_prompt.md
+│   │   ├── operation_suggesting_prompt.md
+│   │   └── synthesis_expert_prompt.md
+│   ├── tasks/                 # Task definitions
+│   │   ├── base_task.py
+│   │   ├── design_task.py
+│   │   ├── evaluation_task.py
+│   │   ├── final_validation_task.py
+│   │   ├── mechanism_analysis_task.py
+│   │   ├── operation_suggesting_task.py
+│   │   └── synthesis_method_task.py
+│   ├── tools/                 # Tool implementations
+│   │   ├── __init__.py
+│   │   ├── crewai_materials_project_tool.py
+│   │   ├── crewai_pubchem_tool.py
+│   │   ├── crewai_name2cas_tool.py
+│   │   ├── crewai_name2properties_tool.py
+│   │   ├── crewai_cid2properties_tool.py
+│   │   ├── crewai_formula2properties_tool.py
+│   │   ├── crewai_material_search_tool.py
+│   │   ├── crewai_pnec_tool.py
+│   │   ├── evaluation_tool.py
+│   │   ├── materials_project_tool.py
+│   │   ├── pubchem_tool.py
+│   │   ├── name2cas_tool.py
+│   │   ├── name2properties_tool.py
+│   │   ├── cid2properties_tool.py
+│   │   ├── formula2properties_tool.py
+│   │   ├── material_search_tool.py
+│   │   └── pnec_tool.py
+│   └── utils/                 # Utility functions
+│       ├── __init__.py
+│       ├── llm_config.py
+│       └── prompt_loader.py
+├── scripts/                   # Script files
+│   ├── main.py                # Main program entry
+│   ├── generate_catalysts.py  # Catalyst generation script
+│   └── generate_catalysts_advanced.py # Advanced catalyst generation script
 ├── examples/                  # Example files
+├── tests/                     # Test files
 ├── .env.example               # Environment variable example
-├── main.py                    # Main program entry
-├── generate_catalysts.py      # Catalyst generation script
-├── generate_catalysts_advanced.py # Advanced catalyst generation script
 ├── requirements.txt           # Dependency list
 └── README_en.md              # Project documentation (English)
 ```
@@ -146,7 +162,7 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 5. Run the system:
    ```bash
-   python main.py
+   python scripts/main.py
    ```
 
 ## Agent Tool Integration
@@ -155,6 +171,12 @@ The system integrates the following database query tools that agents can automat
 
 1. **Materials Project Tool** - Accesses materials science database to obtain material properties, including band gap, formation energy, crystal structure, etc.
 2. **PubChem Tool** - Queries chemical compound information, including CAS numbers, molecular weights, SMILES, etc.
+3. **Name2CAS Tool** - Converts material names to CAS numbers
+4. **Name2Properties Tool** - Queries physicochemical properties by material name
+5. **CID2Properties Tool** - Queries properties by PubChem CID
+6. **Formula2Properties Tool** - Predicts properties based on chemical formula
+7. **MaterialSearch Tool** - Retrieves performance data of similar materials
+8. **PNEC Tool** - Queries Predicted No Effect Concentration data for chemical substances, used for environmental risk assessment
 
 ## Iterative Design Mechanism
 

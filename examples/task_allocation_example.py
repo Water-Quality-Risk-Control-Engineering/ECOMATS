@@ -6,25 +6,26 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
+# 添加src目录到Python路径
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
 from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_openai import ChatOpenAI
-from config.config import Config
+from src.config.config import Config
 
 # 智能体导入
-from agents.coordinator import Coordinator
-from agents.Creative_Designing_agent import CreativeDesigningAgent
-from agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
-from agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
-from agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
-from agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
-from agents.Mechanism_Mining_agent import MechanismMiningAgent
-from agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
-from agents.Operation_Suggesting_agent import OperationSuggestingAgent
-from agents.task_allocator import TaskAllocator
+from src.agents.coordinator import Coordinator
+from src.agents.Creative_Designing_agent import CreativeDesigningAgent
+from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
+from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
+from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
+from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
+from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
+from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
+from src.agents.task_allocator import TaskAllocator
 
 def main():
     print("任务分配示例")

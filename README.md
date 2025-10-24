@@ -99,16 +99,16 @@ ECOMATS/
 
 The system includes the following core agents:
 
-1. **Coordinator** - Coordinates the work of experts to ensure efficient task completion
-2. **Material Designer** - Designs and optimizes water treatment material solutions (Creative_Designing_agent.py)
-3. **Expert A** - Comprehensively evaluates all aspects of material solutions (Assessment_Screening_agent_A.py)
-4. **Expert B** - Comprehensively evaluates all aspects of material solutions (Assessment_Screening_agent_B.py)
-5. **Expert C** - Comprehensively evaluates all aspects of material solutions (Assessment_Screening_agent_C.py)
-6. **Final Validator** - Synthesizes evaluation results from all experts, performs weighted calculations, and generates final material evaluation reports (Assessment_Screening_agent_Overall.py)
-7. **Literature Processor** - Processes and analyzes relevant technical literature (Extracting_agent.py)
-8. **Mechanism Expert** - Analyzes the catalytic mechanisms and action principles of materials (Mechanism_Mining_agent.py)
-9. **Synthesis Method Expert** - Designs synthesis methods and processes for materials (Synthesis_Guiding_agent.py)
-10. **Operation Suggesting Agent** - Provides detailed operational guidance for material synthesis, production, and application (Operation_Suggesting_agent.py)
+1. **coordinator** - Coordinates the work of experts to ensure efficient task completion
+2. **Creative_Designing_agent** - Designs and optimizes water treatment material solutions
+3. **Assessment_Screening_agent_A** - Comprehensively evaluates all aspects of material solutions
+4. **Assessment_Screening_agent_B** - Comprehensively evaluates all aspects of material solutions
+5. **Assessment_Screening_agent_C** - Comprehensively evaluates all aspects of material solutions
+6. **Assessment_Screening_agent_Overall** - Synthesizes evaluation results from all experts, performs weighted calculations, and generates final material evaluation reports
+7. **Extracting_agent** - Processes and analyzes relevant technical literature
+8. **Mechanism_Mining_agent** - Analyzes the catalytic mechanisms and action principles of materials
+9. **Synthesis_Guiding_agent** - Designs synthesis methods and processes for materials
+10. **Operation_Suggesting_agent** - Provides detailed operational guidance for material synthesis, production, and application
 
 ## Working Modes
 

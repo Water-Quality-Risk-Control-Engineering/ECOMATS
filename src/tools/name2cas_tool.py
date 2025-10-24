@@ -40,25 +40,25 @@ class NameToCASTool:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error(f"API请求失败: {e}")
+            logger.error(f"API请求失败: {e} / API request failed: {e}")
             return {"error": str(e)}
     
     def convert_name_to_cas(self, compound_name: str) -> Dict[str, Any]:
         """
-        将化学名称转换为CAS号
+        将化学名称转换为CAS号 / Convert chemical name to CAS number
         
         Args:
-            compound_name (str): 化学名称
+            compound_name (str): 化学名称 / Chemical name
             
         Returns:
-            Dict[str, Any]: 包含CAS号和其他相关信息的字典
+            Dict[str, Any]: 包含CAS号和其他相关信息的字典 / Dictionary containing CAS number and other related information
         """
         try:
-            # 使用PubChem API查询化合物信息
+            # 使用PubChem API查询化合物信息 / Query compound information using PubChem API
             endpoint = f"{self.base_url}/compound/name/{compound_name}/cids/JSON"
             result = self._make_request(endpoint)
             
-            # 提取CAS号信息
+            # 提取CAS号信息 / Extract CAS number information
             if "IdentifierList" in result and "CID" in result["IdentifierList"]:
                 cids = result["IdentifierList"]["CID"]
                 if isinstance(cids, list):
@@ -66,7 +66,7 @@ class NameToCASTool:
                 else:
                     cid = cids
                 
-                # 获取详细信息
+                # 获取详细信息 / Get detailed information
                 endpoint = f"{self.base_url}/compound/cid/{cid}/property/CAS,Formula,MolecularWeight,Synonyms/JSON"
                 details = self._make_request(endpoint)
                 
@@ -84,34 +84,34 @@ class NameToCASTool:
                     return {
                         "success": False,
                         "compound_name": compound_name,
-                        "error": "未找到该化合物的详细信息",
-                        "details": details.get("error", "未知错误")
+                        "error": "未找到该化合物的详细信息 / Detailed information of the compound not found",
+                        "details": details.get("error", "未知错误 / Unknown error")
                     }
             else:
                 return {
                     "success": False,
                     "compound_name": compound_name,
-                    "error": "未找到该化合物的CAS号信息",
-                    "details": result.get("error", "未知错误")
+                    "error": "未找到该化合物的CAS号信息 / CAS number information of the compound not found",
+                    "details": result.get("error", "未知错误 / Unknown error")
                 }
                 
         except Exception as e:
-            logger.error(f"转换化学名称到CAS号时出错: {e}")
+            logger.error(f"转换化学名称到CAS号时出错: {e} / Error converting chemical name to CAS number: {e}")
             return {
                 "success": False,
                 "compound_name": compound_name,
-                "error": f"转换失败: {str(e)}"
+                "error": f"转换失败: {str(e)} / Conversion failed: {str(e)}"
             }
 
-# 全局实例
+# 全局实例 / Global instance
 _name2cas_tool = None
 
 def get_name2cas_tool() -> NameToCASTool:
     """
-    获取Name2CAS工具实例
+    获取Name2CAS工具实例 / Get Name2CAS tool instance
     
     Returns:
-        Name2CASTool: Name2CAS工具实例
+        Name2CASTool: Name2CAS工具实例 / Name2CAS tool instance
     """
     global _name2cas_tool
     if _name2cas_tool is None:

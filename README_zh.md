@@ -100,16 +100,16 @@ ECOMATS/
 
 系统包括以下核心代理：
 
-1. **Coordinator** - 协调专家工作，确保任务高效完成
-2. **Material Designer** - 设计和优化水处理材料解决方案 (Creative_Designing_agent.py)
-3. **Expert A** - 全面评估材料解决方案的各个方面 (Assessment_Screening_agent_A.py)
-4. **Expert B** - 全面评估材料解决方案的各个方面 (Assessment_Screening_agent_B.py)
-5. **Expert C** - 全面评估材料解决方案的各个方面 (Assessment_Screening_agent_C.py)
-6. **Final Validator** - 综合所有专家的评估结果，进行加权计算，生成最终材料评估报告 (Assessment_Screening_agent_Overall.py)
-7. **Literature Processor** - 处理和分析相关技术文献 (Extracting_agent.py)
-8. **Mechanism Expert** - 分析材料的催化机制和作用原理 (Mechanism_Mining_agent.py)
-9. **Synthesis Method Expert** - 设计材料的合成方法和工艺 (Synthesis_Guiding_agent.py)
-10. **Operation Suggesting Agent** - 提供材料合成、生产和应用的详细操作指导 (Operation_Suggesting_agent.py)
+1. **coordinator** - 协调专家工作，确保任务高效完成
+2. **Creative_Designing_agent** - 设计和优化水处理材料解决方案
+3. **Assessment_Screening_agent_A** - 全面评估材料解决方案的各个方面
+4. **Assessment_Screening_agent_B** - 全面评估材料解决方案的各个方面
+5. **Assessment_Screening_agent_C** - 全面评估材料解决方案的各个方面
+6. **Assessment_Screening_agent_Overall** - 综合所有专家的评估结果，进行加权计算，生成最终材料评估报告
+7. **Extracting_agent** - 处理和分析相关技术文献
+8. **Mechanism_Mining_agent** - 分析材料的催化机制和作用原理
+9. **Synthesis_Guiding_agent** - 设计材料的合成方法和工艺
+10. **Operation_Suggesting_agent** - 提供材料合成、生产和应用的详细操作指导
 
 ## 工作模式
 

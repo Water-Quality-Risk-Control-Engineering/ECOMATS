@@ -55,4 +55,16 @@ class OperationSuggestingTask(BaseTask):
         5. 设备使用和维护建议
         """
         
-        return super().create_task(agent, description, expected_output, context_task)
+        # 创建新的任务实例而不是调用父类方法
+        from crewai import Task
+        task = Task(
+            agent=agent,
+            expected_output=expected_output,
+            description=description
+        )
+        
+        # 如果有上下文任务，添加依赖关系
+        if context_task:
+            task.context = [context_task]
+            
+        return task

@@ -10,11 +10,12 @@ class CrewAIMaterialsProjectTool(BaseTool):
     description: str = (
         "访问Materials Project材料科学数据库以搜索材料、获取材料属性等。"
         "可以搜索具有特定化学式、元素组成、晶体结构或物理性质的材料。"
+        "使用方法: action='search', formula='C3N4' 来搜索材料"
     )
     
     def _run(
         self,
-        action: str,
+        action: str = "search",
         material_id: Optional[str] = None,
         formula: Optional[str] = None,
         elements: Optional[List[str]] = None,
@@ -31,7 +32,7 @@ class CrewAIMaterialsProjectTool(BaseTool):
         执行Materials Project API操作
         
         Args:
-            action: 要执行的操作 ("search", "get_material", "get_structure", "get_electronic", "get_thermo", "get_elastic", "get_summary")
+            action: 要执行的操作 ("search", "get_material", "get_structure", "get_electronic", "get_thermo", "get_elastic", "get_summary")，默认为"search"
             material_id: 材料ID（用于获取特定材料信息的操作）
             formula: 化学式（用于搜索）
             elements: 必须包含的元素列表（用于搜索）

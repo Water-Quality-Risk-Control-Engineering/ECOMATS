@@ -31,28 +31,30 @@ class CID2PropertiesTool:
         """
         try:
             # 使用PubChem工具通过CID查询化合物信息
-            result = self.pubchem_tool.get_compound_info(cid)
+            result = self.pubchem_tool.get_properties_by_cid(int(cid))
             
             # 如果查询成功，整理返回结果
             if "error" not in result:
-                return {
-                    "success": True,
-                    "cid": cid,
-                    "molecular_formula": result.get("molecular_formula", ""),
-                    "molecular_weight": result.get("molecular_weight", ""),
-                    "iupac_name": result.get("iupac_name", ""),
-                    "synonyms": result.get("synonyms", []),
-                    "canonical_smiles": result.get("canonical_smiles", ""),
-                    "isomeric_smiles": result.get("isomeric_smiles", ""),
-                    "inchi": result.get("inchi", ""),
-                    "inchi_key": result.get("inchi_key", ""),
-                    "xlogp": result.get("xlogp", ""),
-                    "hydrogen_bond_donor_count": result.get("hydrogen_bond_donor_count", ""),
-                    "hydrogen_bond_acceptor_count": result.get("hydrogen_bond_acceptor_count", ""),
-                    "rotatable_bond_count": result.get("rotatable_bond_count", ""),
-                    "tpsa": result.get("tpsa", ""),  # 极性表面积
-                    "complexity": result.get("complexity", "")
-                }
+                # 提取属性数据
+                if "PropertyTable" in result and "Properties" in result["PropertyTable"]:
+                    properties = result["PropertyTable"]["Properties"][0]
+                    return {
+                        "success": True,
+                        "cid": cid,
+                        "molecular_formula": properties.get("MolecularFormula", "N/A"),
+                        "molecular_weight": properties.get("MolecularWeight", "N/A"),
+                        "iupac_name": properties.get("IUPACName", "N/A"),
+                        "canonical_smiles": properties.get("CanonicalSMILES", "N/A"),
+                        "isomeric_smiles": properties.get("IsomericSMILES", "N/A"),
+                        "inchi": properties.get("InChI", "N/A"),
+                        "inchi_key": properties.get("InChIKey", "N/A")
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "cid": cid,
+                        "error": "无法解析返回数据"
+                    }
             else:
                 return {
                     "success": False,

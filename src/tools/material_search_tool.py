@@ -40,65 +40,69 @@ class MaterialSearchTool:
             results = {
                 "query": query,
                 "sources": [],
-                "materials": []
+                "materials": [],
+                "success": False,
+                "count": 0
             }
             
             # 首先尝试从Materials Project搜索
             if self.materials_project_tool:
                 try:
-                    # 尝试多种搜索方式
-                    mp_results = []
-                    
-                    # 方式1: 按化学式搜索
-                    formula_result = self.materials_project_tool.search_materials(formula=query, limit=limit)
-                    if formula_result and "materials" in formula_result:
-                        mp_results.extend(formula_result["materials"])
-                    
-                    # 方式2: 如果查询包含元素，按元素搜索
-                    if any(char.isalpha() for char in query):
-                        elements = self._extract_elements(query)
-                        if elements:
-                            element_result = self.materials_project_tool.search_materials(elements=elements, limit=limit)
-                            if element_result and "materials" in element_result:
-                                mp_results.extend(element_result["materials"])
-                    
-                    # 整理Materials Project结果
-                    if mp_results:
+                    # 尝试按化学式搜索
+                    formula_result = self.materials_project_tool.search_materials(formula=query, limit=min(limit, 20))
+                    if "error" not in formula_result and "data" in formula_result:
                         results["sources"].append("Materials Project")
-                        for material in mp_results[:limit]:
+                        materials_data = formula_result["data"][:limit]
+                        for material in materials_data:
                             results["materials"].append({
                                 "source": "Materials Project",
-                                "material_id": material.get("material_id", ""),
-                                "formula": material.get("formula", ""),
-                                "formation_energy": material.get("formation_energy_per_atom", ""),
-                                "energy_above_hull": material.get("energy_above_hull", ""),
-                                "band_gap": material.get("band_gap", ""),
-                                "density": material.get("density", ""),
-                                "volume": material.get("volume", ""),
-                                "crystal_system": material.get("symmetry", {}).get("crystal_system", ""),
-                                "elements": material.get("elements", [])
+                                "material_id": material.get("material_id", "N/A"),
+                                "formula": material.get("formula", "N/A"),
+                                "formation_energy": material.get("formation_energy_per_atom", "N/A"),
+                                "energy_above_hull": material.get("energy_above_hull", "N/A"),
+                                "band_gap": material.get("band_gap", "N/A"),
+                                "density": material.get("density", "N/A"),
+                                "volume": material.get("volume", "N/A"),
+                                "crystal_system": "N/A",  # Materials Project工具返回的数据结构中没有这个字段
+                                "elements": []  # Materials Project工具返回的数据结构中没有这个字段
                             })
                 except Exception as e:
                     logger.warning(f"从Materials Project搜索时出错: {e}")
             
-            # 如果Materials Project没有结果或不可用，尝试从PubChem搜索
-            if len(results["materials"]) == 0:
+            # 如果Materials Project没有足够结果，尝试按元素搜索
+            if len(results["materials"]) < limit and self.materials_project_tool:
                 try:
-                    pubchem_result = self.pubchem_tool.search_compound(query)
-                    if "error" not in pubchem_result and "compounds" in pubchem_result:
-                        results["sources"].append("PubChem")
-                        compounds = pubchem_result["compounds"][:limit]
-                        for compound in compounds:
-                            results["materials"].append({
-                                "source": "PubChem",
-                                "name": compound.get("name", ""),
-                                "cid": compound.get("cid", ""),
-                                "molecular_formula": compound.get("molecular_formula", ""),
-                                "molecular_weight": compound.get("molecular_weight", ""),
-                                "synonyms": compound.get("synonyms", [])
-                            })
+                    if any(char.isalpha() for char in query):
+                        elements = self._extract_elements(query)
+                        if elements:
+                            # 限制元素数量以避免过多结果
+                            elements = elements[:2]  # 最多使用2个元素以提高性能
+                            # 添加更多筛选条件以提高精准度
+                            element_result = self.materials_project_tool.search_materials(
+                                elements=elements, 
+                                limit=min(limit, 10)
+                            )
+                            if "error" not in element_result and "data" in element_result:
+                                results["sources"].append("Materials Project")
+                                existing_formulas = [m["formula"] for m in results["materials"]]
+                                materials_data = element_result["data"]
+                                for material in materials_data:
+                                    # 避免重复添加相同材料
+                                    if material.get("formula", "") not in existing_formulas and len(results["materials"]) < limit:
+                                        results["materials"].append({
+                                            "source": "Materials Project",
+                                            "material_id": material.get("material_id", "N/A"),
+                                            "formula": material.get("formula", "N/A"),
+                                            "formation_energy": material.get("formation_energy_per_atom", "N/A"),
+                                            "energy_above_hull": material.get("energy_above_hull", "N/A"),
+                                            "band_gap": material.get("band_gap", "N/A"),
+                                            "density": material.get("density", "N/A"),
+                                            "volume": material.get("volume", "N/A"),
+                                            "crystal_system": "N/A",
+                                            "elements": []
+                                        })
                 except Exception as e:
-                    logger.warning(f"从PubChem搜索时出错: {e}")
+                    logger.warning(f"从Materials Project按元素搜索时出错: {e}")
             
             # 设置成功标志
             results["success"] = len(results["materials"]) > 0

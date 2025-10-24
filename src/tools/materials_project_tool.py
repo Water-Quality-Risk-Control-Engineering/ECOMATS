@@ -82,16 +82,22 @@ class MaterialsProjectTool:
                 kwargs["crystal_system"] = crystal_system
             # 注意：新版本API不直接支持band_gap_min和band_gap_max参数
             # 这些参数将在后处理中手动过滤
-            # 注意：is_stable参数在新版本API中可能不被支持，使用energy_above_hull代替
-            if is_stable is not None:
-                if is_stable:
-                    kwargs["energy_above_hull"] = (0.0, 0.05)  # 稳定材料：能量高于凸包小于0.05 eV/atom
+            # 注意：is_stable参数在新版本API中可能不被支持
+            # 我们不使用energy_above_hull参数，因为它可能不被支持
                 
+            # 优化：限制搜索结果数量以避免超时
+            # 对于元素搜索，使用更小的chunk_size
+            chunk_size = min(limit, 100) if elements else min(limit, 1000)
+            
             # 执行搜索
             docs = self.mpr.materials.search(
                 **kwargs,
-                chunk_size=min(limit, 1000)
+                chunk_size=chunk_size
             )
+            
+            # 手动限制结果数量
+            if len(docs) > limit:
+                docs = docs[:limit]
             
             # 应用skip参数，跳过前skip个结果
             if skip > 0:

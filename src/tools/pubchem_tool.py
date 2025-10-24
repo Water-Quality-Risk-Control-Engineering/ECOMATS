@@ -19,7 +19,7 @@ class PubChemTool:
             "User-Agent": "ECOMATS-PubChem-Tool/1.0"
         })
     
-    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 5) -> Dict[str, Any]:
         """
         发送API请求，带重试机制 / Send API request with retry mechanism
         
@@ -43,8 +43,8 @@ class PubChemTool:
             except requests.exceptions.RequestException as e:
                 logger.warning(f"PubChem API请求失败 (尝试 {attempt + 1}/{max_retries}): {e} / PubChem API request failed (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:  # 不是最后一次尝试
-                    # 指数退避延迟
-                    delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)  # 1-2秒随机延迟
+                    # 指数退避延迟，增加基础延迟时间
+                    delay = (3 ** attempt) + (random.randint(0, 2000) / 1000)  # 1-5秒随机延迟
                     logger.info(f"等待 {delay:.2f} 秒后重试 / Waiting {delay:.2f} seconds before retry")
                     time.sleep(delay)
                 else:

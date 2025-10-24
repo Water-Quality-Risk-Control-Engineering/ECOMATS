@@ -1,6 +1,7 @@
 import logging
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
+from src.agents.base_agent import BaseAgent
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)

@@ -231,8 +231,8 @@ def run_preset_workflow(user_requirement, llm):
             evaluation_task_b, 
             evaluation_task_c, 
             final_validation_task,
-            mechanism_analysis_task,
             synthesis_method_task,
+            mechanism_analysis_task,
             operation_suggesting_task
         ],  # 任务按顺序执行 / Tasks executed in order
         process=Process.sequential,  # 使用顺序流程执行任务 / Use sequential process to execute tasks
@@ -320,8 +320,8 @@ def run_autonomous_workflow(user_requirement, llm):
         design_task,
         *evaluation_tasks,
         final_validation_task,
-        mechanism_analysis_task,
         synthesis_method_task,
+        mechanism_analysis_task,
         operation_suggesting_task
     ]
     

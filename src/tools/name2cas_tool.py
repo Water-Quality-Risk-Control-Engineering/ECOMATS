@@ -7,6 +7,7 @@
 import logging
 import requests
 import time
+import random
 from typing import Dict, Any, Optional
 
 # 配置日志 / Configure logging
@@ -24,24 +25,33 @@ class NameToCASTool:
             "User-Agent": "ECOMATS-NameToCAS-Tool/1.0"
         })
     
-    def _make_request(self, endpoint: str, timeout: int = 30) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
         """
-        发送API请求 / Send API request
+        发送API请求，带重试机制 / Send API request with retry mechanism
         
         Args:
             endpoint: API端点 / API endpoint
             timeout: 超时时间（秒） / Timeout (seconds)
+            max_retries: 最大重试次数 / Maximum retry attempts
             
         Returns:
             API响应数据 / API response data
         """
-        try:
-            response = self.session.get(endpoint, timeout=timeout)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logger.error(f"API请求失败: {e} / API request failed: {e}")
-            return {"error": str(e)}
+        for attempt in range(max_retries):
+            try:
+                response = self.session.get(endpoint, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"API请求失败 (尝试 {attempt + 1}/{max_retries}): {e} / API request failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:  # 不是最后一次尝试
+                    # 指数退避延迟
+                    delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)  # 1-2秒随机延迟
+                    logger.info(f"等待 {delay:.2f} 秒后重试 / Waiting {delay:.2f} seconds before retry")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"API请求最终失败: {e} / API request finally failed: {e}")
+                    return {"error": str(e)}
     
     def convert_name_to_cas(self, compound_name: str) -> Dict[str, Any]:
         """
@@ -66,19 +76,26 @@ class NameToCASTool:
                 else:
                     cid = cids
                 
-                # 获取详细信息 / Get detailed information
-                endpoint = f"{self.base_url}/compound/cid/{cid}/property/CAS,Formula,MolecularWeight,Synonyms/JSON"
+                # 获取详细信息，包括CAS号 / Get detailed information, including CAS number
+                endpoint = f"{self.base_url}/compound/cid/{cid}/property/CAS,IUPACName,Formula,MolecularWeight,Synonyms/JSON"
                 details = self._make_request(endpoint)
                 
                 if "PropertyTable" in details and "Properties" in details["PropertyTable"]:
                     properties = details["PropertyTable"]["Properties"][0]
+                    # 从Synonyms中提取CAS号 / Extract CAS number from Synonyms
+                    synonyms = properties.get("Synonyms", [])
+                    cas_numbers = [syn for syn in synonyms if self._is_cas_number(syn)]
+                    cas_number = cas_numbers[0] if cas_numbers else "N/A"
+                    
                     return {
                         "success": True,
                         "compound_name": compound_name,
-                        "cas_number": properties.get("CID", ""),
+                        "cid": cid,
+                        "cas_number": cas_number,
+                        "iupac_name": properties.get("IUPACName", ""),
                         "molecular_formula": properties.get("MolecularFormula", ""),
                         "molecular_weight": properties.get("MolecularWeight", ""),
-                        "synonyms": properties.get("Synonyms", [])
+                        "synonyms": synonyms
                     }
                 else:
                     return {
@@ -102,6 +119,21 @@ class NameToCASTool:
                 "compound_name": compound_name,
                 "error": f"转换失败: {str(e)} / Conversion failed: {str(e)}"
             }
+    
+    def _is_cas_number(self, text: str) -> bool:
+        """
+        判断文本是否为CAS号格式 / Determine if text is in CAS number format
+        
+        Args:
+            text: 待判断文本 / Text to be judged
+            
+        Returns:
+            是否为CAS号格式 / Whether it is in CAS number format
+        """
+        import re
+        # CAS号格式：XXXXX-XX-X / CAS number format: XXXXX-XX-X
+        cas_pattern = r'^\d{2,7}-\d{2}-\d$'
+        return bool(re.match(cas_pattern, text))
 
 # 全局实例 / Global instance
 _name2cas_tool = None

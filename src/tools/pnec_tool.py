@@ -39,6 +39,47 @@ class PNECTool:
                 "chronic": 1000  # 慢性毒性默认评估因子
             }
         }
+        
+        # 常见金属元素及其价态对应的毒性数据
+        # Common metal elements and their toxicity data corresponding to valence states
+        self.metal_toxicity_data = {
+            "Ni": {
+                "valences": ["Ni²⁺"],
+                "cas_numbers": ["7440-02-0"],
+                "freshwater_pnec": {
+                    "Ni²⁺": {"value": 0.02, "unit": "mg/L", "description": "Ni²⁺离子在淡水中的预测无效应浓度"}
+                }
+            },
+            "W": {
+                "valences": ["W⁶⁺"],
+                "cas_numbers": ["7440-07-5"],
+                "freshwater_pnec": {
+                    "W⁶⁺": {"value": 0.1, "unit": "mg/L", "description": "W⁶⁺离子在淡水中的预测无效应浓度"}
+                }
+            },
+            "Co": {
+                "valences": ["Co²⁺"],
+                "cas_numbers": ["7440-48-4"],
+                "freshwater_pnec": {
+                    "Co²⁺": {"value": 0.01, "unit": "mg/L", "description": "Co²⁺离子在淡水中的预测无效应浓度"}
+                }
+            },
+            "Mo": {
+                "valences": ["Mo⁶⁺"],
+                "cas_numbers": ["7439-98-7"],
+                "freshwater_pnec": {
+                    "Mo⁶⁺": {"value": 0.05, "unit": "mg/L", "description": "Mo⁶⁺离子在淡水中的预测无效应浓度"}
+                }
+            },
+            "Fe": {
+                "valences": ["Fe²⁺", "Fe³⁺"],
+                "cas_numbers": ["7439-89-6"],
+                "freshwater_pnec": {
+                    "Fe²⁺": {"value": 0.5, "unit": "mg/L", "description": "Fe²⁺离子在淡水中的预测无效应浓度"},
+                    "Fe³⁺": {"value": 0.3, "unit": "mg/L", "description": "Fe³⁺离子在淡水中的预测无效应浓度"}
+                }
+            }
+        }
     
     def get_pnec_by_cas(self, cas_number: str) -> Dict[str, Any]:
         """
@@ -61,6 +102,9 @@ class PNECTool:
                     "error": compound_info["error"]
                 }
             
+            # 分析化合物中金属元素的价态
+            valence_analysis = self._analyze_element_valences(compound_info)
+            
             # 模拟PNEC计算（在实际应用中，这需要连接到专门的PNEC数据库）
             pnec_data = self._calculate_pnec(compound_info)
             
@@ -70,6 +114,7 @@ class PNECTool:
                 "compound_name": compound_info.get("name", ""),
                 "molecular_formula": compound_info.get("molecular_formula", ""),
                 "molecular_weight": compound_info.get("molecular_weight", ""),
+                "valence_analysis": valence_analysis,
                 "pnec_data": pnec_data
             }
             
@@ -143,7 +188,10 @@ class PNECTool:
                 cid = compound["id"]["id"]
                 
                 # 获取更多详细信息
-                return self._get_compound_details(cid)
+                details = self._get_compound_details(cid)
+                # 添加CAS号到详细信息中
+                details["cas_number"] = cas_number
+                return details
             else:
                 return {"error": "未找到该CAS号对应的化合物"}
                 
@@ -227,6 +275,77 @@ class PNECTool:
         except Exception as e:
             logger.error(f"处理响应时出错: {e}")
             return {"error": f"处理响应时出错: {str(e)}"}
+    
+    def _analyze_element_valences(self, compound_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        分析化合物中金属元素的价态信息
+        
+        Args:
+            compound_info (Dict[str, Any]): 化合物信息
+            
+        Returns:
+            Dict[str, Any]: 元素价态分析结果
+        """
+        try:
+            # 获取化合物名称和化学式
+            compound_name = compound_info.get("name", "")
+            molecular_formula = compound_info.get("molecular_formula", "")
+            
+            # 从化合物信息中提取元素
+            elements = self._extract_elements_from_formula(molecular_formula)
+            
+            # 分析金属元素的价态
+            metal_valences = {}
+            for element in elements:
+                if element in self.metal_toxicity_data:
+                    metal_info = self.metal_toxicity_data[element]
+                    metal_valences[element] = {
+                        "valences": metal_info["valences"],
+                        "cas_numbers": metal_info["cas_numbers"],
+                        "toxicity_data": metal_info["freshwater_pnec"]
+                    }
+            
+            return {
+                "success": True,
+                "compound_name": compound_name,
+                "molecular_formula": molecular_formula,
+                "metal_elements": metal_valences
+            }
+            
+        except Exception as e:
+            logger.error(f"分析元素价态时出错: {e}")
+            return {
+                "success": False,
+                "error": f"分析元素价态时出错: {str(e)}"
+            }
+    
+    def _extract_elements_from_formula(self, formula: str) -> List[str]:
+        """
+        从化学式中提取元素符号
+        
+        Args:
+            formula (str): 化学式
+            
+        Returns:
+            List[str]: 元素符号列表
+        """
+        import re
+        # 匹配常见的元素符号（1-2个字母，首字母大写）
+        elements = re.findall(r'[A-Z][a-z]?', formula)
+        # 过滤掉可能不是元素的字符串
+        valid_elements = []
+        # 常见元素列表（简化版）
+        common_elements = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
+                          'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
+                          'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',
+                          'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu',
+                          'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn']
+        
+        for element in elements:
+            if element in common_elements:
+                valid_elements.append(element)
+        
+        return list(set(valid_elements))  # 去重
     
     def _calculate_pnec(self, compound_info: Dict[str, Any]) -> Dict[str, Any]:
         """

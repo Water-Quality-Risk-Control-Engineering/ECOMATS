@@ -102,21 +102,45 @@ class MaterialsProjectTool:
             for doc in docs:
                 # 获取带隙值并处理缺失情况
                 band_gap = getattr(doc, "band_gap", None)
-                if band_gap is not None:
+                if band_gap is not None and band_gap != "N/A" and band_gap != "":
                     band_gap_value = band_gap
                 else:
                     band_gap_value = "N/A"  # 明确表示数据不可用
+                
+                # 获取其他属性并处理缺失情况
+                energy_above_hull = getattr(doc, "energy_above_hull", None)
+                if energy_above_hull is not None and energy_above_hull != "N/A" and energy_above_hull != "":
+                    energy_above_hull_value = energy_above_hull
+                else:
+                    energy_above_hull_value = "N/A"
+                
+                formation_energy = getattr(doc, "formation_energy_per_atom", None)
+                if formation_energy is not None and formation_energy != "N/A" and formation_energy != "":
+                    formation_energy_value = formation_energy
+                else:
+                    formation_energy_value = "N/A"
+                
+                # 为数值数据添加单位信息
+                volume_value = getattr(doc, "volume", "N/A")
+                volume_with_unit = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
+                
+                density_value = getattr(doc, "density", "N/A")
+                density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
+                
+                band_gap_with_unit = f"{band_gap_value} eV" if band_gap_value != "N/A" else "N/A"
+                energy_above_hull_with_unit = f"{energy_above_hull_value} eV/atom" if energy_above_hull_value != "N/A" else "N/A"
+                formation_energy_with_unit = f"{formation_energy_value} eV/atom" if formation_energy_value != "N/A" else "N/A"
                 
                 material_dict = {
                     "material_id": str(getattr(doc, "material_id", "N/A")),
                     "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
                     "chemsys": getattr(doc, "chemsys", "N/A"),
-                    "volume": getattr(doc, "volume", "N/A"),
-                    "density": getattr(doc, "density", "N/A"),
+                    "volume": volume_with_unit,
+                    "density": density_with_unit,
                     "nsites": getattr(doc, "nsites", "N/A"),
-                    "band_gap": band_gap_value,
-                    "energy_above_hull": getattr(doc, "energy_above_hull", "N/A"),
-                    "formation_energy_per_atom": getattr(doc, "formation_energy_per_atom", "N/A")
+                    "band_gap": band_gap_with_unit,
+                    "energy_above_hull": energy_above_hull_with_unit,
+                    "formation_energy_per_atom": formation_energy_with_unit
                 }
                 materials_data.append(material_dict)
             
@@ -151,18 +175,38 @@ class MaterialsProjectTool:
                 
             doc = docs[0]
             
-            # 提取关键信息
+            # 提取关键信息并处理缺失值
+            band_gap = getattr(doc, "band_gap", None)
+            band_gap_value = band_gap if band_gap is not None and band_gap != "" else "N/A"
+            
+            energy_above_hull = getattr(doc, "energy_above_hull", None)
+            energy_above_hull_value = energy_above_hull if energy_above_hull is not None and energy_above_hull != "" else "N/A"
+            
+            formation_energy = getattr(doc, "formation_energy_per_atom", None)
+            formation_energy_value = formation_energy if formation_energy is not None and formation_energy != "" else "N/A"
+            
+            # 为数值数据添加单位信息
+            volume_value = getattr(doc, "volume", "N/A")
+            volume_with_unit = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
+            
+            density_value = getattr(doc, "density", "N/A")
+            density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
+            
+            band_gap_with_unit = f"{band_gap_value} eV" if band_gap_value != "N/A" else "N/A"
+            energy_above_hull_with_unit = f"{energy_above_hull_value} eV/atom" if energy_above_hull_value != "N/A" else "N/A"
+            formation_energy_with_unit = f"{formation_energy_value} eV/atom" if formation_energy_value != "N/A" else "N/A"
+            
             material_info = {
-                "material_id": str(getattr(doc, "material_id", "")),
-                "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "")),
-                "chemsys": getattr(doc, "chemsys", ""),
-                "volume": getattr(doc, "volume", ""),
-                "density": getattr(doc, "density", ""),
-                "nsites": getattr(doc, "nsites", 0),
-                "band_gap": getattr(doc, "band_gap", None),
-                "energy_above_hull": getattr(doc, "energy_above_hull", None),
-                "formation_energy_per_atom": getattr(doc, "formation_energy_per_atom", None),
-                "crystal_system": getattr(getattr(doc, "symmetry", None), "crystal_system", None) if hasattr(doc, "symmetry") else None
+                "material_id": str(getattr(doc, "material_id", "N/A")),
+                "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
+                "chemsys": getattr(doc, "chemsys", "N/A"),
+                "volume": volume_with_unit,
+                "density": density_with_unit,
+                "nsites": getattr(doc, "nsites", "N/A"),
+                "band_gap": band_gap_with_unit,
+                "energy_above_hull": energy_above_hull_with_unit,
+                "formation_energy_per_atom": formation_energy_with_unit,
+                "crystal_system": getattr(getattr(doc, "symmetry", None), "crystal_system", "N/A") if hasattr(doc, "symmetry") else "N/A"
             }
             
             return material_info

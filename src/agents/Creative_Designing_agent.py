@@ -23,7 +23,7 @@ class CreativeDesigningAgent(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="材料设计专家",  # Material Design Expert
+            role="Creative_Designing_agent",  # Material Design Expert
             goal="设计和优化水处理材料方案",  # Design and optimize water treatment material solutions
             prompt_file="material_designer_prompt.md",
             temperature=Config.MATERIAL_DESIGNER_TEMPERATURE

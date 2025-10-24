@@ -13,7 +13,7 @@ class MechanismMiningAgent(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="机理挖掘专家",  # 机理挖掘专家 / Mechanism mining expert
+            role="Mechanism_Mining_agent",  # 机理挖掘专家 / Mechanism mining expert
             goal="挖掘污染物降解的反应机理和动力学特性",  # 挖掘污染物降解的反应机理和动力学特性 / Mine reaction mechanisms and kinetic characteristics of pollutant degradation
             prompt_file="mechanism_expert_prompt.md",
             temperature=Config.MECHANISM_EXPERT_TEMPERATURE

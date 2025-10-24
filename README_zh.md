@@ -37,7 +37,7 @@ ECOMATS/
 │   │   ├── Operation_Suggesting_agent.py
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
-│   │   ├── coordinator.py
+│   │   ├── task_organizing_agent.py
 │   │   └── task_allocator.py
 │   ├── config/                # 配置文件
 │   │   └── config.py

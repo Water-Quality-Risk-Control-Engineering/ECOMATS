@@ -21,7 +21,7 @@ class AssessmentScreeningAgentA(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm, 
-            "专家A",  # Expert A / 专家A
+            "Assessment_Screening_agent_A",  # Expert A / 专家A
             "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation of material proposals from various aspects / 全面评估材料方案的各个方面
             "expert_a_prompt.md",  # Prompt file for expert A / 专家A的提示文件
             temperature=Config.EXPERT_A_TEMPERATURE  # Temperature setting from config / 从配置中获取的温度设置

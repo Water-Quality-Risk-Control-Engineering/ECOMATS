@@ -14,7 +14,7 @@ class AssessmentScreeningAgentB(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="Expert B",  # Assessment and screening expert B / 评估筛选专家B
+            role="Assessment_Screening_agent_B",  # Assessment and screening expert B / 评估筛选专家B
             goal="Comprehensively evaluate various aspects of material proposals",  # Comprehensively evaluate various aspects of material proposals / 全面评估材料方案的各个方面
             prompt_file="expert_b_prompt.md",
             temperature=Config.EXPERT_B_TEMPERATURE

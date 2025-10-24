@@ -20,7 +20,7 @@ class AssessmentScreeningAgentC(BaseAgent):
             llm: The language model instance to be used by this agent
         """
         from src.config.config import Config
-        super().__init__(llm, "专家C", "全面评估材料方案的各个方面", "expert_c_prompt.md",
+        super().__init__(llm, "Assessment_Screening_agent_C", "全面评估材料方案的各个方面", "expert_c_prompt.md",
                         temperature=Config.EXPERT_C_TEMPERATURE)
     
     def create_agent(self):

@@ -22,7 +22,7 @@ class AssessmentScreeningAgentOverall(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="最终验证专家",  # 最终验证专家 / Final validation expert
+            role="Assessment_Screening_agent_Overall",  # 最终验证专家 / Final validation expert
             goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告",  # Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report
             prompt_file="final_validator_prompt.md",
             temperature=Config.FINAL_VALIDATOR_TEMPERATURE

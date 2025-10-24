@@ -23,7 +23,7 @@ class ExtractingAgent(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="文献处理专家",  # Literature Processing Expert
+            role="Extracting_agent",  # Literature Processing Expert
             goal="处理和分析相关技术文献，为材料评估提供背景信息",  # Process and analyze relevant technical literature to provide background information for material evaluation
             prompt_file="literature_processor_prompt.md",
             temperature=Config.LITERATURE_PROCESSOR_TEMPERATURE

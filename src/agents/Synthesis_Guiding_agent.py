@@ -23,7 +23,7 @@ class SynthesisGuidingAgent(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm, 
-            "合成方法专家",  # Role in Chinese
+            "Synthesis_Guiding_agent",  # Role in Chinese
             "设计材料的合成方法和工艺流程",  # Goal in Chinese
             "synthesis_expert_prompt.md",  # Prompt template file
             temperature=Config.SYNTHESIS_EXPERT_TEMPERATURE  # Temperature setting from config

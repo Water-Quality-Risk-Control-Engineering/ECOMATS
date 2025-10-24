@@ -14,14 +14,14 @@ class TaskOrganizingAgent(BaseAgent):
     def __init__(self, llm):
         super().__init__(
             llm=llm,
-            role="任务组织代理",  # 任务组织代理 / Task organizing agent
+            role="Task_Organizing_agent",  # 任务组织代理 / Task organizing agent
             goal="组织和协调各个专家智能体的工作，确保任务按计划完成",  # 组织和协调各个专家智能体的工作，确保任务按计划完成 / Organize and coordinate the work of various expert agents to ensure tasks are completed according to plan
             prompt_file="coordinator_prompt.md"
         )
     
     def create_agent(self):
         return Agent(
-            role="任务组织代理",
+            role="Task_Organizing_agent",
             goal="组织和协调各专家工作，确保任务高效完成",
             backstory=load_prompt("coordinator_prompt.md"),
             verbose=False,

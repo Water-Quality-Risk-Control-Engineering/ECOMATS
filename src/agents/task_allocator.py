@@ -23,7 +23,8 @@ class TaskAllocator:
             "mechanism_analysis": "MechanismMiningAgent",
             "synthesis_method": "SynthesisGuidingAgent",
             "literature_processing": "ExtractingAgent",
-            "operation_suggestion": "OperationSuggestingAgent"
+            "operation_suggestion": "OperationSuggestingAgent",
+            "coordinator": "TaskOrganizingAgent"
         }
         
         # 存储所有可用的智能体

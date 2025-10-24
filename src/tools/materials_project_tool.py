@@ -60,9 +60,9 @@ class MaterialsProjectTool:
             elements (List[str], optional): 必须包含的元素
             exclude_elements (List[str], optional): 要排除的元素
             crystal_system (str, optional): 晶体系统
-            band_gap_min (float, optional): 最小带隙
-            band_gap_max (float, optional): 最大带隙
-            is_stable (bool, optional): 热力学稳定性筛选
+            band_gap_min (float, optional): 最小带隙（注意：当前API版本不支持此参数）
+            band_gap_max (float, optional): 最大带隙（注意：当前API版本不支持此参数）
+            is_stable (bool, optional): 热力学稳定性筛选（注意：当前API版本不支持此参数）
             limit (int): 返回结果的最大数量
             
         Returns:
@@ -90,7 +90,16 @@ class MaterialsProjectTool:
             chunk_size = min(limit, 100) if elements else min(limit, 1000)
             
             # 优化：只获取需要的字段以提高查询速度
-            fields = ["material_id", "formula_pretty", "chemsys", "volume", "density", "nsites", "symmetry"]
+            # 使用API支持的字段
+            fields = [
+                "material_id", 
+                "formula_pretty", 
+                "chemsys", 
+                "volume", 
+                "density", 
+                "nsites", 
+                "symmetry"
+            ]
             
             # 执行搜索
             docs = self.mpr.materials.search(
@@ -110,26 +119,6 @@ class MaterialsProjectTool:
             # 转换为字典格式
             materials_data = []
             for doc in docs:
-                # 获取带隙值并处理缺失情况
-                band_gap = getattr(doc, "band_gap", None)
-                if band_gap is not None and band_gap != "N/A" and band_gap != "":
-                    band_gap_value = band_gap
-                else:
-                    band_gap_value = "N/A"  # 明确表示数据不可用
-                
-                # 获取其他属性并处理缺失情况
-                energy_above_hull = getattr(doc, "energy_above_hull", None)
-                if energy_above_hull is not None and energy_above_hull != "N/A" and energy_above_hull != "":
-                    energy_above_hull_value = energy_above_hull
-                else:
-                    energy_above_hull_value = "N/A"
-                
-                formation_energy = getattr(doc, "formation_energy_per_atom", None)
-                if formation_energy is not None and formation_energy != "N/A" and formation_energy != "":
-                    formation_energy_value = formation_energy
-                else:
-                    formation_energy_value = "N/A"
-                
                 # 为数值数据添加单位信息
                 volume_value = getattr(doc, "volume", "N/A")
                 volume_with_unit = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
@@ -137,20 +126,13 @@ class MaterialsProjectTool:
                 density_value = getattr(doc, "density", "N/A")
                 density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
                 
-                band_gap_with_unit = f"{band_gap_value} eV" if band_gap_value != "N/A" else "N/A"
-                energy_above_hull_with_unit = f"{energy_above_hull_value} eV/atom" if energy_above_hull_value != "N/A" else "N/A"
-                formation_energy_with_unit = f"{formation_energy_value} eV/atom" if formation_energy_value != "N/A" else "N/A"
-                
                 material_dict = {
                     "material_id": str(getattr(doc, "material_id", "N/A")),
                     "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
                     "chemsys": getattr(doc, "chemsys", "N/A"),
                     "volume": volume_with_unit,
                     "density": density_with_unit,
-                    "nsites": getattr(doc, "nsites", "N/A"),
-                    "band_gap": band_gap_with_unit,
-                    "energy_above_hull": energy_above_hull_with_unit,
-                    "formation_energy_per_atom": formation_energy_with_unit
+                    "nsites": getattr(doc, "nsites", "N/A")
                 }
                 materials_data.append(material_dict)
             
@@ -245,7 +227,13 @@ class MaterialsProjectTool:
                 kwargs["elements"] = elements
                 
             # 优化：只获取需要的字段以提高查询速度
-            fields = ["material_id", "formula_pretty", "chemsys", "density"]
+            # 使用API支持的字段
+            fields = [
+                "material_id", 
+                "formula_pretty", 
+                "chemsys", 
+                "density"
+            ]
                 
             # 执行搜索
             docs = self.mpr.materials.search(
@@ -257,12 +245,15 @@ class MaterialsProjectTool:
             # 转换为摘要格式
             materials_data = []
             for doc in docs:
+                # 为数值数据添加单位信息
+                density_value = getattr(doc, "density", "N/A")
+                density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
+                
                 material_dict = {
-                    "material_id": str(getattr(doc, "material_id", "")),
-                    "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "")),
-                    "chemsys": getattr(doc, "chemsys", ""),
-                    "density": getattr(doc, "density", ""),
-                    "band_gap": getattr(doc, "band_gap", None)
+                    "material_id": str(getattr(doc, "material_id", "N/A")),
+                    "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
+                    "chemsys": getattr(doc, "chemsys", "N/A"),
+                    "density": density_with_unit
                 }
                 materials_data.append(material_dict)
             

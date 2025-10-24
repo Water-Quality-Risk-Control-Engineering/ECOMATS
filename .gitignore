@@ -54,3 +54,6 @@ FIX_REPORT.md
 # Temporary files
 *.tmp
 *.temp
+
+# Claude Code configuration
+CLAUDE.md

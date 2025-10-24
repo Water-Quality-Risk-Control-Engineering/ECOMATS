@@ -38,12 +38,12 @@ class CrewAIMaterialsProjectTool(BaseTool):
             elements: 必须包含的元素列表（用于搜索）
             exclude_elements: 必须排除的元素列表（用于搜索）
             crystal_system: 晶体系统（用于搜索）
-            band_gap_min: 最小带隙（用于搜索）
-            band_gap_max: 最大带隙（用于搜索）
-            is_stable: 是否稳定（用于搜索）
+            band_gap_min: 最小带隙（用于搜索，注意：当前API版本不支持此参数）
+            band_gap_max: 最大带隙（用于搜索，注意：当前API版本不支持此参数）
+            is_stable: 是否稳定（用于搜索，注意：当前API版本不支持此参数）
             limit: 返回结果数量限制（用于搜索）
             skip: 跳过的结果数量（用于搜索）
-            fields: 要包含的数据字段列表（用于获取材料详情）
+            fields: 要包含的数据字段列表（用于获取材料详情，注意：必须是API支持的字段）
             
         Returns:
             JSON格式的API响应结果

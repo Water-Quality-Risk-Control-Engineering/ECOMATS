@@ -3,26 +3,26 @@ from crewai import Agent
 from src.utils.prompt_loader import load_prompt
 from src.agents.base_agent import BaseAgent
 
-# 配置日志
+# 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 协调者类
-class Coordinator(BaseAgent):
-    """项目协调者智能体 / Project coordinator agent"""
+# 任务组织代理类 / Task organizing agent class
+class TaskOrganizingAgent(BaseAgent):
+    """任务组织代理智能体 / Task organizing agent"""
     
     def __init__(self, llm):
         super().__init__(
             llm=llm,
-            role="项目协调者",  # 项目协调者 / Project coordinator
-            goal="协调各个专家智能体的工作，确保任务按计划完成",  # 协调各个专家智能体的工作，确保任务按计划完成 / Coordinate the work of various expert agents to ensure tasks are completed according to plan
+            role="任务组织代理",  # 任务组织代理 / Task organizing agent
+            goal="组织和协调各个专家智能体的工作，确保任务按计划完成",  # 组织和协调各个专家智能体的工作，确保任务按计划完成 / Organize and coordinate the work of various expert agents to ensure tasks are completed according to plan
             prompt_file="coordinator_prompt.md"
         )
     
     def create_agent(self):
         return Agent(
-            role="协调者",
-            goal="协调各专家工作，确保任务高效完成",
+            role="任务组织代理",
+            goal="组织和协调各专家工作，确保任务高效完成",
             backstory=load_prompt("coordinator_prompt.md"),
             verbose=False,
             allow_delegation=True,

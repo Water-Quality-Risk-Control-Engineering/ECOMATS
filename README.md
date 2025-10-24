@@ -99,7 +99,7 @@ ECOMATS/
 
 The system includes the following core agents:
 
-1. **coordinator** - Coordinates the work of experts to ensure efficient task completion
+1. **Task_Organizing_Agent** - Organizes and coordinates the work of experts to ensure efficient task completion
 2. **Creative_Designing_agent** - Designs and optimizes water treatment material solutions
 3. **Assessment_Screening_agent_A** - Comprehensively evaluates all aspects of material solutions
 4. **Assessment_Screening_agent_B** - Comprehensively evaluates all aspects of material solutions

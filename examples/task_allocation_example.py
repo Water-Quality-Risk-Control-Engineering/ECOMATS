@@ -6,122 +6,142 @@
 
 import sys
 import os
-# 添加src目录到Python路径
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+import json
+
+# 添加项目根目录到Python路径，使src模块可以被正确导入
+project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, os.path.abspath(project_root))
 
 from dotenv import load_dotenv
 load_dotenv()
 
+from crewai import Agent, Task, Crew, Process
 from langchain_openai import ChatOpenAI
 from src.config.config import Config
+import dashscope
 
 # 智能体导入
-from src.agents.coordinator import Coordinator
+from src.agents.base_agent import BaseAgent
+from src.agents.task_organizing_agent import TaskOrganizingAgent
 from src.agents.Creative_Designing_agent import CreativeDesigningAgent
 from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
 from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
 from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
 from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+from src.agents.Extracting_agent import ExtractingAgent
 from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
 from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
 from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
 from src.agents.task_allocator import TaskAllocator
 
-def main():
-    print("任务分配示例")
-    print("=" * 30)
-    
-    # 初始化LLM模型
-    # 注意：在示例中使用占位符而不是真实的API密钥
-    llm = ChatOpenAI(
-        base_url=Config.OPENAI_API_BASE,
-        api_key="sk-***",  # 隐藏真实的API密钥
-        model="openai/" + Config.QWEN_MODEL_NAME,
-        temperature=Config.MODEL_TEMPERATURE,
-        streaming=False,
-        max_tokens=Config.MODEL_MAX_TOKENS
-    )
-    
-    # 创建智能体
-    coordinator_agent = Coordinator(llm).create_agent()
+# 任务导入
+from src.tasks.design_task import DesignTask
+from src.tasks.evaluation_task import EvaluationTask
+from src.tasks.final_validation_task import FinalValidationTask
+from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
+from src.tasks.synthesis_method_task import SynthesisMethodTask
+from src.tasks.operation_suggesting_task import OperationSuggestingTask
+
+def create_all_agents(llm):
+    """创建所有智能体 / Create all agents"""
+    coordinator_agent = TaskOrganizingAgent(llm).create_agent()
     material_designer_agent = CreativeDesigningAgent(llm).create_agent()
     expert_a_agent = AssessmentScreeningAgentA(llm).create_agent()
     expert_b_agent = AssessmentScreeningAgentB(llm).create_agent()
     expert_c_agent = AssessmentScreeningAgentC(llm).create_agent()
     final_validator_agent = AssessmentScreeningAgentOverall(llm).create_agent()
+    literature_processor_agent = ExtractingAgent(llm).create_agent()
     mechanism_expert_agent = MechanismMiningAgent(llm).create_agent()
     synthesis_expert_agent = SynthesisGuidingAgent(llm).create_agent()
     operation_suggesting_agent = OperationSuggestingAgent(llm).create_agent()
     
+    return {
+        'coordinator': coordinator_agent,
+        'material_designer': material_designer_agent,
+        'expert_a': expert_a_agent,
+        'expert_b': expert_b_agent,
+        'expert_c': expert_c_agent,
+        'final_validator': final_validator_agent,
+        'literature_processor': literature_processor_agent,
+        'mechanism_expert': mechanism_expert_agent,
+        'synthesis_expert': synthesis_expert_agent,
+        'operation_suggesting': operation_suggesting_agent
+    }
+
+def main():
+    # 验证API密钥是否存在
+    if not Config.is_api_key_valid(Config.QWEN_API_KEY):
+        print("错误：API密钥未正确设置")
+        return
+    
+    # 设置dashscope的API密钥
+    dashscope.api_key = Config.QWEN_API_KEY
+    
+    # 初始化LLM模型，优先使用EAS模型配置
+    from src.utils.llm_config import create_eas_llm
+    try:
+        llm = create_eas_llm()
+        print("成功创建EAS LLM实例用于测试")
+    except Exception as e:
+        print(f"创建EAS模型实例失败，使用默认配置: {e}")
+        # 如果EAS配置失败，回退到默认配置
+        llm = ChatOpenAI(
+            base_url=Config.OPENAI_API_BASE,
+            api_key=Config.OPENAI_API_KEY,  # 使用原始API密钥
+            model="openai/" + Config.QWEN_MODEL_NAME,  # 使用配置的模型名称，加上提供商前缀
+            temperature=Config.MODEL_TEMPERATURE,
+            streaming=False,
+            max_tokens=Config.MODEL_MAX_TOKENS
+        )
+    
+    print("基于CrewAI的ecomats多智能体系统任务分配示例")
+    print("=" * 50)
+    
+    # 创建所有智能体
+    agents = create_all_agents(llm)
+    
+    # 创建任务组织代理实例
+    coordinator = TaskOrganizingAgent(llm)
+    coordinator_agent = coordinator.create_agent()
+    
     # 创建任务分配器并注册所有智能体
     task_allocator = TaskAllocator()
-    task_allocator.register_agent("Coordinator", coordinator_agent)
-    task_allocator.register_agent("CreativeDesigningAgent", material_designer_agent)
-    task_allocator.register_agent("AssessmentScreeningAgent", [expert_a_agent, expert_b_agent, expert_c_agent])
-    task_allocator.register_agent("AssessmentScreeningAgentOverall", final_validator_agent)
-    task_allocator.register_agent("MechanismMiningAgent", mechanism_expert_agent)
-    task_allocator.register_agent("SynthesisGuidingAgent", synthesis_expert_agent)
-    task_allocator.register_agent("OperationSuggestingAgent", operation_suggesting_agent)
+    task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
+    task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
+    task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
+    task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
+    task_allocator.register_agent("ExtractingAgent", agents['literature_processor'])
+    task_allocator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
+    task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
+    task_allocator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
     
-    # 演示任务分配
-    print("演示任务分配:")
-    print("-" * 20)
+    # 任务组织代理根据任务需求自主委派任务
+    print("\n任务委派示例:")
+    print("-" * 30)
     
-    # 为材料设计任务分配智能体
-    design_agent = task_allocator.get_agent_for_task("material_design")
-    if design_agent:
-        print(f"材料设计任务分配给: {design_agent.role}")
-    else:
-        print("未找到适合材料设计任务的智能体")
+    # 委派材料设计任务
+    design_agent = coordinator.delegate_task("material_design", task_allocator, "设计一种新型催化剂")
+    print(f"材料设计任务委派给: {design_agent.role}")
     
-    # 为评估任务分配智能体
+    # 委派评估任务
     evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
-    if evaluation_agents:
-        print(f"评估任务分配给 {len(evaluation_agents)} 个智能体:")
-        for i, agent in enumerate(evaluation_agents, 1):
-            print(f"  {i}. {agent.role}")
-    else:
-        print("未找到适合评估任务的智能体")
+    print(f"评估任务委派给: {[agent.role for agent in evaluation_agents]}")
     
-    # 为机理分析任务分配智能体
+    # 委派最终验证任务
+    final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+    print(f"最终验证任务委派给: {final_validation_agent.role}")
+    
+    # 委派机理分析任务
     mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
-    if mechanism_agent:
-        print(f"机理分析任务分配给: {mechanism_agent.role}")
-    else:
-        print("未找到适合机理分析任务的智能体")
+    print(f"机理分析任务委派给: {mechanism_agent.role}")
     
-    # 为合成方法任务分配智能体
+    # 委派合成方法任务
     synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
-    if synthesis_agent:
-        print(f"合成方法任务分配给: {synthesis_agent.role}")
-    else:
-        print("未找到适合合成方法任务的智能体")
+    print(f"合成方法任务委派给: {synthesis_agent.role}")
     
-    # 为操作建议任务分配智能体
+    # 委派操作建议任务
     operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
-    if operation_suggesting_agent:
-        print(f"操作建议任务分配给: {operation_suggesting_agent.role}")
-    else:
-        print("未找到适合操作建议任务的智能体")
-    
-    # 根据名称查找特定智能体
-    specific_agent = task_allocator.get_agent_by_name("最终验证专家")
-    if specific_agent:
-        print(f"通过名称查找智能体: {specific_agent.role}")
-    else:
-        print("未找到指定名称的智能体")
-    
-    # 演示协调者委派任务
-    print("\n演示协调者委派任务:")
-    print("-" * 20)
-    coordinator = Coordinator(llm)
-    
-    # 协调者委派材料设计任务
-    delegated_agent = coordinator.delegate_task("material_design", task_allocator, "设计一种新型催化剂")
-    if delegated_agent:
-        print(f"协调者委派材料设计任务给: {delegated_agent.role}")
-    else:
-        print("协调者未能委派材料设计任务")
+    print(f"操作建议任务委派给: {operation_suggesting_agent.role}")
 
 if __name__ == "__main__":
     main()

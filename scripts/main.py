@@ -23,7 +23,7 @@ import dashscope
 
 # 智能体导入 / Agent imports
 from src.agents.base_agent import BaseAgent
-from src.agents.coordinator import Coordinator
+from src.agents.task_organizing_agent import TaskOrganizingAgent
 from src.agents.Creative_Designing_agent import CreativeDesigningAgent
 from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
 from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
@@ -66,7 +66,7 @@ def get_workflow_mode():
 
 def create_all_agents(llm):
     """创建所有智能体的公共函数 / Public function to create all agents"""
-    coordinator_agent = Coordinator(llm).create_agent()
+    coordinator_agent = TaskOrganizingAgent(llm).create_agent()
     material_designer_agent = CreativeDesigningAgent(llm).create_agent()
     expert_a_agent = AssessmentScreeningAgentA(llm).create_agent()
     expert_b_agent = AssessmentScreeningAgentB(llm).create_agent()
@@ -250,14 +250,14 @@ def run_autonomous_workflow(user_requirement, llm):
     # 创建所有智能体 / Create all agents
     agents = create_all_agents(llm)
     
-    # 创建协调者实例（注意：这里创建的是Coordinator类的实例，而不是Agent实例）
-    # Create coordinator instance (note: this creates an instance of the Coordinator class, not an Agent instance)
-    coordinator = Coordinator(llm)
+    # 创建任务组织代理实例（注意：这里创建的是TaskOrganizingAgent类的实例，而不是Agent实例）
+    # Create task organizing agent instance (note: this creates an instance of the TaskOrganizingAgent class, not an Agent instance)
+    coordinator = TaskOrganizingAgent(llm)
     coordinator_agent = coordinator.create_agent()
     
     # 创建任务分配器并注册所有智能体 / Create task allocator and register all agents
     task_allocator = TaskAllocator()
-    task_allocator.register_agent("Coordinator", coordinator_agent)
+    task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
     task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
     task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
     task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
@@ -266,7 +266,7 @@ def run_autonomous_workflow(user_requirement, llm):
     task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
     task_allocator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
     
-    # 协调者根据任务需求自主委派任务 / Coordinator autonomously delegates tasks based on task requirements
+    # 任务组织代理根据任务需求自主委派任务 / Task organizing agent autonomously delegates tasks based on task requirements
     # 1. 委派材料设计任务 / Delegate material design task
     design_agent = coordinator.delegate_task("material_design", task_allocator, user_requirement)
     

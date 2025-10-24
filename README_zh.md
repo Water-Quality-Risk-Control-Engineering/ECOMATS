@@ -100,7 +100,7 @@ ECOMATS/
 
 系统包括以下核心代理：
 
-1. **coordinator** - 协调专家工作，确保任务高效完成
+1. **Task_Organizing_Agent** - 组织和协调专家工作，确保任务高效完成
 2. **Creative_Designing_agent** - 设计和优化水处理材料解决方案
 3. **Assessment_Screening_agent_A** - 全面评估材料解决方案的各个方面
 4. **Assessment_Screening_agent_B** - 全面评估材料解决方案的各个方面

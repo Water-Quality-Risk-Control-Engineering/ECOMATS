@@ -122,6 +122,108 @@ class PubChemTool:
         else:
             return {"error": f"不支持的搜索类型: {search_type}"}
     
+    def get_compound_info(self, query: str) -> Dict[str, Any]:
+        """
+        获取化合物完整信息 / Get complete compound information
+        
+        Args:
+            query: 化合物名称或CID / Compound name or CID
+            
+        Returns:
+            化合物完整信息 / Complete compound information
+        """
+        try:
+            # 首先获取基本信息 / First get basic information
+            basic_info = self.get_basic_properties_by_name(query)
+            
+            if "error" in basic_info:
+                return basic_info
+                
+            try:
+                # 提取CID / Extract CID
+                if "PropertyTable" in basic_info and "Properties" in basic_info["PropertyTable"]:
+                    properties = basic_info["PropertyTable"]["Properties"]
+                    if properties and len(properties) > 0:
+                        cid = properties[0].get("CID")
+                        if cid:
+                            # 获取详细信息 / Get detailed information
+                            endpoint = f"compound/cid/{cid}/property/CanonicalSMILES,IsomericSMILES,InChI,InChIKey,MolecularFormula,MolecularWeight,IUPACName,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
+                            details = self._make_request(endpoint)
+                            
+                            if "PropertyTable" in details and "Properties" in details["PropertyTable"]:
+                                detail_props = details["PropertyTable"]["Properties"][0]
+                                
+                                # 获取SMILES表示并验证有效性
+                                canonical_smiles = detail_props.get("CanonicalSMILES", "N/A")
+                                isomeric_smiles = detail_props.get("IsomericSMILES", "N/A")
+                                
+                                # 验证SMILES有效性（简单检查）
+                                if canonical_smiles != "N/A" and self._is_valid_smiles(canonical_smiles):
+                                    canonical_smiles_value = canonical_smiles
+                                else:
+                                    canonical_smiles_value = "N/A"
+                                    
+                                if isomeric_smiles != "N/A" and self._is_valid_smiles(isomeric_smiles):
+                                    isomeric_smiles_value = isomeric_smiles
+                                else:
+                                    isomeric_smiles_value = "N/A"
+                                
+                                # 合并信息 / Merge information
+                                result = properties[0].copy()
+                                result.update({
+                                    "canonical_smiles": canonical_smiles_value,
+                                    "isomeric_smiles": isomeric_smiles_value,
+                                    "inchi": detail_props.get("InChI", "N/A"),
+                                    "inchi_key": detail_props.get("InChIKey", "N/A"),
+                                    "molecular_formula": detail_props.get("MolecularFormula", "N/A"),
+                                    "molecular_weight": detail_props.get("MolecularWeight", "N/A"),
+                                    "iupac_name": detail_props.get("IUPACName", "N/A"),
+                                    "xlogp": detail_props.get("XLogP", "N/A"),
+                                    "hydrogen_bond_donor_count": detail_props.get("HBondDonorCount", "N/A"),
+                                    "hydrogen_bond_acceptor_count": detail_props.get("HBondAcceptorCount", "N/A"),
+                                    "rotatable_bond_count": detail_props.get("RotatableBondCount", "N/A"),
+                                    "tpsa": detail_props.get("TPSA", "N/A"),  # 极性表面积
+                                    "complexity": detail_props.get("Complexity", "N/A")
+                                })
+                                return {"Compound": result}
+                            else:
+                                return {"error": "无法获取化合物详细信息"}
+                        else:
+                            return {"error": "无法提取化合物CID"}
+                    else:
+                        return {"error": "未找到化合物属性信息"}
+                else:
+                    return basic_info
+                    
+            except Exception as e:
+                logger.error(f"获取化合物详细信息时出错: {e}")
+                return {"error": f"获取化合物详细信息时出错: {str(e)}"}
+                
+        except Exception as e:
+            logger.error(f"获取完整化合物信息时出错: {e}")
+            return {"error": f"获取完整化合物信息时出错: {str(e)}"}
+    
+    def _is_valid_smiles(self, smiles: str) -> bool:
+        """
+        简单验证SMILES字符串是否有效 / Simple validation of SMILES string
+        
+        Args:
+            smiles: SMILES字符串 / SMILES string
+            
+        Returns:
+            是否有效 / Whether it is valid
+        """
+        # 简单检查：确保不是明显的无效值
+        invalid_patterns = ["#", "N/A", "None", ""]
+        if any(pattern in smiles for pattern in invalid_patterns):
+            return False
+            
+        # 确保包含至少一个字母
+        if not any(c.isalpha() for c in smiles):
+            return False
+            
+        return True
+    
     def get_compound_info_with_cas(self, query: str) -> Dict[str, Any]:
         """
         获取化合物完整信息（包括CAS号） / Get complete compound information (including CAS numbers)

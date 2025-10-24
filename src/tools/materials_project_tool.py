@@ -82,41 +82,16 @@ class MaterialsProjectTool:
                 kwargs["crystal_system"] = crystal_system
             # 注意：新版本API不直接支持band_gap_min和band_gap_max参数
             # 这些参数将在后处理中手动过滤
-            # 注意：is_stable参数在新版本API中可能不被支持，暂时移除该过滤条件
-            # 后处理中手动过滤稳定材料
+            # 注意：is_stable参数在新版本API中可能不被支持，使用energy_above_hull代替
+            if is_stable is not None:
+                if is_stable:
+                    kwargs["energy_above_hull"] = (0.0, 0.05)  # 稳定材料：能量高于凸包小于0.05 eV/atom
                 
             # 执行搜索
             docs = self.mpr.materials.search(
                 **kwargs,
                 chunk_size=min(limit, 1000)
             )
-            
-            # 后处理：手动过滤带隙范围
-            if band_gap_min is not None or band_gap_max is not None:
-                filtered_docs = []
-                for doc in docs:
-                    band_gap = getattr(doc, "band_gap", None)
-                    if band_gap is not None:
-                        # 检查是否在指定范围内
-                        if band_gap_min is not None and band_gap < band_gap_min:
-                            continue
-                        if band_gap_max is not None and band_gap > band_gap_max:
-                            continue
-                        filtered_docs.append(doc)
-                    else:
-                        # 如果没有带隙信息，根据参数决定是否包含
-                        if band_gap_min is None and band_gap_max is None:
-                            filtered_docs.append(doc)
-                docs = filtered_docs
-            
-            # 后处理：手动过滤稳定材料
-            if is_stable is not None and is_stable:
-                filtered_docs = []
-                for doc in docs:
-                    energy_above_hull = getattr(doc, "energy_above_hull", None)
-                    if energy_above_hull is not None and energy_above_hull <= 0.05:
-                        filtered_docs.append(doc)
-                docs = filtered_docs
             
             # 应用skip参数，跳过前skip个结果
             if skip > 0:
@@ -125,16 +100,23 @@ class MaterialsProjectTool:
             # 转换为字典格式
             materials_data = []
             for doc in docs:
+                # 获取带隙值并处理缺失情况
+                band_gap = getattr(doc, "band_gap", None)
+                if band_gap is not None:
+                    band_gap_value = band_gap
+                else:
+                    band_gap_value = "N/A"  # 明确表示数据不可用
+                
                 material_dict = {
-                    "material_id": str(getattr(doc, "material_id", "")),
-                    "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "")),
-                    "chemsys": getattr(doc, "chemsys", ""),
-                    "volume": getattr(doc, "volume", ""),
-                    "density": getattr(doc, "density", ""),
-                    "nsites": getattr(doc, "nsites", 0),
-                    "band_gap": getattr(doc, "band_gap", None),
-                    "energy_above_hull": getattr(doc, "energy_above_hull", None),
-                    "formation_energy_per_atom": getattr(doc, "formation_energy_per_atom", None)
+                    "material_id": str(getattr(doc, "material_id", "N/A")),
+                    "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
+                    "chemsys": getattr(doc, "chemsys", "N/A"),
+                    "volume": getattr(doc, "volume", "N/A"),
+                    "density": getattr(doc, "density", "N/A"),
+                    "nsites": getattr(doc, "nsites", "N/A"),
+                    "band_gap": band_gap_value,
+                    "energy_above_hull": getattr(doc, "energy_above_hull", "N/A"),
+                    "formation_energy_per_atom": getattr(doc, "formation_energy_per_atom", "N/A")
                 }
                 materials_data.append(material_dict)
             

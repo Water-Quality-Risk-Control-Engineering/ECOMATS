@@ -27,16 +27,16 @@ class Name2PropertiesTool:
     
     def get_properties_by_name(self, material_name: str) -> Dict[str, Any]:
         """
-        根据材料名称查询理化性质 / Query physicochemical properties by material name
+        根据材料名称查询理化性质
         
         Args:
-            material_name (str): 材料名称 / Material name
+            material_name (str): 材料名称
             
         Returns:
-            Dict[str, Any]: 包含理化性质的字典 / Dictionary containing physicochemical properties
+            Dict[str, Any]: 包含理化性质的字典
         """
         try:
-            # 首先尝试从PubChem获取信息 / First try to get information from PubChem
+            # 首先尝试从PubChem获取信息
             pubchem_result = self.pubchem_tool.get_basic_properties_by_name(material_name)
             
             result = {
@@ -44,38 +44,56 @@ class Name2PropertiesTool:
                 "sources": []
             }
             
-            # 处理PubChem结果 / Process PubChem results
+            # 处理PubChem结果
             if "error" not in pubchem_result:
                 result["sources"].append("PubChem")
                 result.update({
-                    "molecular_formula": pubchem_result.get("molecular_formula", ""),
-                    "molecular_weight": pubchem_result.get("molecular_weight", ""),
-                    "iupac_name": pubchem_result.get("iupac_name", ""),
+                    "molecular_formula": pubchem_result.get("molecular_formula", "N/A"),
+                    "molecular_weight": pubchem_result.get("molecular_weight", "N/A"),
+                    "iupac_name": pubchem_result.get("iupac_name", "N/A"),
                     "synonyms": pubchem_result.get("synonyms", []),
-                    "pubchem_cid": pubchem_result.get("cid", "")
+                    "pubchem_cid": pubchem_result.get("cid", "N/A")
                 })
+                
+                # 如果可以从PubChem获取更多信息
+                if "cid" in pubchem_result:
+                    cid = pubchem_result["cid"]
+                    if cid and cid != "N/A":
+                        compound_info = self.pubchem_tool.get_compound_info(material_name)
+                        if "Compound" in compound_info:
+                            compound = compound_info["Compound"]
+                            # 获取有效的SMILES表示
+                            canonical_smiles = compound.get("canonical_smiles", "N/A")
+                            isomeric_smiles = compound.get("isomeric_smiles", "N/A")
+                            
+                            result.update({
+                                "canonical_smiles": canonical_smiles,
+                                "isomeric_smiles": isomeric_smiles,
+                                "inchi": compound.get("inchi", "N/A"),
+                                "inchi_key": compound.get("inchi_key", "N/A")
+                            })
             
-            # 如果Materials Project可用，也尝试查询 / If Materials Project is available, also try to query
+            # 如果Materials Project可用，也尝试查询
             if self.materials_project_tool:
                 try:
-                    # 尝试将材料名称作为化学式搜索 / Try to search using material name as formula
+                    # 尝试将材料名称作为化学式搜索
                     mp_result = self.materials_project_tool.search_materials(formula=material_name)
-                    if mp_result and "materials" in mp_result and len(mp_result["materials"]) > 0:
-                        material = mp_result["materials"][0]  # 取第一个结果 / Take the first result
+                    if mp_result and "data" in mp_result and len(mp_result["data"]) > 0:
+                        material = mp_result["data"][0]  # 取第一个结果
                         result["sources"].append("Materials Project")
                         result.update({
-                            "material_id": material.get("material_id", ""),
-                            "formula": material.get("formula", ""),
-                            "crystal_system": material.get("symmetry", {}).get("crystal_system", ""),
-                            "band_gap": material.get("band_gap", ""),
-                            "formation_energy": material.get("formation_energy_per_atom", ""),
-                            "density": material.get("density", ""),
-                            "volume": material.get("volume", "")
+                            "material_id": material.get("material_id", "N/A"),
+                            "formula": material.get("formula", "N/A"),
+                            "crystal_system": material.get("symmetry", {}).get("crystal_system", "N/A") if "symmetry" in material else "N/A",
+                            "band_gap": material.get("band_gap", "N/A"),
+                            "formation_energy": material.get("formation_energy_per_atom", "N/A"),
+                            "density": material.get("density", "N/A"),
+                            "volume": material.get("volume", "N/A")
                         })
                 except Exception as e:
                     logger.warning(f"从Materials Project查询时出错: {e}")
             
-            # 如果没有找到任何信息，返回错误 / If no information is found, return an error
+            # 如果没有找到任何信息，返回错误
             if len(result["sources"]) == 0:
                 return {
                     "success": False,

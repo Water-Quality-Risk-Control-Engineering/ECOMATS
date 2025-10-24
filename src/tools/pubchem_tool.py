@@ -1,7 +1,8 @@
 import requests
 import logging
 import time
-from typing import Dict, List, Optional, Any
+import random
+from typing import Dict, Any
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -18,31 +19,40 @@ class PubChemTool:
             "User-Agent": "ECOMATS-PubChem-Tool/1.0"
         })
     
-    def _make_request(self, endpoint: str, timeout: int = 30) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
         """
-        发送API请求 / Send API request
+        发送API请求，带重试机制 / Send API request with retry mechanism
         
         Args:
             endpoint: API端点 / API endpoint
             timeout: 超时时间（秒） / Timeout (seconds)
+            max_retries: 最大重试次数 / Maximum retry attempts
             
         Returns:
             API响应数据 / API response data
         """
-        try:
-            url = f"{self.base_url}/{endpoint}"
-            logger.debug(f"请求PubChem API: {url}")
-            
-            response = self.session.get(url, timeout=timeout)
-            response.raise_for_status()
-            return response.json()
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"PubChem API请求失败: {e}")
-            return {"error": f"API请求失败: {str(e)}"}
-        except Exception as e:
-            logger.error(f"处理响应时出错: {e}")
-            return {"error": f"处理响应时出错: {str(e)}"}
+        for attempt in range(max_retries):
+            try:
+                url = f"{self.base_url}/{endpoint}"
+                logger.debug(f"请求PubChem API: {url}")
+                
+                response = self.session.get(url, timeout=timeout)
+                response.raise_for_status()
+                return response.json()
+                
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"PubChem API请求失败 (尝试 {attempt + 1}/{max_retries}): {e} / PubChem API request failed (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:  # 不是最后一次尝试
+                    # 指数退避延迟
+                    delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)  # 1-2秒随机延迟
+                    logger.info(f"等待 {delay:.2f} 秒后重试 / Waiting {delay:.2f} seconds before retry")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"PubChem API请求最终失败: {e} / PubChem API request finally failed: {e}")
+                    return {"error": f"API请求失败: {str(e)}"}
+            except Exception as e:
+                logger.error(f"处理响应时出错: {e}")
+                return {"error": f"处理响应时出错: {str(e)}"}
     
     def get_basic_properties_by_name(self, compound_name: str) -> Dict[str, Any]:
         """
@@ -55,7 +65,7 @@ class PubChemTool:
             化合物基础信息 / Compound basic information
         """
         endpoint = f"compound/name/{compound_name}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES/JSON"
-        return self._make_request(endpoint)
+        return self._make_request(endpoint, max_retries=3)
     
     def get_synonyms_with_cas(self, compound_name: str) -> Dict[str, Any]:
         """
@@ -68,7 +78,7 @@ class PubChemTool:
             化合物同义词列表（包含CAS号） / List of compound synonyms (including CAS numbers)
         """
         endpoint = f"compound/name/{compound_name}/synonyms/JSON"
-        return self._make_request(endpoint)
+        return self._make_request(endpoint, max_retries=3)
     
     def get_properties_by_cid(self, cid: int) -> Dict[str, Any]:
         """
@@ -81,7 +91,7 @@ class PubChemTool:
             化合物详细信息 / Compound detailed information
         """
         endpoint = f"compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES/JSON"
-        return self._make_request(endpoint)
+        return self._make_request(endpoint, max_retries=3)
     
     def search_by_molecular_formula(self, formula: str) -> Dict[str, Any]:
         """
@@ -94,7 +104,7 @@ class PubChemTool:
             化合物信息 / Compound information
         """
         endpoint = f"compound/fastformula/{formula}/property/MolecularWeight,IUPACName,CanonicalSMILES/JSON"
-        return self._make_request(endpoint)
+        return self._make_request(endpoint, max_retries=3)
     
     def search_compound(self, query: str, search_type: str = "auto") -> Dict[str, Any]:
         """
@@ -148,7 +158,7 @@ class PubChemTool:
                         if cid:
                             # 获取详细信息 / Get detailed information
                             endpoint = f"compound/cid/{cid}/property/CanonicalSMILES,IsomericSMILES,InChI,InChIKey,MolecularFormula,MolecularWeight,IUPACName,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
-                            details = self._make_request(endpoint)
+                            details = self._make_request(endpoint, max_retries=3)
                             
                             if "PropertyTable" in details and "Properties" in details["PropertyTable"]:
                                 detail_props = details["PropertyTable"]["Properties"][0]

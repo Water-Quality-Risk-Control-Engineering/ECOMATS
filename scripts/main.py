@@ -202,11 +202,11 @@ def run_preset_workflow(user_requirement, llm):
     final_validation_task = FinalValidationTask(llm).create_task(agents['final_validator'], 
                                                            [design_task, evaluation_task_a, evaluation_task_b, evaluation_task_c])
     
-    # 4. 创建机理分析任务，依赖于最终验证任务 / Create mechanism analysis task, dependent on final validation task
-    mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(agents['mechanism_expert'], final_validation_task)
-    
-    # 5. 创建合成方法任务，依赖于最终验证任务 / Create synthesis method task, dependent on final validation task
+    # 4. 创建合成方法任务，依赖于最终验证任务 / Create synthesis method task, dependent on final validation task
     synthesis_method_task = SynthesisMethodTask(llm).create_task(agents['synthesis_expert'], final_validation_task)
+    
+    # 5. 创建机理分析任务，依赖于最终验证任务 / Create mechanism analysis task, dependent on final validation task
+    mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(agents['mechanism_expert'], final_validation_task)
     
     # 6. 创建操作建议任务，依赖于最终验证任务 / Create operation suggestion task, dependent on final validation task
     operation_suggesting_task = OperationSuggestingTask(llm).create_task(agents['operation_suggesting'], final_validation_task)
@@ -231,8 +231,8 @@ def run_preset_workflow(user_requirement, llm):
             evaluation_task_b, 
             evaluation_task_c, 
             final_validation_task,
-            synthesis_method_task,
             mechanism_analysis_task,
+            synthesis_method_task,
             operation_suggesting_task
         ],  # 任务按顺序执行 / Tasks executed in order
         process=Process.sequential,  # 使用顺序流程执行任务 / Use sequential process to execute tasks
@@ -320,8 +320,8 @@ def run_autonomous_workflow(user_requirement, llm):
         design_task,
         *evaluation_tasks,
         final_validation_task,
-        synthesis_method_task,
         mechanism_analysis_task,
+        synthesis_method_task,
         operation_suggesting_task
     ]
     

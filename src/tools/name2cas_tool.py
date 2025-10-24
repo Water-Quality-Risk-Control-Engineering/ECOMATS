@@ -1,23 +1,47 @@
 #!/usr/bin/env python3
 """
-Name2CAS工具
-将材料名称转换为CAS号
+化合物名称转CAS号工具 / Compound Name to CAS Number Tool
+通过PubChem API将化合物名称转换为CAS号 / Convert compound names to CAS numbers via PubChem API
 """
 
 import logging
-from typing import Dict, Any
-from src.tools.pubchem_tool import get_pubchem_tool
+import requests
+import time
+from typing import Dict, Any, Optional
 
-# 配置日志
+# 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class Name2CASTool:
-    """Name2CAS工具类 - 将材料名称转换为CAS号"""
+class NameToCASTool:
+    """化合物名称转CAS号工具类 / Compound Name to CAS Number Tool Class"""
     
     def __init__(self):
-        """初始化Name2CAS工具"""
-        self.pubchem_tool = get_pubchem_tool()
+        """初始化NameToCAS工具 / Initialize NameToCAS tool"""
+        self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "ECOMATS-NameToCAS-Tool/1.0"
+        })
+    
+    def _make_request(self, endpoint: str, timeout: int = 30) -> Dict[str, Any]:
+        """
+        发送API请求 / Send API request
+        
+        Args:
+            endpoint: API端点 / API endpoint
+            timeout: 超时时间（秒） / Timeout (seconds)
+            
+        Returns:
+            API响应数据 / API response data
+        """
+        try:
+            response = self.session.get(endpoint, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"API请求失败: {e}")
+            return {"error": str(e)}
     
     def convert_name_to_cas(self, compound_name: str) -> Dict[str, Any]:
         """
@@ -30,19 +54,39 @@ class Name2CASTool:
             Dict[str, Any]: 包含CAS号和其他相关信息的字典
         """
         try:
-            # 使用PubChem工具查询化合物信息
-            result = self.pubchem_tool.get_compound_info_with_cas(compound_name)
+            # 使用PubChem API查询化合物信息
+            endpoint = f"{self.base_url}/compound/name/{compound_name}/cids/JSON"
+            result = self._make_request(endpoint)
             
             # 提取CAS号信息
-            if "cas_number" in result:
-                return {
-                    "success": True,
-                    "compound_name": compound_name,
-                    "cas_number": result["cas_number"],
-                    "molecular_formula": result.get("molecular_formula", ""),
-                    "molecular_weight": result.get("molecular_weight", ""),
-                    "synonyms": result.get("synonyms", [])
-                }
+            if "IdentifierList" in result and "CID" in result["IdentifierList"]:
+                cids = result["IdentifierList"]["CID"]
+                if isinstance(cids, list):
+                    cid = cids[0]
+                else:
+                    cid = cids
+                
+                # 获取详细信息
+                endpoint = f"{self.base_url}/compound/cid/{cid}/property/CAS,Formula,MolecularWeight,Synonyms/JSON"
+                details = self._make_request(endpoint)
+                
+                if "PropertyTable" in details and "Properties" in details["PropertyTable"]:
+                    properties = details["PropertyTable"]["Properties"][0]
+                    return {
+                        "success": True,
+                        "compound_name": compound_name,
+                        "cas_number": properties.get("CID", ""),
+                        "molecular_formula": properties.get("MolecularFormula", ""),
+                        "molecular_weight": properties.get("MolecularWeight", ""),
+                        "synonyms": properties.get("Synonyms", [])
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "compound_name": compound_name,
+                        "error": "未找到该化合物的详细信息",
+                        "details": details.get("error", "未知错误")
+                    }
             else:
                 return {
                     "success": False,
@@ -62,7 +106,7 @@ class Name2CASTool:
 # 全局实例
 _name2cas_tool = None
 
-def get_name2cas_tool() -> Name2CASTool:
+def get_name2cas_tool() -> NameToCASTool:
     """
     获取Name2CAS工具实例
     
@@ -71,5 +115,5 @@ def get_name2cas_tool() -> Name2CASTool:
     """
     global _name2cas_tool
     if _name2cas_tool is None:
-        _name2cas_tool = Name2CASTool()
+        _name2cas_tool = NameToCASTool()
     return _name2cas_tool

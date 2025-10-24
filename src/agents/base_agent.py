@@ -3,13 +3,13 @@ import os
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
 
-# 配置日志
+# 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
 class BaseAgent:
-    """基础智能体类，提供通用的智能体创建功能"""
+    """基础智能体类，提供通用的智能体创建功能 / Base agent class that provides general agent creation functionality"""
     
     def __init__(self, llm, role, goal, prompt_file, temperature=None):
         self.llm = llm
@@ -20,9 +20,11 @@ class BaseAgent:
     
     def create_agent(self):
         # 如果提供了特定温度，则使用该温度，否则使用LLM的默认温度
+        # If a specific temperature is provided, use that temperature, otherwise use the LLM's default temperature
         agent_llm = self.llm
         if self.temperature is not None:
             # 创建一个新的LLM实例，使用指定的温度
+            # Create a new LLM instance with the specified temperature
             agent_llm = type(self.llm)(
                 base_url=getattr(self.llm, 'base_url', None) or getattr(self.llm, 'openai_api_base', None),
                 api_key=getattr(self.llm, 'api_key', None) or getattr(self.llm, 'openai_api_key', None),

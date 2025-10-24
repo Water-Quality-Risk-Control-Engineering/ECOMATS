@@ -7,9 +7,16 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # 协调者类
-class Coordinator:
+class Coordinator(BaseAgent):
+    """项目协调者智能体 / Project coordinator agent"""
+    
     def __init__(self, llm):
-        self.llm = llm
+        super().__init__(
+            llm=llm,
+            role="项目协调者",  # 项目协调者 / Project coordinator
+            goal="协调各个专家智能体的工作，确保任务按计划完成",  # 协调各个专家智能体的工作，确保任务按计划完成 / Coordinate the work of various expert agents to ensure tasks are completed according to plan
+            prompt_file="coordinator_prompt.md"
+        )
     
     def create_agent(self):
         return Agent(

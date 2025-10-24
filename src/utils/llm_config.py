@@ -6,7 +6,30 @@ LLM配置工具
 
 import os
 from langchain_openai import ChatOpenAI
-from src.config.config import Config
+from config.config import Config
+
+def create_llm(temperature=None, max_tokens=None):
+    """
+    创建并配置语言模型实例 / Create and configure language model instance
+    
+    Args:
+        temperature (float, optional): 模型温度参数，控制输出随机性 / Model temperature parameter, controlling output randomness
+        max_tokens (int, optional): 最大令牌数限制 / Maximum token limit
+        
+    Returns:
+        ChatOpenAI: 配置好的语言模型实例 / Configured language model instance
+    """
+    # 创建ChatOpenAI实例 / Create ChatOpenAI instance
+    llm = ChatOpenAI(
+        base_url=Config.QWEN_API_BASE,    # API基础URL / API base URL
+        api_key=Config.QWEN_API_KEY,      # API密钥 / API key
+        model=Config.QWEN_MODEL_NAME,     # 模型名称 / Model name
+        temperature=temperature or Config.MODEL_TEMPERATURE,  # 温度参数 / Temperature parameter
+        max_tokens=max_tokens or Config.MODEL_MAX_TOKENS,     # 最大令牌数 / Maximum tokens
+        streaming=False  # 禁用流式输出 / Disable streaming output
+    )
+    
+    return llm
 
 def create_eas_llm():
     """

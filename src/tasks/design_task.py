@@ -4,12 +4,27 @@
 负责设计和优化水处理材料方案
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class DesignTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
-
+    """材料设计任务类 / Material design task class"""
+    
+    def __init__(self, agent):
+        """
+        初始化材料设计任务 / Initialize material design task
+        
+        Args:
+            agent: 材料设计智能体 / Material design agent
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等",  # 设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等 / Detailed information of the 10 designed catalyst materials, including material structure, synthesis methods, etc.
+            description="""基于用户需求和污染物特性，设计10种催化PMS活化的催化剂材料。
+            要求给出每种材料的详细结构信息和具体的合成方法。
+            / Based on user requirements and pollutant characteristics, design 10 catalyst materials for PMS activation.
+            Provide detailed structural information and specific synthesis methods for each material."""
+        )
+    
     def create_task(self, agent, context_task=None, feedback=None, user_requirement=None):
         description = """
         根据用户需求设计水处理材料方案。

@@ -4,11 +4,29 @@
 负责提供材料合成、生产和应用的详细操作建议
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class OperationSuggestingTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
+    """运行建议任务类 / Operation suggestion task class"""
+    
+    def __init__(self, agent, material_info=""):
+        """
+        初始化运行建议任务 / Initialize operation suggestion task
+        
+        Args:
+            agent: 运行建议智能体 / Operation suggestion agent
+            material_info: 材料信息 / Material information
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="水处理工艺的运行参数建议和优化策略",  # 水处理工艺的运行参数建议和优化策略 / Operational parameter recommendations and optimization strategies for water treatment processes
+            description=f"""为基于催化剂的水处理工艺提供运行参数建议和优化策略。
+            包括pH值、温度、催化剂投加量等关键参数。
+            {material_info}
+            / Provide operational parameter recommendations and optimization strategies for catalyst-based water treatment processes.
+            Include key parameters such as pH, temperature, and catalyst dosage.
+            {material_info}"""
+        )
 
     def create_task(self, agent, context_task=None):
         description = """

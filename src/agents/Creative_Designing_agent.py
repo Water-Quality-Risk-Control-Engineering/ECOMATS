@@ -2,35 +2,64 @@ import logging
 from src.agents.base_agent import BaseAgent
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
-from tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool
+from src.tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool
 
+# Configure logging
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 材料设计专家类
+# Material Design Expert class / 材料设计专家类
 class CreativeDesigningAgent(BaseAgent):
+    """Creative Designing Agent for water treatment materials"""
+    
     def __init__(self, llm):
+        """
+        Initialize the Creative Designing Agent
+        
+        Args:
+            llm: The language model instance
+        """
         from src.config.config import Config
-        super().__init__(llm, "材料设计专家", "设计和优化水处理材料方案", "material_designer_prompt.md", 
-                        temperature=Config.MATERIAL_DESIGNER_TEMPERATURE)
+        super().__init__(
+            llm=llm,
+            role="材料设计专家",  # Material Design Expert
+            goal="设计和优化水处理材料方案",  # Design and optimize water treatment material solutions
+            prompt_file="material_designer_prompt.md",
+            temperature=Config.MATERIAL_DESIGNER_TEMPERATURE
+        )
     
     def create_agent(self):
+        """
+        Create the agent instance with appropriate tools
+        
+        Returns:
+            Agent: Configured agent instance with tools attached
+        """
+        # Try to create EAS model instance
         # 尝试创建EAS模型实例
         try:
             from src.utils.llm_config import create_eas_llm
             eas_llm = create_eas_llm()
-            logger.info("成功创建EAS LLM实例")
-            # Update the llm attribute to use EAS
+            logger.info("Successfully created EAS LLM instance")
+            # 更新llm属性以使用EAS
             self.llm = eas_llm
         except Exception as e:
-            logger.error(f"创建EAS模型实例失败: {e}")
-            # If EAS configuration fails, use the passed LLM
+            logger.error(f"Failed to create EAS model instance: {e}")
+            # 如果EAS配置失败，则使用传入的LLM
             # Keep self.llm as is
         
         agent = super().create_agent()
+        # Add chemical database query tools for the material design expert
         # 为材料设计专家添加化学数据库查询工具
-        agent.tools = [materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool]
+        agent.tools = [
+            materials_project_tool,      # Materials Project database tool
+            pubchem_tool,                # PubChem database tool  
+            name2cas_tool,               # Chemical name to CAS number lookup
+            name2properties_tool,        # Chemical name to properties lookup
+            formula2properties_tool,     # Chemical formula to properties lookup
+            material_search_tool         # General material search tool
+        ]
         return agent
 
 # 创建实例

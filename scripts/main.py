@@ -5,11 +5,12 @@ ECOMATS - 基于CrewAI的水处理材料设计多智能体系统
 
 import sys
 import os
-# 添加src目录到Python路径
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
+# 添加项目根目录到Python路径，使src模块可以被正确导入
+project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, os.path.abspath(project_root))
 
 import json
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 确保环境变量已加载
 from dotenv import load_dotenv
@@ -43,25 +44,25 @@ from src.tasks.synthesis_method_task import SynthesisMethodTask
 from src.tasks.operation_suggesting_task import OperationSuggestingTask
 
 def get_user_input():
-    """获取用户自定义的材料设计需求"""
-    print("请输入您的材料设计需求:")
-    print("例如: 设计一种用于处理含重金属镉废水的高效催化剂")
-    user_input = input("材料设计需求: ")
+    """获取用户自定义的材料设计需求 / Get user-defined material design requirements"""
+    print("请输入您的材料设计需求: / Please enter your material design requirements:")
+    print("例如: 设计一种用于处理含重金属镉废水的高效催化剂 / Example: Design an efficient catalyst for treating cadmium-containing heavy metal wastewater")
+    user_input = input("材料设计需求: / Material design requirements: ")
     return user_input
 
 def get_workflow_mode():
-    """获取用户选择的工作模式"""
-    print("\n请选择工作模式:")
-    print("1. 预设工作流模式 (按固定顺序执行所有任务)")
-    print("2. 智能体自主调度模式 (由协调者动态分配任务)")
+    """获取用户选择的工作模式 / Get user-selected workflow mode"""
+    print("\n请选择工作模式: / Please select workflow mode:")
+    print("1. 预设工作流模式 (按固定顺序执行所有任务) / Preset workflow mode (execute all tasks in fixed order)")
+    print("2. 智能体自主调度模式 (由协调者动态分配任务) / Agent autonomous scheduling mode (tasks dynamically assigned by coordinator)")
     while True:
-        choice = input("请输入选项 (1 或 2): ").strip()
+        choice = input("请输入选项 (1 或 2): / Please enter option (1 or 2): ").strip()
         if choice == "1":
             return "preset"
         elif choice == "2":
             return "autonomous"
         else:
-            print("无效选项，请输入 1 或 2")
+            print("无效选项，请输入 1 或 2 / Invalid option, please enter 1 or 2")
 
 def create_all_agents(llm):
     """创建所有智能体的公共函数"""

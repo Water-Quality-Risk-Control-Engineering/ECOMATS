@@ -4,11 +4,29 @@
 基于催化性能、经济可行性、环境友好性、技术可行性和结构合理性五个维度进行评价
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class EvaluationTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
+    """材料评估任务类 / Material evaluation task class"""
+    
+    def __init__(self, agent, material_info=""):
+        """
+        初始化材料评估任务 / Initialize material evaluation task
+        
+        Args:
+            agent: 材料评估智能体 / Material evaluation agent
+            material_info: 待评估的材料信息 / Material information to be evaluated
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="对材料的评估结果，包括各项性能指标和综合评分",  # 对材料的评估结果，包括各项性能指标和综合评分 / Evaluation results of the material, including various performance indicators and comprehensive scores
+            description=f"""对设计的催化剂材料进行专业评估。
+            评估内容包括材料的化学稳定性、环境安全性等指标。
+            {material_info}
+            / Conduct professional evaluation of the designed catalyst materials.
+            The evaluation includes indicators such as chemical stability and environmental safety of the materials.
+            {material_info}"""
+        )
 
     def create_task(self, agent, context_task=None):
         description = """

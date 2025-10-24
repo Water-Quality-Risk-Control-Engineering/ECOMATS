@@ -1,32 +1,64 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
+from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
 
+# Configure logging
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 专家A类
+# Expert A class for material assessment and screening
+# 专家A类 - 负责材料方案的全面评估与筛选
 class AssessmentScreeningAgentA(BaseAgent):
     def __init__(self, llm):
+        """
+        Initialize the Assessment Screening Agent A
+        
+        Args:
+            llm: The language model instance to be used by this agent
+                 用于此智能体的语言模型实例
+        """
         from src.config.config import Config
-        super().__init__(llm, "专家A", "全面评估材料方案的各个方面", "expert_a_prompt.md",
-                        temperature=Config.EXPERT_A_TEMPERATURE)
+        super().__init__(
+            llm, 
+            "专家A",  # Expert A / 专家A
+            "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation of material proposals from various aspects / 全面评估材料方案的各个方面
+            "expert_a_prompt.md",  # Prompt file for expert A / 专家A的提示文件
+            temperature=Config.EXPERT_A_TEMPERATURE  # Temperature setting from config / 从配置中获取的温度设置
+        )
     
     def create_agent(self):
+        """
+        Create and configure the agent with appropriate tools
+        
+        Returns:
+            Configured agent instance with chemical database query tools
+            配置好的智能体实例，包含化学数据库查询工具
+        """
+        # Try to create EAS model instance
         # 尝试创建EAS模型实例
         try:
             from src.utils.llm_config import create_eas_llm
             eas_llm = create_eas_llm()
-            logger.info("成功创建EAS LLM实例")
+            logger.info("成功创建EAS LLM实例")  # Successfully created EAS LLM instance
             # Update the llm attribute to use EAS
+            # 更新llm属性以使用EAS
             self.llm = eas_llm
         except Exception as e:
-            logger.error(f"创建EAS模型实例失败: {e}")
+            logger.error(f"创建EAS模型实例失败: {e}")  # Failed to create EAS model instance
             # If EAS configuration fails, use the passed LLM
+            # 如果EAS配置失败，则使用传入的LLM
             # Keep self.llm as is
+            # 保持self.llm不变
         
         agent = super().create_agent()
+        # Add chemical database query tools for the assessment expert
         # 为评估专家添加化学数据库查询工具
-        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool]
+        agent.tools = [
+            materials_project_tool,      # Materials Project database tool / 材料项目数据库工具
+            pubchem_tool,               # PubChem database tool / PubChem数据库工具
+            name2properties_tool,       # Chemical name to properties lookup tool / 化学名称到性质查找工具
+            cid2properties_tool,        # CID (Compound ID) to properties lookup tool / 化合物ID到性质查找工具
+            pnec_tool                   # PNEC (Predicted No-Effect Concentration) estimation tool / 预测无效应浓度估算工具
+        ]
         return agent

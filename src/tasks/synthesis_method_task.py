@@ -4,11 +4,29 @@
 负责设计材料的合成方法和工艺流程
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class SynthesisMethodTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
+    """合成方法任务类 / Synthesis method task class"""
+    
+    def __init__(self, agent, material_info=""):
+        """
+        初始化合成方法任务 / Initialize synthesis method task
+        
+        Args:
+            agent: 合成方法智能体 / Synthesis method agent
+            material_info: 材料信息 / Material information
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="材料合成的详细指导和工艺参数",  # 材料合成的详细指导和工艺参数 / Detailed guidance and process parameters for material synthesis
+            description=f"""提供材料合成的详细指导和工艺参数。
+            包括实验步骤、反应条件、设备要求等。
+            {material_info}
+            / Provide detailed guidance and process parameters for material synthesis.
+            Include experimental steps, reaction conditions, equipment requirements, etc.
+            {material_info}"""
+        )
 
     def create_task(self, agent, context_task=None):
         description = """

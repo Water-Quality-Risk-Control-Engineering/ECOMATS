@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-PNEC工具
-PNEC (Predicted No Effect Concentration) 数据库查询工具
-用于查询化学物质的预测无效应浓度数据
+PNEC工具 / PNEC Tool
+PNEC (Predicted No Effect Concentration) 数据库查询工具 / PNEC (Predicted No Effect Concentration) database query tool
+用于查询化学物质的预测无效应浓度数据 / Used to query predicted no effect concentration data of chemical substances
 """
 
 import logging
@@ -10,17 +10,17 @@ import requests
 import time
 from typing import Dict, Any, List, Optional
 
-# 配置日志
+# 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class PNECTool:
-    """PNEC工具类 - 查询化学物质的预测无效应浓度数据"""
+    """PNEC工具类 - 查询化学物质的预测无效应浓度数据 / PNEC Tool Class - Query predicted no effect concentration data of chemical substances"""
     
     def __init__(self):
-        """初始化PNEC工具"""
+        """初始化PNEC工具 / Initialize PNEC tool"""
         # PNEC数据通常来自多个来源，这里我们模拟一个综合查询工具
-        # 在实际应用中，可能需要连接到专门的PNEC数据库
+        # PNEC data usually comes from multiple sources, here we simulate a comprehensive query tool
         self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
         self.session = requests.Session()
         self.session.headers.update({
@@ -28,6 +28,7 @@ class PNECTool:
         })
         
         # PNEC相关参数的参考范围（用于模拟数据）
+        # Reference range of PNEC-related parameters (used for simulated data)
         self.pnec_reference_data = {
             "toxicity_reference": {
                 "acute_toxicity": "LC50, EC50, or similar",
@@ -238,7 +239,9 @@ class PNECTool:
             Dict[str, Any]: PNEC计算结果
         """
         # 这是一个简化的PNEC计算模型
+        # This is a simplified PNEC calculation model
         # 在实际应用中，应该使用专业的PNEC数据库和计算方法
+        # In actual applications, professional PNEC databases and calculation methods should be used
         
         molecular_weight = compound_info.get("molecular_weight", 0)
         try:
@@ -247,9 +250,12 @@ class PNECTool:
             mw = 0
         
         # 简化的PNEC计算（仅用于演示）
+        # Simplified PNEC calculation (for demonstration purposes only)
         # 实际的PNEC计算需要考虑毒性数据、评估因子等多种因素
+        # Actual PNEC calculation needs to consider toxicity data, assessment factors, and other factors
         if mw > 0:
             # 基于分子量的简化估算（仅用于演示，非真实计算）
+            # Simplified estimation based on molecular weight (for demonstration purposes only, not real calculation)
             acute_pnec = 1000 / (mw ** 0.5)  # μg/L
             chronic_pnec = acute_pnec / 10  # 通常慢性毒性比急性毒性低一个数量级
         else:

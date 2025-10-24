@@ -7,38 +7,25 @@
 from crewai import Task
 
 class BaseTask:
-    """基础任务类，提供通用的任务创建功能"""
+    """基础任务类 / Base task class"""
     
-    def __init__(self, llm):
-        self.llm = llm
-    
-    def create_task(self, agent, description, expected_output, context_task=None):
+    def __init__(self, agent, expected_output, description):
         """
-        创建任务的通用方法
+        初始化基础任务 / Initialize base task
         
         Args:
-            agent: 执行任务的智能体
-            description: 任务描述
-            expected_output: 期望的输出
-            context_task: 上下文任务（可选）
-            
-        Returns:
-            Task: 创建的任务实例
+            agent: 负责执行任务的智能体 / Agent responsible for executing the task
+            expected_output: 期望的输出格式 / Expected output format
+            description: 任务描述 / Task description
         """
-        task_params = {
-            'description': description.strip(),
-            'expected_output': expected_output.strip(),
-            'agent': agent,
-            'verbose': True
-        }
-        
-        # 处理上下文任务
-        if context_task:
-            if isinstance(context_task, list):
-                # 如果是任务列表，直接使用
-                task_params['context'] = context_task
-            else:
-                # 如果是单个任务，放入列表中
-                task_params['context'] = [context_task]
-        
-        return Task(**task_params)
+        self.agent = agent
+        self.expected_output = expected_output
+        self.description = description
+    
+    def create_task(self):
+        """创建并返回任务实例 / Create and return task instance"""
+        return Task(
+            agent=self.agent,
+            expected_output=self.expected_output,
+            description=self.description
+        )

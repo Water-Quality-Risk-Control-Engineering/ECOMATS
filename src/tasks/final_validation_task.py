@@ -4,11 +4,29 @@
 综合各专家评估结果，进行加权计算并形成最终材料评估报告
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class FinalValidationTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
+    """最终验证任务类 / Final validation task class"""
+    
+    def __init__(self, agent, evaluation_results=""):
+        """
+        初始化最终验证任务 / Initialize final validation task
+        
+        Args:
+            agent: 最终验证智能体 / Final validation agent
+            evaluation_results: 各专家的评估结果 / Evaluation results from various experts
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="综合各专家评估结果的最终材料筛选建议和排序",  # 综合各专家评估结果的最终材料筛选建议和排序 / Final material screening recommendations and ranking based on comprehensive evaluation results from various experts
+            description=f"""综合各评估专家的结果，给出最终的材料筛选建议和排序。
+            要求明确指出最优的几种材料及其优势。
+            {evaluation_results}
+            / Synthesize the results from various evaluation experts and provide final material screening recommendations and rankings.
+            Clearly identify the optimal materials and their advantages.
+            {evaluation_results}"""
+        )
 
     def create_task(self, agent, context_task=None):
         description = """

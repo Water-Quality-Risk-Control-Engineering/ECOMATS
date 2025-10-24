@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Materials Project API 工具
-提供对Materials Project材料数据库的访问功能
-使用官方mp-api客户端
+Materials Project API 工具 / Materials Project API Tool
+提供对Materials Project材料数据库的访问功能 / Provides access to Materials Project materials database
+使用官方mp-api客户端 / Uses official mp-api client
 """
 
 import os
 import logging
 from typing import Dict, List, Optional, Any
 
-# 配置日志
+# 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -17,18 +17,20 @@ try:
     from mp_api.client import MPRester
     MP_API_AVAILABLE = True
 except ImportError:
+    # mp-api客户端未安装，Materials Project工具将不可用
+    # mp-api client not installed, Materials Project tool will be unavailable
     MP_API_AVAILABLE = False
-    logger.warning("mp-api客户端未安装，Materials Project工具将不可用")
+    logger.warning("mp-api客户端未安装，Materials Project工具将不可用 / mp-api client not installed, Materials Project tool will be unavailable")
 
 class MaterialsProjectTool:
-    """Materials Project API 工具类"""
+    """Materials Project API 工具类 / Materials Project API Tool Class"""
     
     def __init__(self, api_key: Optional[str] = None):
         """
-        初始化Materials Project工具
+        初始化Materials Project工具 / Initialize Materials Project tool
         
         Args:
-            api_key (str, optional): Materials Project API密钥
+            api_key (str, optional): Materials Project API密钥 / Materials Project API key
         """
         if not MP_API_AVAILABLE:
             raise ImportError("mp-api客户端未安装，请运行 'pip install mp-api'")

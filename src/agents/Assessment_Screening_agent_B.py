@@ -1,17 +1,24 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
+from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 专家B类
+# Expert B class / 评估筛选专家B
 class AssessmentScreeningAgentB(BaseAgent):
+    """Assessment and screening expert B agent"""
+    
     def __init__(self, llm):
         from src.config.config import Config
-        super().__init__(llm, "专家B", "全面评估材料方案的各个方面", "expert_b_prompt.md",
-                        temperature=Config.EXPERT_B_TEMPERATURE)
+        super().__init__(
+            llm=llm,
+            role="Expert B",  # Assessment and screening expert B / 评估筛选专家B
+            goal="Comprehensively evaluate various aspects of material proposals",  # Comprehensively evaluate various aspects of material proposals / 全面评估材料方案的各个方面
+            prompt_file="expert_b_prompt.md",
+            temperature=Config.EXPERT_B_TEMPERATURE
+        )
     
     def create_agent(self):
         # 尝试创建EAS模型实例

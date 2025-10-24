@@ -4,11 +4,29 @@
 负责分析材料的催化机理和作用机制
 """
 
-from src.tasks.base_task import BaseTask
+from .base_task import BaseTask
 
 class MechanismAnalysisTask(BaseTask):
-    def __init__(self, llm):
-        super().__init__(llm)
+    """机理分析任务类 / Mechanism analysis task class"""
+    
+    def __init__(self, agent, material_info=""):
+        """
+        初始化机理分析任务 / Initialize mechanism analysis task
+        
+        Args:
+            agent: 机理分析智能体 / Mechanism analysis agent
+            material_info: 材料信息 / Material information
+        """
+        super().__init__(
+            agent=agent,
+            expected_output="污染物降解的反应机理和动力学特性分析报告",  # 污染物降解的反应机理和动力学特性分析报告 / Analysis report on reaction mechanisms and kinetic characteristics of pollutant degradation
+            description=f"""分析目标污染物在催化剂作用下的降解机理和动力学特性。
+            要求详细描述反应路径和关键中间体。
+            {material_info}
+            / Analyze the degradation mechanisms and kinetic characteristics of target pollutants under the action of catalysts.
+            Describe the reaction pathways and key intermediates in detail.
+            {material_info}"""
+        )
 
     def create_task(self, agent, context_task=None):
         description = """

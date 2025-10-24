@@ -8,11 +8,14 @@ logger = logging.getLogger(__name__)
 
 class TaskAllocator:
     """
-    任务分配器，根据任务类型自动选择合适的智能体
+    任务分配器，根据任务类型自动选择合适的智能体 / Task allocator that automatically selects the appropriate agent based on task type
     """
     
     def __init__(self):
-        # 定义任务类型到智能体的映射关系
+        """
+        初始化任务分配器 / Initialize the TaskAllocator
+        """
+        # 定义任务类型到智能体的映射关系 / Define mapping from task types to agents
         self.task_agent_mapping = {
             "material_design": "CreativeDesigningAgent",
             "evaluation": "AssessmentScreeningAgent",
@@ -28,11 +31,11 @@ class TaskAllocator:
         
     def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]) -> None:
         """
-        注册智能体到可用列表
+        注册智能体到可用列表 / Register an agent to the available list
         
         Args:
-            agent_type: 智能体类型
-            agent: 智能体实例或实例列表
+            agent_type: 智能体类型 / The type of the agent
+            agent: 智能体实例或实例列表 / The agent instance or list of instances
         """
         # 如果传入的是单个智能体，转换为列表
         if isinstance(agent, Agent):
@@ -46,22 +49,22 @@ class TaskAllocator:
         
     def _get_agent_type_for_task(self, task_type: str) -> str:
         """
-        根据任务类型获取对应的智能体类型
+        根据任务类型获取对应的智能体类型 / Get the corresponding agent type for a given task type
         
         Args:
-            task_type: 任务类型
+            task_type: 任务类型 / The type of the task
             
         Returns:
-            对应的智能体类型
+            对应的智能体类型 / The corresponding agent type
         """
         return self.task_agent_mapping.get(task_type)
     
     def _get_default_agent(self) -> Agent:
         """
-        获取默认的智能体（第一个可用的智能体）
+        获取默认的智能体（第一个可用的智能体） / Get the default agent (the first available agent)
         
         Returns:
-            默认的智能体实例
+            默认的智能体实例 / The default agent instance
         """
         for agents in self.available_agents.values():
             if agents:
@@ -70,10 +73,10 @@ class TaskAllocator:
     
     def _get_all_available_agents(self) -> List[Agent]:
         """
-        获取所有可用的智能体
+        获取所有可用的智能体 / Get all available agents
         
         Returns:
-            所有可用的智能体实例列表
+            所有可用的智能体实例列表 / A list of all available agent instances
         """
         all_agents = []
         for agents in self.available_agents.values():
@@ -82,13 +85,13 @@ class TaskAllocator:
         
     def get_agent_for_task(self, task_type: str) -> Agent:
         """
-        根据任务类型获取合适的智能体
+        根据任务类型获取合适的智能体 / Get the appropriate agent for a given task type
         
         Args:
-            task_type: 任务类型
+            task_type: 任务类型 / The type of the task
             
         Returns:
-            合适的智能体实例
+            合适的智能体实例 / The appropriate agent instance
         """
         # 根据任务类型查找对应的智能体类型
         agent_type = self._get_agent_type_for_task(task_type)
@@ -108,13 +111,13 @@ class TaskAllocator:
             
     def get_all_agents_for_task(self, task_type: str) -> List[Agent]:
         """
-        根据任务类型获取所有合适的智能体
+        根据任务类型获取所有合适的智能体 / Get all suitable agents for a given task type
         
         Args:
-            task_type: 任务类型
+            task_type: 任务类型 / The type of the task
             
         Returns:
-            所有合适的智能体实例列表
+            所有合适的智能体实例列表 / A list of all suitable agent instances
         """
         # 根据任务类型查找对应的智能体类型
         agent_type = self._get_agent_type_for_task(task_type)
@@ -133,13 +136,13 @@ class TaskAllocator:
             
     def get_agent_by_name(self, agent_name: str) -> Agent:
         """
-        根据智能体名称获取智能体实例
+        根据智能体名称获取智能体实例 / Get an agent instance by its name
         
         Args:
-            agent_name: 智能体名称
+            agent_name: 智能体名称 / The name of the agent
             
         Returns:
-            智能体实例
+            智能体实例 / The agent instance
         """
         for agents in self.available_agents.values():
             for agent in agents:
@@ -150,18 +153,18 @@ class TaskAllocator:
         
     def get_task_types(self) -> List[str]:
         """
-        获取所有支持的任务类型
+        获取所有支持的任务类型 / Get all supported task types
         
         Returns:
-            任务类型列表
+            任务类型列表 / A list of task types
         """
         return list(self.task_agent_mapping.keys())
         
     def get_agent_types(self) -> List[str]:
         """
-        获取所有注册的智能体类型
+        获取所有注册的智能体类型 / Get all registered agent types
         
         Returns:
-            智能体类型列表
+            智能体类型列表 / A list of agent types
         """
         return list(self.available_agents.keys())

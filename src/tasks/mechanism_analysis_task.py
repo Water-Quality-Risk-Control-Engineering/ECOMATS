@@ -91,6 +91,10 @@ class MechanismAnalysisTask(BaseTask):
         - 必须使用material_search_tool检索相似材料的性能数据，以支持构效关系分析
         - 所有工具查询结果必须在分析中引用，并解释这些数据如何支持你的机理分析
         - 如果工具查询未返回结果，必须说明这对机理分析的影响
+        - 工具调用示例：
+          * Materials Project: action="search", formula="材料化学式"
+          * PubChem: query="污染物名称或化学式"
+          * material_search_tool: query="材料类型或化学式"
         
         分析要点：
         - 必须覆盖所有10个分析维度，不能遗漏
@@ -99,6 +103,7 @@ class MechanismAnalysisTask(BaseTask):
         - 分析材料在实际应用中的表现机理
         - 必须结合Materials Project和PubChem工具数据进行验证
         - 每个分析维度都应包含具体的工具数据支持
+        - 在分析开始时，首先调用相关工具获取必要的数据
         """
         
         expected_output = """
@@ -135,11 +140,12 @@ class MechanismAnalysisTask(BaseTask):
 
         并提供性能预测和基于工具数据的验证结果。
         
-        工具数据要求：
-        - Materials Project数据：包含材料的带隙、密度、形成能等关键属性
-        - PubChem数据：包含有机污染物的分子结构、键合性质等信息
-        - material_search_tool数据：包含相似材料的性能对比数据
+        工具数据要求（必须包含）：
+        - Materials Project数据：包含材料的带隙、密度、形成能等关键属性，必须提供具体的查询结果和材料ID
+        - PubChem数据：包含有机污染物的分子结构、键合性质等信息，必须提供具体的化合物CID和属性数据
+        - material_search_tool数据：包含相似材料的性能对比数据，必须提供具体的搜索结果和对比分析
         - 所有工具数据必须在报告中明确引用，并说明如何支持机理分析结论
+        - 每个工具的查询结果都需要以JSON格式展示关键数据
         """
         
         # 创建新的任务实例而不是调用父类方法

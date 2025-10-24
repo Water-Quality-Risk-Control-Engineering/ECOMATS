@@ -170,8 +170,8 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 The system integrates the following database query tools that agents can automatically invoke as needed:
 
-1. **Materials Project Tool** - Accesses materials science database to obtain material properties, including band gap, formation energy, crystal structure, etc. (materials_project_tool.py)
-2. **PubChem Tool** - Queries chemical compound information, including CAS numbers, molecular weights, SMILES, etc. (pubchem_tool.py)
+1. **Materials Project Tool** - Accesses materials science database to obtain material properties, including band gap, formation energy, crystal structure, etc. Optimized with field selection and chunking to improve query performance. (materials_project_tool.py)
+2. **PubChem Tool** - Queries chemical compound information, including CAS numbers, molecular weights, SMILES, InChI, and other detailed properties. Enhanced with InChIKey search capability and improved molecular formula validation. (pubchem_tool.py)
 3. **Name2CAS Tool** - Converts material names to CAS numbers (name2cas_tool.py)
 4. **Name2Properties Tool** - Queries physicochemical properties by material name (name2properties_tool.py)
 5. **CID2Properties Tool** - Queries properties by PubChem CID (cid2properties_tool.py)

@@ -2,6 +2,7 @@ import requests
 import logging
 import time
 import random
+import os
 from typing import Dict, Any
 
 # 配置日志 / Configure logging
@@ -11,13 +12,22 @@ logger = logging.getLogger(__name__)
 class PubChemTool:
     """PubChem数据库查询工具 / PubChem database query tool"""
     
-    def __init__(self):
+    def __init__(self, api_key: str = None):
         self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
+        self.api_key = api_key or os.getenv('PUBCHEM_API_KEY')
         self.session = requests.Session()
         # 设置请求头 / Set request headers
-        self.session.headers.update({
+        headers = {
             "User-Agent": "ECOMATS-PubChem-Tool/1.0"
-        })
+        }
+        # 如果有API密钥，添加到请求头 / Add API key to request headers if available
+        if self.api_key:
+            headers["X-PubChem-API-Key"] = self.api_key
+        self.session.headers.update(headers)
+        
+        # 请求频率控制 / Request rate control
+        self.last_request_time = 0
+        self.min_request_interval = 0.3  # 最小请求间隔0.3秒 / Minimum request interval 0.3 seconds
     
     def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 5) -> Dict[str, Any]:
         """
@@ -31,12 +41,31 @@ class PubChemTool:
         Returns:
             API响应数据 / API response data
         """
+        # 请求频率控制 / Request rate control
+        current_time = time.time()
+        time_since_last_request = current_time - self.last_request_time
+        if time_since_last_request < self.min_request_interval:
+            time.sleep(self.min_request_interval - time_since_last_request)
+        
         for attempt in range(max_retries):
             try:
                 url = f"{self.base_url}/{endpoint}"
                 logger.debug(f"请求PubChem API: {url}")
                 
+                # 更新最后请求时间 / Update last request time
+                self.last_request_time = time.time()
+                
                 response = self.session.get(url, timeout=timeout)
+                
+                # 检查是否是503错误（服务器繁忙） / Check if it's a 503 error (server busy)
+                if response.status_code == 503:
+                    retry_after = int(response.headers.get('Retry-After', 30))
+                    logger.warning(f"PubChem服务器繁忙，将在 {retry_after} 秒后重试 / PubChem server is busy, will retry after {retry_after} seconds")
+                    if attempt < max_retries - 1:
+                        logger.info(f"等待 {retry_after} 秒后重试 / Waiting {retry_after} seconds before retry")
+                        time.sleep(retry_after)
+                        continue
+                
                 response.raise_for_status()
                 return response.json()
                 
@@ -64,7 +93,7 @@ class PubChemTool:
         Returns:
             化合物基础信息 / Compound basic information
         """
-        endpoint = f"compound/name/{compound_name}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES/JSON"
+        endpoint = f"compound/name/{compound_name}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES,InChI,InChIKey,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
         return self._make_request(endpoint, max_retries=3)
     
     def get_synonyms_with_cas(self, compound_name: str) -> Dict[str, Any]:
@@ -90,7 +119,7 @@ class PubChemTool:
         Returns:
             化合物详细信息 / Compound detailed information
         """
-        endpoint = f"compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES/JSON"
+        endpoint = f"compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES,InChI,InChIKey,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
         return self._make_request(endpoint, max_retries=3)
     
     def search_by_molecular_formula(self, formula: str) -> Dict[str, Any]:
@@ -103,7 +132,20 @@ class PubChemTool:
         Returns:
             化合物信息 / Compound information
         """
-        endpoint = f"compound/fastformula/{formula}/property/MolecularWeight,IUPACName,CanonicalSMILES/JSON"
+        endpoint = f"compound/fastformula/{formula}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES,InChI,InChIKey,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
+        return self._make_request(endpoint, max_retries=3)
+    
+    def search_by_inchikey(self, inchikey: str) -> Dict[str, Any]:
+        """
+        通过InChIKey搜索化合物 / Search compound by InChIKey
+        
+        Args:
+            inchikey: InChIKey标识符 / InChIKey identifier
+            
+        Returns:
+            化合物信息 / Compound information
+        """
+        endpoint = f"compound/inchikey/{inchikey}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES,InChI,InChIKey,XLogP,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,TPSA,Complexity/JSON"
         return self._make_request(endpoint, max_retries=3)
     
     def search_compound(self, query: str, search_type: str = "auto") -> Dict[str, Any]:
@@ -111,40 +153,64 @@ class PubChemTool:
         智能搜索化合物（自动判断查询类型） / Intelligent search compound (automatically determine search type)
         
         Args:
-            query: 查询内容（化学名称或分子式） / Query content (compound name or molecular formula)
-            search_type: 查询类型 ("auto", "name", "formula") / Search type ("auto", "name", "formula")
+            query: 查询内容（化学名称、分子式或InChIKey） / Query content (compound name, molecular formula, or InChIKey)
+            search_type: 查询类型 ("auto", "name", "formula", "inchikey") / Search type ("auto", "name", "formula", "inchikey")
             
         Returns:
             化合物信息 / Compound information
         """
         if search_type == "auto":
-            # 简单判断：如果包含字母和数字的组合，可能是分子式 / Simple judgment: if it contains a combination of letters and numbers, it may be a molecular formula
-            if any(c.isalpha() for c in query) and any(c.isdigit() for c in query):
-                # 可能是分子式，使用fastformula端点 / May be a molecular formula, use fastformula endpoint
+            # 检查是否为InChIKey格式 (通常为27个字符，包含连字符)
+            if len(query) == 27 and query.count('-') >= 2:
+                # 可能是InChIKey，使用inchikey端点
+                return self.search_by_inchikey(query)
+            # 检查是否为分子式格式 (包含元素符号和数字)
+            elif self._is_molecular_formula(query):
+                # 可能是分子式，使用fastformula端点
                 return self.search_by_molecular_formula(query)
             else:
-                # 可能是化学名称，使用name端点 / May be a compound name, use name endpoint
+                # 可能是化学名称，使用name端点
                 return self.get_basic_properties_by_name(query)
         elif search_type == "name":
             return self.get_basic_properties_by_name(query)
         elif search_type == "formula":
             return self.search_by_molecular_formula(query)
+        elif search_type == "inchikey":
+            return self.search_by_inchikey(query)
         else:
             return {"error": f"不支持的搜索类型: {search_type}"}
+    
+    def _is_molecular_formula(self, query: str) -> bool:
+        """
+        判断查询字符串是否可能是分子式 / Determine if query string is likely a molecular formula
+        
+        Args:
+            query: 查询字符串 / Query string
+            
+        Returns:
+            是否可能是分子式 / Whether it is likely a molecular formula
+        """
+        import re
+        # 分子式通常由元素符号和数字组成，可能包含括号
+        # 元素符号以大写字母开头，可能跟着小写字母
+        # 例如: H2O, C6H6, C12H22O11, Ca(OH)2, NaCl
+        # 更准确的正则表达式，支持多种格式
+        formula_pattern = r'^([A-Z][a-z]?[0-9]*)+([A-Z][a-z]?[0-9]*)*$|^([A-Z][a-z]?[0-9]*)*\([A-Z][a-z]?[0-9]*\)[0-9]*([A-Z][a-z]?[0-9]*)*$'
+        return bool(re.match(formula_pattern, query))
     
     def get_compound_info(self, query: str) -> Dict[str, Any]:
         """
         获取化合物完整信息 / Get complete compound information
         
         Args:
-            query: 化合物名称或CID / Compound name or CID
+            query: 化合物名称、CID、分子式或InChIKey / Compound name, CID, molecular formula, or InChIKey
             
         Returns:
             化合物完整信息 / Complete compound information
         """
         try:
-            # 首先获取基本信息 / First get basic information
-            basic_info = self.get_basic_properties_by_name(query)
+            # 使用智能搜索获取基本信息 / Use intelligent search to get basic information
+            basic_info = self.search_compound(query)
             
             if "error" in basic_info:
                 return basic_info
@@ -297,14 +363,17 @@ class PubChemTool:
 # 创建全局实例 / Create global instance
 pubchem_tool = None
 
-def get_pubchem_tool() -> PubChemTool:
+def get_pubchem_tool(api_key: str = None) -> PubChemTool:
     """
     获取PubChem工具实例 / Get PubChem tool instance
     
+    Args:
+        api_key (str, optional): PubChem API密钥 / PubChem API key
+        
     Returns:
         PubChemTool: 工具实例 / Tool instance
     """
     global pubchem_tool
     if pubchem_tool is None:
-        pubchem_tool = PubChemTool()
+        pubchem_tool = PubChemTool(api_key)
     return pubchem_tool

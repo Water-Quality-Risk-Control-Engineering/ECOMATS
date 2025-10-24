@@ -17,6 +17,9 @@ class Config:
     # Materials Project API配置 / Materials Project API configuration
     MATERIALS_PROJECT_API_KEY = os.getenv("MATERIALS_PROJECT_API_KEY", "")
     
+    # PubChem API配置 / PubChem API configuration
+    PUBCHEM_API_KEY = os.getenv("PUBCHEM_API_KEY", "")
+    
     # 模型参数配置 / Model parameter configuration
     MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.7"))
     MODEL_MAX_TOKENS = int(os.getenv("MODEL_MAX_TOKENS", "2048"))

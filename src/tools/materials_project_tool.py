@@ -89,10 +89,14 @@ class MaterialsProjectTool:
             # 对于元素搜索，使用更小的chunk_size
             chunk_size = min(limit, 100) if elements else min(limit, 1000)
             
+            # 优化：只获取需要的字段以提高查询速度
+            fields = ["material_id", "formula_pretty", "chemsys", "volume", "density", "nsites", "symmetry"]
+            
             # 执行搜索
             docs = self.mpr.materials.search(
                 **kwargs,
-                chunk_size=chunk_size
+                chunk_size=chunk_size,
+                fields=fields
             )
             
             # 手动限制结果数量
@@ -240,10 +244,14 @@ class MaterialsProjectTool:
             if elements:
                 kwargs["elements"] = elements
                 
+            # 优化：只获取需要的字段以提高查询速度
+            fields = ["material_id", "formula_pretty", "chemsys", "density"]
+                
             # 执行搜索
             docs = self.mpr.materials.search(
                 **kwargs,
-                chunk_size=min(limit, 1000)
+                chunk_size=min(limit, 1000),
+                fields=fields
             )
             
             # 转换为摘要格式

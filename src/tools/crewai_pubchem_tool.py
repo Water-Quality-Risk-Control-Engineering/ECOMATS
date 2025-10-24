@@ -9,7 +9,7 @@ class CrewAIPubChemTool(BaseTool):
     name: str = "PubChem Database Query"
     description: str = (
         "查询PubChem化学数据库以获取化合物信息。"
-        "支持通过化学名称或分子式搜索化合物，并获取CAS号、分子量、SMILES等信息。"
+        "支持通过化学名称、分子式或InChIKey搜索化合物，并获取CAS号、分子量、SMILES、InChI等详细信息。"
         "当需要验证化学信息或获取化合物详细数据时使用此工具。"
     )
     
@@ -17,15 +17,17 @@ class CrewAIPubChemTool(BaseTool):
         self,
         query: str,
         search_type: str = "auto",
-        get_cas: bool = True
+        get_cas: bool = True,
+        get_full_info: bool = False
     ) -> str:
         """
         执行PubChem数据库查询
         
         Args:
-            query: 查询内容（化学名称或分子式）
-            search_type: 查询类型 ("auto", "name", "formula")
+            query: 查询内容（化学名称、分子式或InChIKey）
+            search_type: 查询类型 ("auto", "name", "formula", "inchikey")
             get_cas: 是否获取CAS号信息
+            get_full_info: 是否获取完整化合物信息（包括所有属性）
             
         Returns:
             JSON格式的查询结果
@@ -35,13 +37,12 @@ class CrewAIPubChemTool(BaseTool):
             tool = get_pubchem_tool()
             
             # 根据参数执行相应功能
-            if get_cas:
+            if get_full_info:
+                result = tool.get_compound_info(query)
+            elif get_cas:
                 result = tool.get_compound_info_with_cas(query)
             else:
-                if search_type == "auto" and get_cas:
-                    result = tool.get_compound_info_with_cas(query)
-                else:
-                    result = tool.search_compound(query, search_type)
+                result = tool.search_compound(query, search_type)
                 
             # 返回JSON格式的结果
             return json.dumps(result, ensure_ascii=False, indent=2)

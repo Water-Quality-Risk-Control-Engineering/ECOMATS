@@ -173,13 +173,11 @@ def run_design_iteration(user_requirement, llm, iteration_count=0):
         if feedback:
             # 更新用户需求，加入反馈 / Update user requirements with feedback
             updated_requirement = f"{user_requirement}\n\n基于上一轮评估的改进建议：{feedback}"
-            print(f"改进建议: {feedback}")
             # 进行下一轮迭代 / Proceed to next iteration
             return run_design_iteration(updated_requirement, llm, iteration_count + 1)
         else:
             return result
     else:
-        print("设计方案已达到要求，无需进一步迭代。")
         return result
 
 def run_preset_workflow(user_requirement, llm):
@@ -273,62 +271,81 @@ def run_autonomous_workflow(user_requirement, llm):
     # 2. 创建材料设计任务 / Create material design task
     design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
     
-    # 3. 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
-    evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
-    evaluation_tasks = []
-    for i, agent in enumerate(evaluation_agents):
-        task = EvaluationTask(llm).create_task(agent, design_task)
-        evaluation_tasks.append(task)
+    # 3. 根据用户需求动态决定需要哪些任务 / Dynamically decide which tasks are needed based on user requirements
+    required_tasks = []
+    required_agents = [coordinator_agent, design_agent]
+    seen_roles = {coordinator_agent.role, design_agent.role}
     
-    # 4. 委派最终验证任务 / Delegate final validation task
-    final_validation_agent = task_allocator.get_agent_for_task("final_validation")
-    final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
-                                                           [design_task] + evaluation_tasks)
-    
-    # 5. 委派合成方法任务 / Delegate synthesis method task
-    synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
-    synthesis_method_task = SynthesisMethodTask(llm).create_task(synthesis_agent, final_validation_task)
-    
-    # 6. 委派机理分析任务 / Delegate mechanism analysis task
-    mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
-    mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, final_validation_task)
-    
-    # 7. 委派操作建议任务 / Delegate operation suggestion task
-    operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
-    operation_suggesting_task = OperationSuggestingTask(llm).create_task(operation_suggesting_agent, final_validation_task)
-    
-    # 创建Crew，包含所有参与任务的智能体 / Create Crew including all agents participating in tasks
-    all_agents = [
-        coordinator_agent,
-        design_agent,
-        *evaluation_agents,
-        final_validation_agent,
-        mechanism_agent,
-        synthesis_agent
-    ]
-    
-    # 确保不会重复添加智能体 / Ensure no duplicate agents are added
-    unique_agents = []
-    seen_roles = set()
-    for agent in all_agents:
-        if agent.role not in seen_roles:
-            unique_agents.append(agent)
-            seen_roles.add(agent.role)
-    
-    # 创建任务列表 / Create task list
-    all_tasks = [
-        design_task,
-        *evaluation_tasks,
-        final_validation_task,
-        synthesis_method_task,
-        mechanism_analysis_task,
-        operation_suggesting_task
-    ]
+    # 检查是否需要评估任务 / Check if evaluation tasks are needed
+    if "评估" in user_requirement or "评价" in user_requirement or "性能" in user_requirement:
+        # 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
+        evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
+        evaluation_tasks = []
+        for agent in evaluation_agents:
+            task = EvaluationTask(llm).create_task(agent, design_task)
+            evaluation_tasks.append(task)
+        
+        # 委派最终验证任务 / Delegate final validation task
+        final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+        final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
+                                                               [design_task] + evaluation_tasks)
+        
+        required_tasks.extend(evaluation_tasks)
+        required_tasks.append(final_validation_task)
+        
+        # 添加评估相关的智能体 / Add evaluation-related agents
+        for agent in evaluation_agents:
+            if agent.role not in seen_roles:
+                required_agents.append(agent)
+                seen_roles.add(agent.role)
+        
+        if final_validation_agent and final_validation_agent.role not in seen_roles:
+            required_agents.append(final_validation_agent)
+            seen_roles.add(final_validation_agent.role)
+            
+        # 检查是否需要机理分析任务 / Check if mechanism analysis task is needed
+        if "机理" in user_requirement or "机制" in user_requirement or "反应" in user_requirement:
+            mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+            mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, final_validation_task)
+            required_tasks.append(mechanism_analysis_task)
+            
+            if mechanism_agent and mechanism_agent.role not in seen_roles:
+                required_agents.append(mechanism_agent)
+                seen_roles.add(mechanism_agent.role)
+        
+        # 检查是否需要合成方法任务 / Check if synthesis method task is needed
+        if "合成" in user_requirement or "制备" in user_requirement or "工艺" in user_requirement:
+            synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
+            synthesis_method_task = SynthesisMethodTask(llm).create_task(synthesis_agent, final_validation_task)
+            required_tasks.append(synthesis_method_task)
+            
+            if synthesis_agent and synthesis_agent.role not in seen_roles:
+                required_agents.append(synthesis_agent)
+                seen_roles.add(synthesis_agent.role)
+        
+        # 操作建议任务依赖于最终验证任务 / Operation suggestion task depends on final validation task
+        operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+        operation_suggesting_task = OperationSuggestingTask(llm).create_task(operation_suggesting_agent, final_validation_task)
+        required_tasks.append(operation_suggesting_task)
+        
+        if operation_suggesting_agent and operation_suggesting_agent.role not in seen_roles:
+            required_agents.append(operation_suggesting_agent)
+            seen_roles.add(operation_suggesting_agent.role)
+    else:
+        # 如果不需要评估任务，则操作建议任务直接依赖于设计任务
+        # If no evaluation tasks are needed, operation suggestion task depends directly on design task
+        operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+        operation_suggesting_task = OperationSuggestingTask(llm).create_task(operation_suggesting_agent, design_task)
+        required_tasks.append(operation_suggesting_task)
+        
+        if operation_suggesting_agent and operation_suggesting_agent.role not in seen_roles:
+            required_agents.append(operation_suggesting_agent)
+            seen_roles.add(operation_suggesting_agent.role)
     
     # 创建Crew / Create Crew
     ecomats_crew = Crew(
-        agents=unique_agents,
-        tasks=all_tasks,
+        agents=required_agents,
+        tasks=[design_task] + required_tasks,
         process=Process.sequential,
         verbose=Config.VERBOSE
     )

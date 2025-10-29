@@ -231,8 +231,8 @@ def run_preset_workflow(user_requirement, llm):
             evaluation_task_b, 
             evaluation_task_c, 
             final_validation_task,
-            mechanism_analysis_task,
             synthesis_method_task,
+            mechanism_analysis_task,
             operation_suggesting_task
         ],  # 任务按顺序执行 / Tasks executed in order
         process=Process.sequential,  # 使用顺序流程执行任务 / Use sequential process to execute tasks
@@ -285,13 +285,13 @@ def run_autonomous_workflow(user_requirement, llm):
     final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
                                                            [design_task] + evaluation_tasks)
     
-    # 5. 委派机理分析任务 / Delegate mechanism analysis task
-    mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
-    mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, final_validation_task)
-    
-    # 6. 委派合成方法任务 / Delegate synthesis method task
+    # 5. 委派合成方法任务 / Delegate synthesis method task
     synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
     synthesis_method_task = SynthesisMethodTask(llm).create_task(synthesis_agent, final_validation_task)
+    
+    # 6. 委派机理分析任务 / Delegate mechanism analysis task
+    mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+    mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, final_validation_task)
     
     # 7. 委派操作建议任务 / Delegate operation suggestion task
     operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
@@ -320,8 +320,8 @@ def run_autonomous_workflow(user_requirement, llm):
         design_task,
         *evaluation_tasks,
         final_validation_task,
-        mechanism_analysis_task,
         synthesis_method_task,
+        mechanism_analysis_task,
         operation_suggesting_task
     ]
     

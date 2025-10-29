@@ -1,6 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool
+from src.tools import pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool, data_validator_tool
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -53,5 +53,5 @@ class SynthesisGuidingAgent(BaseAgent):
         
         agent = super().create_agent()
         # Add chemical database query tools for the synthesis guiding agent
-        agent.tools = [pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool]
+        agent.tools = [pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool, data_validator_tool]
         return agent

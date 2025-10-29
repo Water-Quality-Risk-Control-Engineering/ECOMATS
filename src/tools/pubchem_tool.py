@@ -290,7 +290,7 @@ class PubChemTool:
             是否有效 / Whether it is valid
         """
         # 简单检查：确保不是明显的无效值
-        invalid_patterns = ["#", "N/A", "None", ""]
+        invalid_patterns = ["#", "N/A", "None", "", "null", "NULL"]
         if any(pattern in smiles for pattern in invalid_patterns):
             return False
             
@@ -298,7 +298,94 @@ class PubChemTool:
         if not any(c.isalpha() for c in smiles):
             return False
             
+        # 检查是否包含有效的化学元素符号
+        import re
+        # 检查是否包含至少一个常见的化学元素符号
+        common_elements = ['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'B', 'Si']
+        if not any(element in smiles for element in common_elements):
+            return False
+            
         return True
+    
+    def validate_cid(self, cid: Any) -> bool:
+        """
+        验证CID是否有效 / Validate if CID is valid
+        
+        Args:
+            cid: 化合物ID / Compound ID
+            
+        Returns:
+            CID是否有效 / Whether CID is valid
+        """
+        try:
+            # CID应该是正整数
+            if cid is None or cid == "" or cid == "N/A":
+                return False
+            cid_int = int(cid)
+            return cid_int > 0
+        except (ValueError, TypeError):
+            return False
+    
+    def get_validated_compound_info(self, query: str) -> Dict[str, Any]:
+        """
+        获取经过验证的化合物信息 / Get validated compound information
+        
+        Args:
+            query: 查询内容 / Query content
+            
+        Returns:
+            经过验证的化合物信息 / Validated compound information
+        """
+        try:
+            # 获取化合物信息
+            compound_info = self.get_compound_info(query)
+            
+            # 检查是否有错误
+            if "error" in compound_info:
+                return compound_info
+            
+            # 验证CID
+            if "Compound" in compound_info:
+                compound = compound_info["Compound"]
+                cid = compound.get("CID")
+                if not self.validate_cid(cid):
+                    return {
+                        "success": False,
+                        "query": query,
+                        "error": f"无效的CID: {cid}"
+                    }
+                
+                # 验证分子量
+                molecular_weight = compound.get("MolecularWeight")
+                if molecular_weight == "N/A" or molecular_weight is None:
+                    # 这是可以接受的，某些化合物可能没有分子量信息
+                    pass
+                else:
+                    try:
+                        mw = float(molecular_weight)
+                        if mw <= 0:
+                            return {
+                                "success": False,
+                                "query": query,
+                                "error": f"无效的分子量: {molecular_weight}"
+                            }
+                    except (ValueError, TypeError):
+                        # 分子量不是数字，这可能是一个问题
+                        pass
+                
+                # 添加验证标记
+                compound_info["validated"] = True
+                compound_info["validation_time"] = time.time()
+            
+            return compound_info
+            
+        except Exception as e:
+            logger.error(f"验证化合物信息时出错: {e}")
+            return {
+                "success": False,
+                "query": query,
+                "error": f"验证失败: {str(e)}"
+            }
     
     def get_compound_info_with_cas(self, query: str) -> Dict[str, Any]:
         """

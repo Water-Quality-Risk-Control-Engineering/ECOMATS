@@ -1,6 +1,6 @@
 import logging
 from .base_agent import BaseAgent
-from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool, material_identifier_tool
+from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool, material_identifier_tool, data_validator_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -34,5 +34,5 @@ class MechanismMiningAgent(BaseAgent):
         
         agent = super().create_agent()
         # 为机理分析专家添加化学数据库查询工具
-        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool, material_identifier_tool]
+        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, material_search_tool, material_identifier_tool, data_validator_tool]
         return agent

@@ -189,6 +189,7 @@ class MaterialIdentifierTool:
                 if "error" not in result and "data" in result and result["data"]:
                     return result["data"][0]
                     
+            # 如果仍然没有找到，返回None而不是生成虚假数据
             return None
         except Exception as e:
             logger.warning(f"获取金属材料MP-ID时出错: {e}")

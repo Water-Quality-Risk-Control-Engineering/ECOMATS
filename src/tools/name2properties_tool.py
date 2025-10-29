@@ -4,6 +4,8 @@ Name2Properties工具 / Name2Properties Tool
 根据材料名称查询理化性质 / Query physicochemical properties by material name
 """
 
+import time
+
 import logging
 from typing import Dict, Any, List
 from src.tools.pubchem_tool import get_pubchem_tool
@@ -37,7 +39,7 @@ class Name2PropertiesTool:
         """
         try:
             # 首先尝试从PubChem获取信息
-            pubchem_result = self.pubchem_tool.get_basic_properties_by_name(material_name)
+            pubchem_result = self.pubchem_tool.get_validated_compound_info(material_name)
             
             result = {
                 "material_name": material_name,
@@ -56,22 +58,18 @@ class Name2PropertiesTool:
                 })
                 
                 # 如果可以从PubChem获取更多信息
-                if "cid" in pubchem_result:
-                    cid = pubchem_result["cid"]
-                    if cid and cid != "N/A":
-                        compound_info = self.pubchem_tool.get_compound_info(material_name)
-                        if "Compound" in compound_info:
-                            compound = compound_info["Compound"]
-                            # 获取有效的SMILES表示
-                            canonical_smiles = compound.get("canonical_smiles", "N/A")
-                            isomeric_smiles = compound.get("isomeric_smiles", "N/A")
-                            
-                            result.update({
-                                "canonical_smiles": canonical_smiles,
-                                "isomeric_smiles": isomeric_smiles,
-                                "inchi": compound.get("inchi", "N/A"),
-                                "inchi_key": compound.get("inchi_key", "N/A")
-                            })
+                if "Compound" in pubchem_result:
+                    compound = pubchem_result["Compound"]
+                    # 获取有效的SMILES表示
+                    canonical_smiles = compound.get("canonical_smiles", "N/A")
+                    isomeric_smiles = compound.get("isomeric_smiles", "N/A")
+                    
+                    result.update({
+                        "canonical_smiles": canonical_smiles,
+                        "isomeric_smiles": isomeric_smiles,
+                        "inchi": compound.get("inchi", "N/A"),
+                        "inchi_key": compound.get("inchi_key", "N/A")
+                    })
             
             # 如果Materials Project可用，也尝试查询
             if self.materials_project_tool:
@@ -80,16 +78,21 @@ class Name2PropertiesTool:
                     mp_result = self.materials_project_tool.search_materials(formula=material_name)
                     if mp_result and "data" in mp_result and len(mp_result["data"]) > 0:
                         material = mp_result["data"][0]  # 取第一个结果
-                        result["sources"].append("Materials Project")
-                        result.update({
-                            "material_id": material.get("material_id", "N/A"),
-                            "formula": material.get("formula", "N/A"),
-                            "crystal_system": material.get("symmetry", {}).get("crystal_system", "N/A") if "symmetry" in material else "N/A",
-                            "band_gap": material.get("band_gap", "N/A"),
-                            "formation_energy": material.get("formation_energy_per_atom", "N/A"),
-                            "density": material.get("density", "N/A"),
-                            "volume": material.get("volume", "N/A")
-                        })
+                        material_id = material.get("material_id", "N/A")
+                        # 验证材料ID
+                        if self.materials_project_tool.validate_material_id(material_id):
+                            result["sources"].append("Materials Project")
+                            result.update({
+                                "material_id": material_id,
+                                "formula": material.get("formula", "N/A"),
+                                "crystal_system": material.get("symmetry", {}).get("crystal_system", "N/A") if "symmetry" in material else "N/A",
+                                "band_gap": material.get("band_gap", "N/A"),
+                                "formation_energy": material.get("formation_energy_per_atom", "N/A"),
+                                "density": material.get("density", "N/A"),
+                                "volume": material.get("volume", "N/A")
+                            })
+                        else:
+                            logger.warning(f"无效的材料ID: {material_id}")
                 except Exception as e:
                     logger.warning(f"从Materials Project查询时出错: {e}")
             
@@ -102,6 +105,8 @@ class Name2PropertiesTool:
                 }
             
             result["success"] = True
+            result["validated"] = True
+            result["validation_time"] = time.time()
             return result
                 
         except Exception as e:

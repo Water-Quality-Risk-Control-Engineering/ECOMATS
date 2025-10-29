@@ -7,11 +7,16 @@ Materials Project API 工具 / Materials Project API Tool
 
 import os
 import logging
+import time
 from typing import Dict, List, Optional, Any
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+# 添加调用间隔控制
+_last_call_time = 0
+_call_interval = 1.0  # 1秒间隔
 
 try:
     from mp_api.client import MPRester
@@ -69,6 +74,14 @@ class MaterialsProjectTool:
             Dict: 材料搜索结果
         """
         try:
+            # 添加调用间隔控制
+            global _last_call_time, _call_interval
+            current_time = time.time()
+            time_since_last_call = current_time - _last_call_time
+            if time_since_last_call < _call_interval:
+                time.sleep(_call_interval - time_since_last_call)
+            _last_call_time = time.time()
+            
             # 构建搜索参数
             kwargs = {}
             
@@ -159,6 +172,18 @@ class MaterialsProjectTool:
             Dict: 材料详细信息
         """
         try:
+            # 验证material_id格式
+            if not material_id or material_id == "N/A" or material_id == "":
+                return {"error": f"无效的材料ID: {material_id}"}
+            
+            # 添加调用间隔控制
+            global _last_call_time, _call_interval
+            current_time = time.time()
+            time_since_last_call = current_time - _last_call_time
+            if time_since_last_call < _call_interval:
+                time.sleep(_call_interval - time_since_last_call)
+            _last_call_time = time.time()
+            
             # 获取材料文档
             docs = self.mpr.materials.search(material_ids=[material_id])
             
@@ -166,6 +191,11 @@ class MaterialsProjectTool:
                 return {"error": f"未找到材料ID: {material_id}"}
                 
             doc = docs[0]
+            
+            # 验证获取到的材料ID是否与查询的ID匹配
+            retrieved_material_id = str(getattr(doc, "material_id", ""))
+            if retrieved_material_id != material_id:
+                return {"error": f"材料ID不匹配: 查询 {material_id}, 获取到 {retrieved_material_id}"}
             
             # 提取关键信息并处理缺失值
             band_gap = getattr(doc, "band_gap", None)
@@ -198,7 +228,9 @@ class MaterialsProjectTool:
                 "band_gap": band_gap_with_unit,
                 "energy_above_hull": energy_above_hull_with_unit,
                 "formation_energy_per_atom": formation_energy_with_unit,
-                "crystal_system": getattr(getattr(doc, "symmetry", None), "crystal_system", "N/A") if hasattr(doc, "symmetry") else "N/A"
+                "crystal_system": getattr(getattr(doc, "symmetry", None), "crystal_system", "N/A") if hasattr(doc, "symmetry") else "N/A",
+                "validated": True,
+                "validation_time": time.time()
             }
             
             return material_info
@@ -206,6 +238,25 @@ class MaterialsProjectTool:
         except Exception as e:
             logger.error(f"获取材料详情时出错: {e}")
             return {"error": f"获取材料详情时出错: {str(e)}"}
+    
+    def validate_material_id(self, material_id: Any) -> bool:
+        """
+        验证材料ID是否有效
+        
+        Args:
+            material_id: 材料ID
+            
+        Returns:
+            材料ID是否有效
+        """
+        try:
+            # 材料ID应该是以"mp-"开头的字符串
+            if material_id is None or material_id == "" or material_id == "N/A":
+                return False
+            material_id_str = str(material_id)
+            return material_id_str.startswith("mp-") and len(material_id_str) > 3
+        except (ValueError, TypeError):
+            return False
     
     def get_materials_summary(self, 
                              elements: Optional[List[str]] = None,

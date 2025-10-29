@@ -30,6 +30,38 @@ class TaskAllocator:
         # 存储所有可用的智能体
         self.available_agents = {}
         
+    def determine_required_task_types(self, task_description):
+        """
+        根据任务描述动态决定需要哪些任务类型
+        / Dynamically determine which task types are needed based on task description
+        
+        Args:
+            task_description: 任务描述 / Task description
+            
+        Returns:
+            需要的任务类型列表 / List of required task types
+        """
+        required_task_types = ["material_design"]  # 材料设计任务总是需要
+        
+        # 检查是否需要评估任务 / Check if evaluation tasks are needed
+        if "评估" in task_description or "评价" in task_description or "性能" in task_description:
+            required_task_types.append("evaluation")
+            required_task_types.append("final_validation")
+            
+            # 检查是否需要机理分析任务 / Check if mechanism analysis task is needed
+            if "机理" in task_description or "机制" in task_description or "反应" in task_description:
+                required_task_types.append("mechanism_analysis")
+        
+        # 检查是否需要合成方法任务 / Check if synthesis method task is needed
+        if "合成" in task_description or "制备" in task_description or "工艺" in task_description:
+            required_task_types.append("synthesis_method")
+        
+        # 检查是否需要操作建议任务 / Check if operation suggestion task is needed
+        if "操作" in task_description or "运行" in task_description or "应用" in task_description:
+            required_task_types.append("operation_suggestion")
+            
+        return required_task_types
+        
     def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]) -> None:
         """
         注册智能体到可用列表 / Register an agent to the available list

@@ -1,6 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
+from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, structure_validator_tool
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -35,5 +35,5 @@ class AssessmentScreeningAgentB(BaseAgent):
         
         agent = super().create_agent()
         # 为评估专家添加化学数据库查询工具
-        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool]
+        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, structure_validator_tool]
         return agent

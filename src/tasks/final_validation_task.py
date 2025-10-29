@@ -38,6 +38,7 @@ class FinalValidationTask(BaseTask):
         3. 应用一致性系数调整最终得分
         4. 根据加权公式计算综合得分
         5. 确定材料的最终排名
+        6. **使用Structure Validator工具对最终排名靠前的材料进行结构验证**
         
         加权计算公式：
         最终得分 = 0.50×催化性能 + 0.10×经济可行性 + 0.10×环境友好性 + 0.10×技术可行性 + 0.20×结构合理性
@@ -60,6 +61,7 @@ class FinalValidationTask(BaseTask):
         2. 提供一致性分析结果
         3. 给出最终排名和综合得分
         4. 提供具体的改进建议
+        5. **对排名前3的材料使用Structure Validator工具验证其结构真实性**
         """
         
         expected_output = """

@@ -50,6 +50,7 @@ class EvaluationTask(BaseTask):
         - 使用PubChem工具验证有机污染物或配体的分子结构和性质
         - 使用name2properties_tool或formula2properties_tool验证材料关键组分的性质
         - 使用pnec_tool评估材料的环境安全性
+        - **使用Structure Validator工具验证材料结构是否真实存在**
         - 所有工具查询结果必须在评估中引用，并作为评分依据
         
         评估要求：
@@ -57,6 +58,7 @@ class EvaluationTask(BaseTask):
         - 重点关注材料的科学合理性和实际应用潜力
         - 对于明显不合理的材料设计，请在结构合理性维度给出低分
         - 必须使用工具验证材料信息的准确性
+        - **必须验证材料结构在现实中是否存在**
         
         评估结果输出格式：
         1. 各维度评分（满分10分）：
@@ -76,6 +78,7 @@ class EvaluationTask(BaseTask):
         4. 工具验证结果：
            - Materials Project查询结果：[具体数据]
            - PubChem查询结果：[具体数据]
+           - Structure Validator验证结果：[材料是否存在]
            - 其他工具查询结果：[具体数据]
            - 工具数据如何支持评分决定：[说明]
         """

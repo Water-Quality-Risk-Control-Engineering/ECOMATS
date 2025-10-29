@@ -43,24 +43,50 @@ class TaskAllocator:
         """
         required_task_types = ["material_design"]  # 材料设计任务总是需要
         
+        # 转换为小写以便匹配
+        task_lower = task_description.lower()
+        
         # 检查是否需要评估任务 / Check if evaluation tasks are needed
-        if "评估" in task_description or "评价" in task_description or "性能" in task_description:
+        if "评估" in task_description or "评价" in task_description or "性能" in task_description or \
+           "evaluation" in task_lower or "assess" in task_lower or "performance" in task_lower or \
+           "evaluate" in task_lower:
             required_task_types.append("evaluation")
             required_task_types.append("final_validation")
             
             # 检查是否需要机理分析任务 / Check if mechanism analysis task is needed
-            if "机理" in task_description or "机制" in task_description or "反应" in task_description:
+            if "机理" in task_description or "机制" in task_description or "反应" in task_description or \
+               "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
+               "analyze" in task_lower or "analysis" in task_lower:
+                required_task_types.append("mechanism_analysis")
+        
+        # 检查是否需要机理分析任务（独立检查） / Check if mechanism analysis task is needed (independent check)
+        if "机理" in task_description or "机制" in task_description or "反应" in task_description or \
+           "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
+           "analyze" in task_lower or "analysis" in task_lower:
+            if "mechanism_analysis" not in required_task_types:
                 required_task_types.append("mechanism_analysis")
         
         # 检查是否需要合成方法任务 / Check if synthesis method task is needed
-        if "合成" in task_description or "制备" in task_description or "工艺" in task_description:
+        if "合成" in task_description or "制备" in task_description or "工艺" in task_description or \
+           "synthesis" in task_lower or "synthetic" in task_lower or "preparation" in task_lower or \
+           "method" in task_lower or "procedure" in task_lower or "synthesize" in task_lower:
             required_task_types.append("synthesis_method")
         
         # 检查是否需要操作建议任务 / Check if operation suggestion task is needed
-        if "操作" in task_description or "运行" in task_description or "应用" in task_description:
+        if "操作" in task_description or "运行" in task_description or "应用" in task_description or \
+           "operation" in task_lower or "application" in task_lower or "suggestion" in task_lower or \
+           "usage" in task_lower or "suggest" in task_lower:
             required_task_types.append("operation_suggestion")
             
-        return required_task_types
+        # 去重并保持顺序
+        unique_task_types = []
+        seen = set()
+        for task_type in required_task_types:
+            if task_type not in seen:
+                unique_task_types.append(task_type)
+                seen.add(task_type)
+                
+        return unique_task_types
         
     def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]) -> None:
         """

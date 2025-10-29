@@ -9,7 +9,8 @@ from src.tools import (
     cid2properties_tool,
     pnec_tool,
     material_search_tool,
-    data_validator_tool
+    data_validator_tool,
+    structure_validator_tool
 )
 
 # 配置日志
@@ -45,5 +46,5 @@ class AssessmentScreeningAgentOverall(BaseAgent):
         agent = super().create_agent()
         # 为最终验证专家添加化学数据库查询工具
         # Add chemical database query tools for the final validation expert
-        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, material_search_tool, data_validator_tool]
+        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, material_search_tool, data_validator_tool, structure_validator_tool]
         return agent

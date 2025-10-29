@@ -84,17 +84,20 @@ class MechanismAnalysisTask(BaseTask):
             - 计算验证方法
             - 实验验证方法
             - 与数据库信息的交叉验证
+            - **使用Structure Validator工具验证材料结构的真实性**
         
         工具使用要求（必须严格遵守）：
         - 对于金属材料，使用Materials Project工具查询材料的电子结构数据（如带隙、态密度）、晶体结构信息和计算材料属性（如形成能、弹性常数）
         - 对于有机污染物，使用PubChem工具查询分子结构信息、键合性质和热力学数据
         - 必须使用material_search_tool检索相似材料的性能数据，以支持构效关系分析
+        - **必须使用Structure Validator工具验证所有涉及的材料结构是否真实存在**
         - 所有工具查询结果必须在分析中引用，并解释这些数据如何支持你的机理分析
         - 如果工具查询未返回结果，必须说明这对机理分析的影响
         - 工具调用示例：
           * Materials Project: action="search", formula="材料化学式"
           * PubChem: query="污染物名称或化学式"
           * material_search_tool: query="材料类型或化学式"
+          * structure_validator_tool: material_formula="材料化学式"
         
         分析要点：
         - 必须覆盖所有10个分析维度，不能遗漏
@@ -104,6 +107,7 @@ class MechanismAnalysisTask(BaseTask):
         - 必须结合Materials Project和PubChem工具数据进行验证
         - 每个分析维度都应包含具体的工具数据支持
         - 在分析开始时，首先调用相关工具获取必要的数据
+        - **必须验证所有材料结构在现实中是否存在**
         """
         
         expected_output = """

@@ -2,7 +2,7 @@ import logging
 from src.agents.base_agent import BaseAgent
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
-from src.tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool, cid2properties_tool, pnec_tool
+from src.tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool, cid2properties_tool, pnec_tool, structure_validator_tool
 
 # Configure logging
 # 配置日志
@@ -60,7 +60,8 @@ class CreativeDesigningAgent(BaseAgent):
             cid2properties_tool,         # CID to properties lookup
             formula2properties_tool,     # Chemical formula to properties lookup
             material_search_tool,        # General material search tool
-            pnec_tool                    # PNEC tool
+            pnec_tool,                   # PNEC tool
+            structure_validator_tool     # Structure validation tool
         ]
         return agent
 

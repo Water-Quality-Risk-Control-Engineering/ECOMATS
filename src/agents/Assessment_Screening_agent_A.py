@@ -1,6 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, data_validator_tool
+from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, data_validator_tool, structure_validator_tool
 
 # Configure logging
 # 配置日志
@@ -60,6 +60,7 @@ class AssessmentScreeningAgentA(BaseAgent):
             name2properties_tool,       # Chemical name to properties lookup tool / 化学名称到性质查找工具
             cid2properties_tool,        # CID (Compound ID) to properties lookup tool / 化合物ID到性质查找工具
             pnec_tool,                  # PNEC (Predicted No-Effect Concentration) estimation tool / 预测无效应浓度估算工具
-            data_validator_tool         # Data validation tool / 数据验证工具
+            data_validator_tool,         # Data validation tool / 数据验证工具
+            structure_validator_tool    # Structure validation tool / 结构验证工具
         ]
         return agent

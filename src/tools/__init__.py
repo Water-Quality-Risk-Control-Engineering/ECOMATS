@@ -14,6 +14,7 @@ from .material_search_tool import get_material_search_tool
 from .pnec_tool import get_pnec_tool
 from .material_identifier_tool import get_material_identifier_tool
 from .data_validator_tool import get_data_validator_tool
+from .structure_validator_tool import get_structure_validator_tool
 
 # Import CrewAI tool wrappers / 导入CrewAI工具包装器
 from .crewai_materials_project_tool import materials_project_tool
@@ -26,6 +27,7 @@ from .crewai_material_search_tool import CrewAIMaterialSearchTool
 from .crewai_pnec_tool import CrewAIPNECTool
 from .crewai_material_identifier_tool import CrewAIMaterialIdentifierTool
 from .crewai_data_validator_tool import CrewAIDataValidatorTool
+from .crewai_structure_validator_tool import structure_validator_tool
 
 # Create instances of CrewAI tools / 创建CrewAI工具实例
 name2cas_tool = CrewAIName2CASTool()
@@ -50,6 +52,7 @@ __all__ = [
     'get_pnec_tool',
     'get_material_identifier_tool',
     'get_data_validator_tool',
+    'get_structure_validator_tool',
     'materials_project_tool',
     'pubchem_tool',
     'name2cas_tool',
@@ -59,5 +62,6 @@ __all__ = [
     'material_search_tool',
     'pnec_tool',
     'material_identifier_tool',
-    'data_validator_tool'
+    'data_validator_tool',
+    'structure_validator_tool'
 ]

@@ -372,26 +372,26 @@ def main():
     # 获取用户选择的工作模式 / Get user-selected workflow mode
     workflow_mode = get_workflow_mode()
     
-    # 验证API密钥是否存在 / Verify if API key exists
+    # 验证API密钥是否存在
     if not Config.is_api_key_valid(Config.QWEN_API_KEY):
-        print("错误：API密钥未正确设置 / Error: API key not properly configured")
+        print("错误：API密钥未正确设置")
         return
     
-    # 设置dashscope的API密钥 / Set dashscope API key
+    # 设置dashscope的API密钥
     dashscope.api_key = Config.QWEN_API_KEY
     
-    # 初始化LLM模型，优先使用EAS模型配置 / Initialize LLM model, prioritize EAS model configuration
+    # 初始化LLM模型，优先使用EAS模型配置
     from src.utils.llm_config import create_eas_llm
     try:
         llm = create_eas_llm()
-        print("成功创建EAS LLM实例用于主程序 / Successfully created EAS LLM instance for main program")
+        print("成功创建EAS LLM实例用于主程序")
     except Exception as e:
-        print(f"创建EAS模型实例失败，使用默认配置: {e} / Failed to create EAS model instance, using default configuration: {e}")
-        # 如果EAS配置失败，回退到默认配置 / If EAS configuration fails, fall back to default configuration
+        print(f"创建EAS模型实例失败，使用默认配置: {e}")
+        # 如果EAS配置失败，回退到默认配置
         llm = ChatOpenAI(
             base_url=Config.OPENAI_API_BASE,
-            api_key=Config.OPENAI_API_KEY,  # 使用原始API密钥 / Use original API key
-            model="openai/" + Config.QWEN_MODEL_NAME,  # 使用配置的模型名称，加上提供商前缀 / Use configured model name with provider prefix
+            api_key=Config.OPENAI_API_KEY,
+            model="openai/" + Config.QWEN_MODEL_NAME,
             temperature=Config.MODEL_TEMPERATURE,
             streaming=False,
             max_tokens=Config.MODEL_MAX_TOKENS

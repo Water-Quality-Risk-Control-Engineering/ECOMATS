@@ -24,7 +24,7 @@ class CreativeDesigningAgent(BaseAgent):
         super().__init__(
             llm=llm,
             role="Creative_Designing_agent",  # Material Design Expert
-            goal="设计和优化水处理材料方案",  # Design and optimize water treatment material solutions
+            goal="设计和优化水处理材料方案，严格按照材料类型分类和结构描述规范进行设计",  # Design and optimize water treatment material solutions, strictly following material type classification and structural description specifications
             prompt_file="material_designer_prompt.md",
             temperature=Config.MATERIAL_DESIGNER_TEMPERATURE
         )

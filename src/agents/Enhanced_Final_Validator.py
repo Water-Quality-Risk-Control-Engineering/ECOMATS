@@ -1,7 +1,5 @@
 import logging
 from .base_agent import BaseAgent
-
-# 导入必要的工具
 from src.tools import (
     materials_project_tool,
     pubchem_tool,
@@ -18,16 +16,16 @@ from src.utils.tool_initializer import initialize_final_validator_tools
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class AssessmentScreeningAgentOverall(BaseAgent):
-    """综合评估筛选专家智能体 / Comprehensive assessment and screening expert agent"""
+class EnhancedFinalValidator(BaseAgent):
+    """增强型最终验证专家智能体 / Enhanced final validation expert agent"""
     
     def __init__(self, llm):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="Assessment_Screening_agent_Overall",  # 最终验证专家 / Final validation expert
-            goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告",  # Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report
-            prompt_file="final_validator_prompt.md",
+            role="Enhanced_Final_Validator",  # 增强型最终验证专家 / Enhanced final validation expert
+            goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告，同时提供改进建议",  # Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions
+            prompt_file="enhanced_final_validator_prompt.md",
             temperature=Config.FINAL_VALIDATOR_TEMPERATURE
         )
     
@@ -51,10 +49,10 @@ class AssessmentScreeningAgentOverall(BaseAgent):
         try:
             agent.tools = initialize_final_validator_tools()
             if not agent.tools:
-                logger.warning("最终验证代理的工具初始化失败，使用默认工具列表")
+                logger.warning("增强型最终验证代理的工具初始化失败，使用默认工具列表")
                 agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, material_search_tool, data_validator_tool, structure_validator_tool]
         except Exception as e:
-            logger.error(f"初始化最终验证代理工具时出错: {e}")
+            logger.error(f"初始化增强型最终验证代理工具时出错: {e}")
             # 回退到原始工具列表
             agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, material_search_tool, data_validator_tool, structure_validator_tool]
         

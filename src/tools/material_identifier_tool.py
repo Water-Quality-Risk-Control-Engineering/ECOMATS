@@ -14,7 +14,13 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class MaterialIdentifierTool:
-    """材料标识符处理工具类 - 统一处理金属材料和有机物的标识符"""
+    """材料标识符处理工具类 - 统一处理金属材料和有机物的标识符
+    
+    支持多种材料类型的标识符处理：
+    1. 金属材料（获取Materials Project ID）
+    2. 有机材料（获取CAS号）
+    3. 复合材料（通过元素组成识别）
+    """
     
     def __init__(self):
         """初始化材料标识符处理工具"""

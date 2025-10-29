@@ -10,7 +10,14 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class PubChemTool:
-    """PubChem数据库查询工具 / PubChem database query tool"""
+    """PubChem数据库查询工具 / PubChem database query tool
+    
+    支持多种有机材料的查询和验证：
+    1. 纯有机化合物
+    2. 生物基材料
+    3. 碳基材料（部分）
+    4. 其他含有机成分的材料
+    """
     
     def __init__(self, api_key: str = None):
         self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"

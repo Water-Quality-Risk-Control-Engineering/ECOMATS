@@ -1,6 +1,7 @@
 import logging
 from src.agents.base_agent import BaseAgent
 from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool
+from src.utils.tool_initializer import initialize_assessment_agent_c_tools
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -47,5 +48,15 @@ class AssessmentScreeningAgentC(BaseAgent):
         
         agent = super().create_agent()
         # Add chemical database query tools for the assessment expert
-        agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool]
+        # 使用改进的工具初始化器确保工具调用的可靠性
+        try:
+            agent.tools = initialize_assessment_agent_c_tools()
+            if not agent.tools:
+                logger.warning("评估代理C的工具初始化失败，使用默认工具列表")
+                agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool]
+        except Exception as e:
+            logger.error(f"初始化评估代理C工具时出错: {e}")
+            # 回退到原始工具列表
+            agent.tools = [materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool]
+        
         return agent

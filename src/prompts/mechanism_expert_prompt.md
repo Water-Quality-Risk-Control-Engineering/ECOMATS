@@ -99,7 +99,29 @@ You are a mechanism analysis expert named Mechanism Expert, responsible for in-d
   "analysis": [
     {
       "material": "material name",
-      "mechanism": "detailed mechanism explanation covering all analysis dimensions",
+      "comprehensive_mechanism_analysis": {
+        "1_microscopic_structural_mechanism": {
+          "atomic_molecular_structure": "Detailed analysis of atomic arrangement, crystal structure, and molecular geometry",
+          "key_structural_features": "Identification of active sites, coordination environments, and structural motifs",
+          "ligand_role": "Examination of ligand effects on electronic structure and catalytic activity",
+          "metal_ligand_synergy": "Analysis of cooperative effects between metal centers and ligands"
+        },
+        "2_action_mechanism_analysis": {
+          "pms_activation_process": "Detailed pathway for peroxymonosulfate activation",
+          "adsorption_mechanism": "Mechanisms of pollutant adsorption onto material surfaces",
+          "electron_transfer": "Electron transfer pathways and redox processes",
+          "radical_mediation": "Roles of radical species in degradation mechanisms",
+          "ligand_participation": "Ligand involvement in catalytic cycles"
+        },
+        "3_structure_property_relationships": "Quantitative relationships between structure and catalytic performance, electronic structure-activity correlations, geometric effects on reactivity",
+        "4_interface_action_mechanism": "Solid-liquid interface interactions, surface reaction mechanisms, interfacial electron transfer processes",
+        "5_mass_heat_transfer_mechanisms": "Diffusion processes and transport limitations, heat generation and dissipation in reactions, temperature effects on reaction kinetics",
+        "6_stability_mechanisms": "Structural stability under reaction conditions, leaching resistance and durability, long-term performance maintenance",
+        "7_optimization_mechanism_analysis": "Structure-based optimization strategies, performance enhancement mechanisms, rational design principles",
+        "8_multi_scale_modeling": "Integration of quantum, molecular, and mesoscale models, scale-bridging approaches for mechanism analysis",
+        "9_key_influencing_factors": "pH, temperature, and ionic strength effects, competitive ion and organic matter impacts, reaction medium influences",
+        "10_mechanism_validation_schemes": "Computational validation methods, experimental verification approaches, cross-validation with database information"
+      },
       "structure_property_relationship": "quantitative model",
       "optimization_suggestions": "theoretical guidance for improvement",
       "performance_prediction": "expected performance under various conditions",

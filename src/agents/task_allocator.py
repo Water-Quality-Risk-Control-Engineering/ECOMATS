@@ -20,6 +20,7 @@ class TaskAllocator:
             "material_design": "CreativeDesigningAgent",
             "evaluation": "AssessmentScreeningAgent",
             "final_validation": "AssessmentScreeningAgentOverall",
+            "enhanced_final_validation": "EnhancedFinalValidator",
             "mechanism_analysis": "MechanismMiningAgent",
             "synthesis_method": "SynthesisGuidingAgent",
             "literature_processing": "ExtractingAgent",

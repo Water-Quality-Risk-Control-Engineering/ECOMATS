@@ -29,6 +29,7 @@ from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
 from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
 from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
 from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+from src.agents.Enhanced_Final_Validator import EnhancedFinalValidator
 from src.agents.Extracting_agent import ExtractingAgent
 from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
 from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
@@ -47,6 +48,7 @@ def get_user_input():
     """获取用户自定义的材料设计需求 / Get user-defined material design requirements"""
     print("请输入您的材料设计需求: / Please enter your material design requirements:")
     print("例如: 设计一种用于处理含重金属镉废水的高效催化剂 / Example: Design an efficient catalyst for treating cadmium-containing heavy metal wastewater")
+    print("注意: 系统支持详细的材料类型分类和结构描述要求 / Note: The system supports detailed material type classification and structural description requirements")
     user_input = input("材料设计需求: / Material design requirements: ")
     return user_input
 
@@ -72,6 +74,7 @@ def create_all_agents(llm):
     expert_b_agent = AssessmentScreeningAgentB(llm).create_agent()
     expert_c_agent = AssessmentScreeningAgentC(llm).create_agent()
     final_validator_agent = AssessmentScreeningAgentOverall(llm).create_agent()
+    enhanced_final_validator_agent = EnhancedFinalValidator(llm).create_agent()
     literature_processor_agent = ExtractingAgent(llm).create_agent()
     mechanism_expert_agent = MechanismMiningAgent(llm).create_agent()
     synthesis_expert_agent = SynthesisGuidingAgent(llm).create_agent()
@@ -84,6 +87,7 @@ def create_all_agents(llm):
         'expert_b': expert_b_agent,
         'expert_c': expert_c_agent,
         'final_validator': final_validator_agent,
+        'enhanced_final_validator': enhanced_final_validator_agent,
         'literature_processor': literature_processor_agent,
         'mechanism_expert': mechanism_expert_agent,
         'synthesis_expert': synthesis_expert_agent,
@@ -259,6 +263,7 @@ def run_autonomous_workflow(user_requirement, llm):
     task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
     task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
     task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
+    task_allocator.register_agent("EnhancedFinalValidator", agents['enhanced_final_validator'])
     task_allocator.register_agent("ExtractingAgent", agents['literature_processor'])
     task_allocator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
     task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])

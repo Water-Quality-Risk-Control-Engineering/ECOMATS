@@ -15,7 +15,13 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class StructureValidatorTool:
-    """结构验证工具类 - 验证材料结构是否真实存在"""
+    """结构验证工具类 - 验证材料结构是否真实存在
+    
+    支持多种材料类型的结构验证：
+    1. 金属材料（使用Materials Project数据库）
+    2. 有机材料（使用PubChem数据库）
+    3. 复合材料（通过元素组成验证）
+    """
     
     def __init__(self):
         """初始化结构验证工具"""

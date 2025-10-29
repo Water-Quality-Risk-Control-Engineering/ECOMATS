@@ -28,7 +28,16 @@ except ImportError:
     logger.warning("mp-api客户端未安装，Materials Project工具将不可用 / mp-api client not installed, Materials Project tool will be unavailable")
 
 class MaterialsProjectTool:
-    """Materials Project API 工具类 / Materials Project API Tool Class"""
+    """Materials Project API 工具类 / Materials Project API Tool Class
+    
+    支持多种无机材料的查询和验证：
+    1. 纯金属材料
+    2. 金属氧化物
+    3. 金属硫化物
+    4. 金属氮化物/碳化物
+    5. MOF/COF材料
+    6. 其他无机化合物
+    """
     
     def __init__(self, api_key: Optional[str] = None):
         """

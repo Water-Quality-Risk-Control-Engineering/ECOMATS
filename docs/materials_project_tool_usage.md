@@ -41,9 +41,6 @@
 
 以下字段在当前版本的API中不可用：
 
-- `band_gap`
-- `formation_energy_per_atom`
-- `energy_above_hull`
 - `elasticity`
 - `magnetic_ordering`
 - `total_magnetization`
@@ -60,11 +57,6 @@
 - `crystal_system`: 晶体系统
 - `limit`: 返回结果的最大数量（默认100）
 - `skip`: 跳过的结果数量（默认0）
-
-注意：以下参数在当前API版本中不被支持：
-- `band_gap_min`
-- `band_gap_max`
-- `is_stable`
 
 ### get_material_by_id
 
@@ -116,5 +108,5 @@ result = materials_project_tool._run(action="get_material", material_id="mp-1977
 
 1. 确保已在环境变量中设置`MATERIALS_PROJECT_API_KEY`
 2. 使用`fields`参数时，必须确保字段是API支持的字段
-3. 某些参数在当前API版本中不被支持，使用时会被忽略
+3. 使用`fields`参数时，必须确保字段是API支持的字段
 4. 查询大量数据时可能需要较长时间，请设置合适的超时时间

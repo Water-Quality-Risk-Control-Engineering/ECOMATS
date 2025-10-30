@@ -7,18 +7,18 @@ load_dotenv()
 class Config:
     # Qwen3模型配置 / Qwen3 model configuration
     QWEN_API_BASE = os.getenv("QWEN_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")  # API密钥应通过环境变量设置 / API key should be set through environment variables
-    QWEN_MODEL_NAME = os.getenv("QWEN_MODEL_NAME", "qwen3-30b-a3b-instruct-2507")
+    QWEN_API_KEY = os.getenv("QWEN_API_KEY")  # API密钥应通过环境变量设置 / API key should be set through environment variables
+    QWEN_MODEL_NAME = os.getenv("QWEN_MODEL_NAME", "qwen3-30b-a3b-instruct-2507")  # 使用项目规范的默认模型
     
     # 兼容OpenAI的配置（CrewAI需要） / OpenAI-compatible configuration (required by CrewAI)
     OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # API密钥应通过环境变量设置 / API key should be set through environment variables
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # API密钥应通过环境变量设置 / API key should be set through environment variables
     
     # Materials Project API配置 / Materials Project API configuration
-    MATERIALS_PROJECT_API_KEY = os.getenv("MATERIALS_PROJECT_API_KEY", "")
+    MATERIALS_PROJECT_API_KEY = os.getenv("MATERIALS_PROJECT_API_KEY")
     
     # PubChem API配置 / PubChem API configuration
-    PUBCHEM_API_KEY = os.getenv("PUBCHEM_API_KEY", "")
+    PUBCHEM_API_KEY = os.getenv("PUBCHEM_API_KEY")
     
     # 模型参数配置 / Model parameter configuration
     MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.7"))
@@ -57,9 +57,9 @@ class Config:
     VERBOSE = os.getenv("VERBOSE", "True").lower() == "true"
     
     # EAS模型配置（可选） / EAS model configuration (optional)
-    EAS_ENDPOINT = os.getenv("EAS_ENDPOINT", "")
-    EAS_TOKEN = os.getenv("EAS_TOKEN", "")
-    EAS_MODEL_NAME = os.getenv("EAS_MODEL_NAME", "")
+    EAS_ENDPOINT = os.getenv("EAS_ENDPOINT")
+    EAS_TOKEN = os.getenv("EAS_TOKEN")
+    EAS_MODEL_NAME = os.getenv("EAS_MODEL_NAME")
     
     @classmethod
     def is_api_key_valid(cls, api_key):

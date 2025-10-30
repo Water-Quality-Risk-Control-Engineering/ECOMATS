@@ -1,7 +1,13 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.pnec_tool import get_pnec_tool
+
+class PNECToolInput(BaseModel):
+    """PNEC工具输入参数模型"""
+    query: str = Field(description="查询内容（CAS号或化合物名称）")
+    query_type: str = Field(default="name", description="查询类型 ('name' 或 'cas')")
 
 class CrewAIPNECTool(BaseTool):
     """CrewAI工具包装器，用于查询化学物质的预测无效应浓度(PNEC)数据"""
@@ -12,6 +18,7 @@ class CrewAIPNECTool(BaseTool):
         "可以基于CAS号或化合物名称查询PNEC值。"
         "当需要评估化学物质的环境安全性时使用此工具。"
     )
+    args_schema: type[BaseModel] = PNECToolInput
     
     def _run(self, query: str, query_type: str = "name") -> str:
         """

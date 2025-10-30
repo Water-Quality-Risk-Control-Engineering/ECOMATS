@@ -19,11 +19,17 @@ def create_llm(temperature=None, max_tokens=None):
     Returns:
         ChatOpenAI: 配置好的语言模型实例 / Configured language model instance
     """
+    # 检查模型名称
+    model_name = Config.QWEN_MODEL_NAME
+    if not model_name:
+        raise ValueError("QWEN_MODEL_NAME 未在环境变量中设置")
+    
+    # 使用环境变量中定义的完整模型名称，不进行前缀处理
     # 创建ChatOpenAI实例 / Create ChatOpenAI instance
     llm = ChatOpenAI(
         base_url=Config.QWEN_API_BASE,    # API基础URL / API base URL
         api_key=Config.QWEN_API_KEY,      # API密钥 / API key
-        model=Config.QWEN_MODEL_NAME,     # 模型名称 / Model name
+        model=model_name,                 # 模型名称 / Model name
         temperature=temperature or Config.MODEL_TEMPERATURE,  # 温度参数 / Temperature parameter
         max_tokens=max_tokens or Config.MODEL_MAX_TOKENS,     # 最大令牌数 / Maximum tokens
         streaming=False  # 禁用流式输出 / Disable streaming output
@@ -39,16 +45,15 @@ def create_eas_llm():
         ChatOpenAI: EAS模型实例
     """
     # 检查EAS配置是否存在
-    if not Config.EAS_ENDPOINT or not Config.EAS_TOKEN or Config.EAS_ENDPOINT == "your-eas-endpoint" or Config.EAS_TOKEN == "your-eas-token":
-        raise ValueError("EAS配置未设置或使用默认值，请在.env文件中配置有效的EAS_ENDPOINT和EAS_TOKEN")
+    if not Config.EAS_ENDPOINT or not Config.EAS_TOKEN:
+        raise ValueError("EAS配置未设置，请在.env文件中配置有效的EAS_ENDPOINT和EAS_TOKEN")
     
     # 检查模型名称
-    model_name = Config.EAS_MODEL_NAME if Config.EAS_MODEL_NAME and Config.EAS_MODEL_NAME != "your-model-name" else "qwen3-next-80b-a3b-thinking"
+    model_name = Config.EAS_MODEL_NAME
+    if not model_name:
+        raise ValueError("EAS_MODEL_NAME 未在环境变量中设置")
     
-    # 为EAS模型添加正确的前缀
-    if not model_name.startswith("openai/"):
-        model_name = "openai/" + model_name
-    
+    # 使用环境变量中定义的完整模型名称，不进行前缀处理
     # 使用配置的EAS端点URL（不添加额外路径）
     base_url = Config.EAS_ENDPOINT
     
@@ -68,12 +73,4 @@ def create_eas_llm():
         return eas_llm
     except Exception as e:
         print(f"创建EAS模型实例失败: {e}")
-        # 如果EAS配置失败，回退到默认配置
-        return ChatOpenAI(
-            base_url=Config.OPENAI_API_BASE,
-            api_key=Config.OPENAI_API_KEY,
-            model="openai/" + ("qwen3-next-80b-a3b-thinking" if not Config.QWEN_MODEL_NAME or Config.QWEN_MODEL_NAME == "your-model-name" else Config.QWEN_MODEL_NAME),
-            temperature=Config.MODEL_TEMPERATURE,
-            streaming=False,
-            max_tokens=Config.MODEL_MAX_TOKENS
-        )
+        raise

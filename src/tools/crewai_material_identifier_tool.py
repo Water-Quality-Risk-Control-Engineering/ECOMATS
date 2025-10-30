@@ -1,7 +1,12 @@
 import json
 from typing import Dict, Any
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.material_identifier_tool import get_material_identifier_tool
+
+class MaterialIdentifierToolInput(BaseModel):
+    """材料标识符工具输入参数模型"""
+    query: str = Field(description="材料查询字符串（可以是化学式、元素组合或材料名称）")
 
 class CrewAIMaterialIdentifierTool(BaseTool):
     """CrewAI工具包装器，用于材料标识符处理"""
@@ -12,6 +17,7 @@ class CrewAIMaterialIdentifierTool(BaseTool):
         "能够识别材料类型并获取相应的唯一标识符。"
         "当需要确定材料的唯一标识符时使用此工具。"
     )
+    args_schema: type[BaseModel] = MaterialIdentifierToolInput
     
     def _run(self, query: str) -> str:
         """

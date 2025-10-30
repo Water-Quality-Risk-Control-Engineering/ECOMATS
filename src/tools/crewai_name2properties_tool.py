@@ -1,7 +1,12 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.name2properties_tool import get_name2properties_tool
+
+class Name2PropertiesToolInput(BaseModel):
+    """Name2Properties工具输入参数模型"""
+    material_name: str = Field(description="材料名称 / Material name")
 
 class CrewAIName2PropertiesTool(BaseTool):
     """CrewAI工具包装器，用于根据材料名称查询理化性质 / CrewAI tool wrapper for querying physicochemical properties by material name"""
@@ -12,6 +17,7 @@ class CrewAIName2PropertiesTool(BaseTool):
         "可以获取分子式、分子量、晶体结构等信息。/ Can obtain information such as molecular formula, molecular weight, crystal structure, etc. "
         "当需要了解材料的基本物理化学特性时使用此工具。/ Use this tool when you need to understand the basic physicochemical characteristics of materials."
     )
+    args_schema: type[BaseModel] = Name2PropertiesToolInput
     
     def _run(self, material_name: str) -> str:
         """

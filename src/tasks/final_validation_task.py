@@ -28,7 +28,7 @@ class FinalValidationTask(BaseTask):
             {evaluation_results}"""
         )
 
-    def create_task(self, agent, context_task=None):
+    def create_task(self, agent, context_task=None, user_requirement=None):
         description = """
         请综合各专家评估结果，进行加权计算并形成最终材料评估报告：
         
@@ -39,6 +39,38 @@ class FinalValidationTask(BaseTask):
         4. 根据加权公式计算综合得分
         5. 确定材料的最终排名
         6. **使用Structure Validator工具对最终排名靠前的材料进行结构验证**
+        
+        工具使用策略：
+        1. **专家数据验证阶段**：
+           - 首先验证各专家评估结果中引用的工具数据是否真实存在
+           - 检查所有MP-ID、CAS号等数据库标识符的有效性
+           - 对于专家提供的工具查询结果，使用相同工具进行独立验证
+           - 标记任何无法验证或明显错误的数据
+        
+        2. **材料结构验证阶段**：
+           - 对排名前5的材料，逐一调用Structure Validator Tool验证结构真实性
+           - 对于金属材料，同时调用Materials Project工具进行交叉验证
+           - 对于有机材料，同时调用PubChem工具进行交叉验证
+           - 记录所有验证工具的查询参数和返回结果
+           - 对无法验证的材料进行特别标注并影响最终排名
+        
+        3. **数据一致性分析阶段**：
+           - 使用Data Validator Tool验证各专家评分数据的一致性
+           - 计算每个维度在三个专家评分中的标准差和变异系数
+           - 识别评分差异较大的维度并分析原因
+           - 对一致性差的维度进行重点关注和重新评估
+        
+        4. **综合验证阶段**：
+           - 对所有工具验证结果进行综合分析
+           - 识别并标记任何编造或不一致的数据
+           - 验证材料性能数据的合理性和可信度
+           - 确保最终排名基于真实的工具验证数据
+        
+        5. **改进建议数据支持阶段**：
+           - 对于排名较低的材料，调用相关工具获取改进建议的数据支持
+           - 查询类似优化材料的性能数据
+           - 提供基于工具数据的具体改进方向
+           - 确保改进建议的可行性和科学性
         
         加权计算公式：
         最终得分 = 0.50×催化性能 + 0.10×经济可行性 + 0.10×环境友好性 + 0.10×技术可行性 + 0.20×结构合理性
@@ -62,7 +94,14 @@ class FinalValidationTask(BaseTask):
         3. 给出最终排名和综合得分
         4. 提供具体的改进建议
         5. **对排名前3的材料使用Structure Validator工具验证其结构真实性**
+        6. 详细记录所有工具调用的参数和结果
+        7. 明确标识任何发现的编造或不一致数据
+        8. **如果Materials Project工具未返回有效的material_id，不得进行推断或生成虚假的MP-ID**
         """
+        
+        # 添加用户需求到描述中
+        if user_requirement:
+            description += f"\n\n用户具体需求：{user_requirement}"
         
         expected_output = """
         提供完整的最终验证报告，包括：

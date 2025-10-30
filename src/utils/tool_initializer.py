@@ -7,9 +7,53 @@
 import logging
 from typing import List, Dict, Any, Optional
 
+# 导入所有工具类
+from src.tools import (
+    materials_project_tool,
+    pubchem_tool,
+    CrewAIName2PropertiesTool,
+    CrewAICID2PropertiesTool,
+    CrewAIPNECTool,
+    CrewAIMaterialSearchTool,
+    CrewAIDataValidatorTool,
+    CrewAIStructureValidatorTool
+)
+
+# 导入工具工厂
+from src.tools.factory import ToolFactory
+
+# 导入评估工具执行器
+from src.utils.assessment_tool_executor import AssessmentToolExecutor
+
+# 导入评估评分逻辑
+from src.utils.assessment_scoring_logic import AssessmentScoringLogic
+
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+def initialize_final_validator_tools():
+    """
+    初始化最终验证代理的工具
+    返回所有可用工具的列表
+    """
+    try:
+        tools = ToolFactory.create_all_tools()
+        logger.info("成功初始化最终验证代理的工具")
+        return tools
+    except Exception as e:
+        logger.error(f"初始化最终验证代理工具时出错: {e}")
+        # 回退到手动创建的工具列表
+        return [
+            materials_project_tool,
+            pubchem_tool,
+            CrewAIName2PropertiesTool(),
+            CrewAICID2PropertiesTool(),
+            CrewAIPNECTool(),
+            CrewAIMaterialSearchTool(),
+            CrewAIDataValidatorTool(),
+            CrewAIStructureValidatorTool()
+        ]
 
 class ToolInitializer:
     """工具初始化器类 - 提供可靠的工具实例创建和错误处理机制"""
@@ -73,100 +117,3 @@ class ToolInitializer:
                 logger.warning(f"工具 {name} 初始化失败，将在代理中跳过")
         
         return tools
-
-# 创建特定代理的工具初始化函数
-def initialize_assessment_agent_a_tools() -> List[Any]:
-    """初始化评估代理A的工具"""
-    from src.tools import (
-        materials_project_tool,
-        pubchem_tool,
-        name2properties_tool,
-        cid2properties_tool,
-        pnec_tool,
-        data_validator_tool,
-        structure_validator_tool
-    )
-    
-    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
-    tools = [
-        materials_project_tool,      # CrewAIMaterialsProjectTool
-        pubchem_tool,                # CrewAIPubChemTool
-        name2properties_tool,        # CrewAIName2PropertiesTool
-        cid2properties_tool,         # CrewAICID2PropertiesTool
-        pnec_tool,                   # CrewAIPNECTool
-        data_validator_tool,         # CrewAIDataValidatorTool
-        structure_validator_tool     # CrewAIStructureValidatorTool
-    ]
-    
-    return tools
-
-def initialize_assessment_agent_b_tools() -> List[Any]:
-    """初始化评估代理B的工具"""
-    from src.tools import (
-        materials_project_tool,
-        pubchem_tool,
-        name2properties_tool,
-        cid2properties_tool,
-        pnec_tool,
-        structure_validator_tool
-    )
-    
-    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
-    tools = [
-        materials_project_tool,      # CrewAIMaterialsProjectTool
-        pubchem_tool,                # CrewAIPubChemTool
-        name2properties_tool,        # CrewAIName2PropertiesTool
-        cid2properties_tool,         # CrewAICID2PropertiesTool
-        pnec_tool,                   # CrewAIPNECTool
-        structure_validator_tool     # CrewAIStructureValidatorTool
-    ]
-    
-    return tools
-
-def initialize_assessment_agent_c_tools() -> List[Any]:
-    """初始化评估代理C的工具"""
-    from src.tools import (
-        materials_project_tool,
-        pubchem_tool,
-        name2properties_tool,
-        cid2properties_tool,
-        pnec_tool
-    )
-    
-    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
-    tools = [
-        materials_project_tool,      # CrewAIMaterialsProjectTool
-        pubchem_tool,                # CrewAIPubChemTool
-        name2properties_tool,        # CrewAIName2PropertiesTool
-        cid2properties_tool,         # CrewAICID2PropertiesTool
-        pnec_tool                     # CrewAIPNECTool
-    ]
-    
-    return tools
-
-def initialize_final_validator_tools() -> List[Any]:
-    """初始化最终验证代理的工具"""
-    from src.tools import (
-        materials_project_tool,
-        pubchem_tool,
-        name2properties_tool,
-        cid2properties_tool,
-        pnec_tool,
-        material_search_tool,
-        data_validator_tool,
-        structure_validator_tool
-    )
-    
-    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
-    tools = [
-        materials_project_tool,      # CrewAIMaterialsProjectTool
-        pubchem_tool,                # CrewAIPubChemTool
-        name2properties_tool,        # CrewAIName2PropertiesTool
-        cid2properties_tool,         # CrewAICID2PropertiesTool
-        pnec_tool,                   # CrewAIPNECTool
-        material_search_tool,        # CrewAIMaterialSearchTool
-        data_validator_tool,         # CrewAIDataValidatorTool
-        structure_validator_tool     # CrewAIStructureValidatorTool
-    ]
-    
-    return tools

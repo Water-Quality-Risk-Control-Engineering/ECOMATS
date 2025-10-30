@@ -50,7 +50,8 @@ class StructureValidatorTool:
                 "type": "unknown",
                 "data": None,
                 "source": None,
-                "reason": None
+                "reason": None,
+                "validation_confidence": "low"  # 添加验证置信度字段
             }
             
             # 首先识别材料类型
@@ -58,29 +59,67 @@ class StructureValidatorTool:
                 identification = self.identifier_tool.identify_material(material_formula)
                 material_type = identification.get("material_type", "unknown")
                 result["type"] = material_type
+                
+                # 检查材料是否已验证
+                validation_status = identification.get("validation_status", "not_found")
+                is_verified = identification.get("is_verified", False)
+                if validation_status == "validated" and is_verified:
+                    # 如果材料已通过标识符工具验证，设置高置信度
+                    result["validation_confidence"] = "high"
+                    result["reason"] = f"材料类型已通过标识符工具验证为{material_type}"
+                    # 添加标识符信息
+                    result["identifier"] = identification.get("identifier")
+                    result["identifier_type"] = identification.get("identifier_type")
+                elif validation_status == "not_found":
+                    result["reason"] = f"标识符工具未能找到匹配的{material_type}材料"
+                else:
+                    result["reason"] = f"标识符工具验证失败: {identification.get('error', '未知错误')}"
             else:
                 # 如果标识符工具不可用，使用简单判断
                 material_type = self._simple_determine_material_type(material_formula)
                 result["type"] = material_type
+                result["reason"] = "标识符工具不可用，使用简单判断"
             
             # 根据材料类型使用相应的验证方法
             if material_type == "metal":
                 # 金属材料验证
                 validation_result = self._validate_metal_structure(material_formula)
                 result.update(validation_result)
+                # 更新验证置信度
+                if validation_result["valid"]:
+                    result["validation_confidence"] = "high"
+                else:
+                    result["validation_confidence"] = "low"
             elif material_type == "organic":
                 # 有机材料验证
                 validation_result = self._validate_organic_structure(material_formula)
                 result.update(validation_result)
+                # 更新验证置信度
+                if validation_result["valid"]:
+                    result["validation_confidence"] = "high"
+                else:
+                    result["validation_confidence"] = "low"
             else:
                 # 未知类型，尝试两种方法
                 metal_result = self._validate_metal_structure(material_formula)
                 if metal_result["valid"]:
                     result.update(metal_result)
+                    result["validation_confidence"] = "high"
                 else:
                     organic_result = self._validate_organic_structure(material_formula)
                     result.update(organic_result)
+                    if organic_result["valid"]:
+                        result["validation_confidence"] = "high"
+                    else:
+                        result["validation_confidence"] = "low"
             
+            # 添加强制验证要求
+            if not result["valid"]:
+                result["mandatory_action_required"] = True
+                result["action_description"] = "材料结构未通过验证，需要重新设计或提供更多实验数据支持"
+            else:
+                result["mandatory_action_required"] = False
+                
             return result
                 
         except Exception as e:
@@ -91,7 +130,10 @@ class StructureValidatorTool:
                 "type": "unknown",
                 "data": None,
                 "source": None,
-                "reason": f"验证过程中出错: {str(e)}"
+                "reason": f"验证过程中出错: {str(e)}",
+                "validation_confidence": "low",
+                "mandatory_action_required": True,
+                "action_description": f"验证过程中出现错误: {str(e)}，需要人工检查"
             }
     
     def _validate_metal_structure(self, formula: str) -> Dict[str, Any]:
@@ -117,34 +159,46 @@ class StructureValidatorTool:
             # 尝试按化学式搜索
             search_result = self.materials_project_tool.search_materials(formula=formula, limit=1)
             if "error" not in search_result and "data" in search_result and search_result["data"]:
-                return {
-                    "valid": True,
-                    "type": "metal",
-                    "data": search_result["data"][0],
-                    "source": "Materials Project",
-                    "reason": "在Materials Project中找到匹配的材料结构"
-                }
-            else:
-                # 如果按化学式搜索失败，尝试按元素搜索
-                elements = self._extract_elements(formula)
-                if elements:
-                    element_result = self.materials_project_tool.search_materials(elements=elements[:2], limit=1)
-                    if "error" not in element_result and "data" in element_result and element_result["data"]:
+                material = search_result["data"][0]
+                # 验证material_id在Materials Project数据库中是否存在
+                material_id = material.get("material_id", "")
+                if material_id and self.materials_project_tool.verify_material_id_exists(material_id):
+                    return {
+                        "valid": True,
+                        "type": "metal",
+                        "data": material,
+                        "source": "Materials Project",
+                        "reason": "在Materials Project中找到匹配的材料结构"
+                    }
+                else:
+                    logger.warning(f"发现无效的材料ID: {material_id}")
+                
+            # 如果按化学式搜索失败，尝试按元素搜索
+            elements = self._extract_elements(formula)
+            if elements:
+                element_result = self.materials_project_tool.search_materials(elements=elements[:2], limit=1)
+                if "error" not in element_result and "data" in element_result and element_result["data"]:
+                    material = element_result["data"][0]
+                    # 验证material_id在Materials Project数据库中是否存在
+                    material_id = material.get("material_id", "")
+                    if material_id and self.materials_project_tool.verify_material_id_exists(material_id):
                         return {
                             "valid": True,
                             "type": "metal",
-                            "data": element_result["data"][0],
+                            "data": material,
                             "source": "Materials Project",
                             "reason": "在Materials Project中找到包含相同元素的材料结构"
                         }
-                
-                return {
-                    "valid": False,
-                    "type": "metal",
-                    "data": None,
-                    "source": None,
-                    "reason": f"Materials Project中未找到化学式为{formula}的材料"
-                }
+                    else:
+                        logger.warning(f"发现无效的材料ID: {material_id}")
+            
+            return {
+                "valid": False,
+                "type": "metal",
+                "data": None,
+                "source": None,
+                "reason": f"Materials Project中未找到化学式为{formula}的材料或找到的材料ID无效"
+            }
         except Exception as e:
             logger.warning(f"验证金属材料结构时出错: {e}")
             return {

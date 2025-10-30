@@ -1,239 +1,144 @@
 #!/usr/bin/env python3
 """
-MaterialSearch工具
-检索相似材料的性能数据
+材料搜索工具
+用于搜索具有特定属性的材料
 """
 
+import json
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, Optional, List
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
-from src.tools.pubchem_tool import get_pubchem_tool
-from src.tools.material_identifier_tool import get_material_identifier_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class MaterialSearchTool:
-    """MaterialSearch工具类 - 检索相似材料的性能数据"""
+class MaterialSearchInput(BaseModel):
+    """材料搜索工具输入参数"""
+    query: str = Field(..., description="搜索查询，可以是材料类型、化学式或元素组合")
+    limit: int = Field(default=10, description="返回结果数量限制")
+
+class MaterialSearchTool(BaseTool):
+    """材料搜索工具"""
     
-    def __init__(self, pubchem_api_key: str = None, materials_project_api_key: str = None):
-        """初始化MaterialSearch工具"""
-        try:
-            self.materials_project_tool = get_materials_project_tool(materials_project_api_key)
-        except Exception as e:
-            logger.warning(f"Materials Project工具不可用: {e}")
-            self.materials_project_tool = None
-        self.pubchem_tool = get_pubchem_tool(pubchem_api_key)
-        self.material_identifier_tool = get_material_identifier_tool()
+    name: str = "Material Search Tool"
+    description: str = (
+        "搜索具有特定属性的材料。"
+        "可以按材料类型、化学式或元素组合进行搜索。"
+    )
+    args_schema: type[BaseModel] = MaterialSearchInput
     
-    def search_similar_materials(self, query: str, limit: int = 10) -> Dict[str, Any]:
+    def _run(self, query: str, limit: int = 10) -> str:
         """
-        检索相似材料的性能数据
+        搜索材料
         
         Args:
-            query (str): 查询内容（可以是化学式、元素组合或材料名称）
-            limit (int): 返回结果数量限制
+            query: 搜索查询
+            limit: 返回结果数量限制
             
         Returns:
-            Dict[str, Any]: 包含相似材料性能数据的字典
+            JSON格式的搜索结果
         """
         try:
-            results = {
+            # 获取Materials Project工具实例
+            mp_tool = get_materials_project_tool()
+            
+            # 解析查询，尝试识别是否为化学式或元素
+            materials = []
+            
+            # 首先尝试按化学式搜索
+            formula_result = mp_tool.search_materials(formula=query, limit=limit)
+            
+            if "error" not in formula_result and formula_result.get("data"):
+                materials.extend(formula_result["data"])
+            
+            # 如果按化学式搜索没有结果，尝试按元素搜索
+            if not materials:
+                # 尝试将查询解析为元素列表
+                elements = self._parse_elements(query)
+                if elements:
+                    element_result = mp_tool.search_materials(elements=elements, limit=limit)
+                    if "error" not in element_result and element_result.get("data"):
+                        materials.extend(element_result["data"])
+            
+            # 如果仍然没有结果，尝试使用元素组合搜索
+            if not materials:
+                # 尝试用"-"连接的元素组合搜索
+                if "-" in query:
+                    element_list = [elem.strip() for elem in query.split("-") if elem.strip()]
+                    if element_list:
+                        combo_result = mp_tool.search_materials(elements=element_list, limit=limit)
+                        if "error" not in combo_result and combo_result.get("data"):
+                            materials.extend(combo_result["data"])
+            
+            # 如果还是没有结果，返回空结果
+            if not materials:
+                return json.dumps({
+                    "query": query,
+                    "results": [],
+                    "message": f"未找到与 '{query}' 匹配的材料"
+                }, ensure_ascii=False, indent=2)
+            
+            # 限制结果数量
+            materials = materials[:limit]
+            
+            # 格式化结果
+            formatted_results = []
+            for material in materials:
+                formatted_material = {
+                    "material_id": material.get("material_id", "N/A"),
+                    "formula": material.get("formula", "N/A"),
+                    "chemsys": material.get("chemsys", "N/A"),
+                    "volume": material.get("volume", "N/A"),
+                    "density": material.get("density", "N/A"),
+                    "nsites": material.get("nsites", "N/A")
+                }
+                formatted_results.append(formatted_material)
+            
+            return json.dumps({
                 "query": query,
-                "sources": [],
-                "materials": [],
-                "success": False,
-                "count": 0,
-                "material_type": "unknown"
-            }
+                "results": formatted_results
+            }, ensure_ascii=False, indent=2)
             
-            # 首先识别材料类型
-            if self.material_identifier_tool:
-                identification = self.material_identifier_tool.identify_material(query)
-                if "material_type" in identification:
-                    results["material_type"] = identification["material_type"]
-            
-            # 根据材料类型使用相应的搜索策略
-            if results["material_type"] == "metal":
-                # 金属材料优先使用Materials Project
-                self._search_metal_materials(results, query, limit)
-            elif results["material_type"] == "organic":
-                # 有机物优先使用PubChem
-                self._search_organic_compounds(results, query, limit)
-            else:
-                # 未知类型，尝试两种方法
-                # 首先尝试从Materials Project搜索
-                self._search_metal_materials(results, query, limit)
-                # 如果Materials Project没有足够结果，尝试PubChem
-                if len(results["materials"]) < limit:
-                    self._search_organic_compounds(results, query, limit)
-            
-            # 设置成功标志
-            results["success"] = len(results["materials"]) > 0
-            results["count"] = len(results["materials"])
-            
-            if not results["success"]:
-                results["error"] = "未找到相似材料的性能数据"
-            
-            return results
-                
         except Exception as e:
-            logger.error(f"检索相似材料时出错: {e}")
-            return {
-                "success": False,
-                "query": query,
-                "error": f"检索失败: {str(e)}"
-            }
+            logger.error(f"搜索材料 '{query}' 时出错: {e}")
+            return json.dumps({"error": f"搜索材料 '{query}' 时出错: {str(e)}"}, ensure_ascii=False)
     
-    def _search_metal_materials(self, results: Dict, query: str, limit: int):
+    def _parse_elements(self, query: str) -> Optional[List[str]]:
         """
-        搜索金属材料
+        解析查询中的元素
         
         Args:
-            results (Dict): 结果字典
-            query (str): 查询内容
-            limit (int): 返回结果数量限制
-        """
-        if not self.materials_project_tool:
-            return
-            
-        try:
-            # 尝试按化学式搜索
-            formula_result = self.materials_project_tool.search_materials(formula=query, limit=min(limit, 20))
-            if "error" not in formula_result and "data" in formula_result:
-                if "Materials Project" not in results["sources"]:
-                    results["sources"].append("Materials Project")
-                materials_data = formula_result["data"][:limit]
-                for material in materials_data:
-                    # 检查是否已存在相同材料
-                    existing_materials = [m for m in results["materials"] if m["source"] == "Materials Project" and m["formula"] == material.get("formula", "N/A")]
-                    if not existing_materials:
-                        results["materials"].append({
-                            "source": "Materials Project",
-                            "material_id": material.get("material_id", "N/A"),
-                            "formula": material.get("formula", "N/A"),
-                            "formation_energy": material.get("formation_energy_per_atom", "N/A"),
-                            "energy_above_hull": material.get("energy_above_hull", "N/A"),
-                            "band_gap": material.get("band_gap", "N/A"),
-                            "density": material.get("density", "N/A"),
-                            "volume": material.get("volume", "N/A"),
-                            "crystal_system": material.get("crystal_system", "N/A"),
-                            "elements": []  # 可以进一步完善
-                        })
-        except Exception as e:
-            logger.warning(f"从Materials Project搜索金属材料时出错: {e}")
-        
-        # 如果按化学式搜索没有足够结果，尝试按元素搜索
-        if len([m for m in results["materials"] if m["source"] == "Materials Project"]) < limit:
-            try:
-                if any(char.isalpha() for char in query):
-                    elements = self._extract_elements(query)
-                    if elements:
-                        # 限制元素数量以避免过多结果
-                        elements = elements[:2]  # 最多使用2个元素以提高性能
-                        element_result = self.materials_project_tool.search_materials(
-                            elements=elements, 
-                            limit=min(limit, 10)
-                        )
-                        if "error" not in element_result and "data" in element_result:
-                            if "Materials Project" not in results["sources"]:
-                                results["sources"].append("Materials Project")
-                            existing_formulas = [m["formula"] for m in results["materials"] if m["source"] == "Materials Project"]
-                            materials_data = element_result["data"]
-                            for material in materials_data:
-                                # 避免重复添加相同材料
-                                if material.get("formula", "") not in existing_formulas and len([m for m in results["materials"] if m["source"] == "Materials Project"]) < limit:
-                                    results["materials"].append({
-                                        "source": "Materials Project",
-                                        "material_id": material.get("material_id", "N/A"),
-                                        "formula": material.get("formula", "N/A"),
-                                        "formation_energy": material.get("formation_energy_per_atom", "N/A"),
-                                        "energy_above_hull": material.get("energy_above_hull", "N/A"),
-                                        "band_gap": material.get("band_gap", "N/A"),
-                                        "density": material.get("density", "N/A"),
-                                        "volume": material.get("volume", "N/A"),
-                                        "crystal_system": material.get("crystal_system", "N/A"),
-                                        "elements": []
-                                    })
-            except Exception as e:
-                logger.warning(f"从Materials Project按元素搜索金属材料时出错: {e}")
-    
-    def _search_organic_compounds(self, results: Dict, query: str, limit: int):
-        """
-        搜索有机化合物
-        
-        Args:
-            results (Dict): 结果字典
-            query (str): 查询内容
-            limit (int): 返回结果数量限制
-        """
-        if not self.pubchem_tool:
-            return
-            
-        try:
-            # 使用PubChem搜索化合物
-            compound_info = self.pubchem_tool.get_compound_info(query)
-            if "error" not in compound_info and "Compound" in compound_info:
-                if "PubChem" not in results["sources"]:
-                    results["sources"].append("PubChem")
-                
-                compound = compound_info["Compound"]
-                # 检查是否已存在相同化合物
-                existing_compounds = [m for m in results["materials"] if m["source"] == "PubChem"]
-                if not existing_compounds and len([m for m in results["materials"] if m["source"] == "PubChem"]) < limit:
-                    results["materials"].append({
-                        "source": "PubChem",
-                        "compound_id": compound.get("CID", "N/A"),
-                        "name": compound.get("IUPACName", "N/A"),
-                        "formula": compound.get("MolecularFormula", "N/A"),
-                        "molecular_weight": compound.get("MolecularWeight", "N/A"),
-                        "canonical_smiles": compound.get("canonical_smiles", "N/A"),
-                        "isomeric_smiles": compound.get("isomeric_smiles", "N/A"),
-                        "inchi": compound.get("inchi", "N/A"),
-                        "inchi_key": compound.get("inchi_key", "N/A")
-                    })
-        except Exception as e:
-            logger.warning(f"从PubChem搜索有机化合物时出错: {e}")
-    
-    def _extract_elements(self, query: str) -> List[str]:
-        """
-        从查询字符串中提取元素符号
-        
-        Args:
-            query (str): 查询字符串
+            query: 查询字符串
             
         Returns:
-            List[str]: 元素符号列表
+            元素列表或None
         """
-        # 简单的元素提取逻辑
+        # 简单的元素解析逻辑
+        # 这里可以扩展为更复杂的化学式解析
+        elements = []
+        
+        # 移除数字和特殊字符，只保留字母
         import re
-        # 匹配常见的元素符号（1-2个字母，首字母大写）
-        elements = re.findall(r'[A-Z][a-z]?', query)
-        # 过滤掉可能不是元素的字符串
-        valid_elements = []
-        # 常见元素列表（简化版）
-        common_elements = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
-                          'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
-                          'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe']
+        element_chars = re.findall(r'[A-Z][a-z]?', query)
         
-        for element in elements:
-            if element in common_elements:
-                valid_elements.append(element)
+        # 过滤出有效的元素符号（这里只是简单示例）
+        # 在实际应用中，应该有一个完整的元素符号列表进行验证
+        valid_elements = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar",
+                         "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",
+                         "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe"]
         
-        return list(set(valid_elements))  # 去重
+        for element in element_chars:
+            if element in valid_elements:
+                elements.append(element)
+        
+        return elements if elements else None
 
-# 全局实例
-_material_search_tool = None
+# 创建工具实例
+material_search_tool = MaterialSearchTool()
 
-def get_material_search_tool() -> MaterialSearchTool:
-    """
-    获取MaterialSearch工具实例
-    
-    Returns:
-        MaterialSearchTool: MaterialSearch工具实例
-    """
-    global _material_search_tool
-    if _material_search_tool is None:
-        _material_search_tool = MaterialSearchTool()
-    return _material_search_tool
+def get_material_search_tool():
+    """获取材料搜索工具实例"""
+    return material_search_tool

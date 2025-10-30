@@ -24,7 +24,7 @@ class TaskAllocator:
             "material_design": "CreativeDesigningAgent",
             "evaluation": "AssessmentScreeningAgent",
             "final_validation": "AssessmentScreeningAgentOverall",
-            "enhanced_final_validation": "EnhancedFinalValidator",
+            "enhanced_final_validation": "AssessmentScreeningAgentOverall",
             "mechanism_analysis": "MechanismMiningAgent",
             "synthesis_method": "SynthesisGuidingAgent",
             "literature_processing": "ExtractingAgent",
@@ -38,7 +38,7 @@ class TaskAllocator:
         # 存储语言模型实例
         self.llm = llm
         
-    def determine_required_task_types(self, task_description):
+    def determine_required_task_types(self, task_description: str) -> List[str]:
         """
         根据任务描述动态决定需要哪些任务类型
         / Dynamically determine which task types are needed based on task description
@@ -49,7 +49,12 @@ class TaskAllocator:
         Returns:
             需要的任务类型列表 / List of required task types
         """
-        # 如果有LLM实例，使用LLM进行智能分配
+        # 输入验证
+        if not task_description or not task_description.strip():
+            logger.warning("Empty task description provided, using default task")
+            return ["material_design"]
+            
+        # 使用LLM进行智能分配
         if self.llm:
             try:
                 # 加载提示文件
@@ -57,31 +62,46 @@ class TaskAllocator:
                 prompt_template = load_prompt("task_allocation_prompt.md")
                 
                 # 格式化提示
-                prompt = prompt_template.format(user_requirement=task_description)
+                prompt = prompt_template.format(user_requirement=task_description.strip())
                 
                 # 调用LLM获取任务类型
                 response = self.llm.invoke(prompt)
                 
+                # 确保response是字符串格式
+                if hasattr(response, 'content'):
+                    response_content = response.content
+                else:
+                    response_content = str(response)
+                
                 # 记录LLM响应用于调试
-                logger.debug(f"LLM task allocation response: {response}")
+                logger.debug(f"LLM task allocation response: {response_content}")
                 
                 # 解析LLM响应
-                task_types = json.loads(response)
+                task_types = json.loads(response_content)
+                
+                # 验证task_types是否为列表
+                if not isinstance(task_types, list):
+                    logger.warning(f"LLM response is not a list: {task_types}")
+                    return ["material_design"]
                 
                 # 验证任务类型是否有效
                 valid_task_types = []
                 available_task_types = set(self.task_agent_mapping.keys())
                 
                 for task_type in task_types:
+                    if not isinstance(task_type, str):
+                        logger.warning(f"Invalid task type format: {task_type}")
+                        continue
                     if task_type in available_task_types:
                         valid_task_types.append(task_type)
                     else:
                         logger.warning(f"Invalid task type detected: {task_type}")
                 
-                # 特殊处理：如果只包含机理分析任务，则只返回机理分析任务
-                if valid_task_types == ["mechanism_analysis"]:
-                    logger.info("User requested mechanism analysis only, returning mechanism_analysis task only")
-                    return ["mechanism_analysis"]
+                # 特殊处理：如果只包含独立任务，则只返回该任务
+                independent_tasks = ["mechanism_analysis", "synthesis_method", "operation_suggestion"]
+                if len(valid_task_types) == 1 and valid_task_types[0] in independent_tasks:
+                    logger.info(f"User requested {valid_task_types[0]} only, returning that task only")
+                    return valid_task_types
                 
                 # 确保返回非空列表
                 if not valid_task_types:
@@ -90,82 +110,38 @@ class TaskAllocator:
                 
                 # 如果LLM没有包含material_design但其他任务需要它，则添加
                 if "material_design" not in valid_task_types:
-                    # 检查是否需要material_design（除了机理分析外的其他任务通常需要）
-                    needs_material_design = any(task_type in ["evaluation", "final_validation", "synthesis_method", "operation_suggestion"] 
+                    # 检查是否需要material_design（除了独立任务外的其他任务通常需要）
+                    # 但如果是评估现有材料，则不需要设计任务
+                    needs_material_design = any(task_type in ["evaluation", "final_validation"] 
                                               for task_type in valid_task_types)
-                    if needs_material_design:
+                    # 检查用户是否明确表示要评估现有材料
+                    lower_desc = task_description.lower()
+                    is_evaluating_existing = ("评估" in task_description or "evaluate" in lower_desc) and \
+                                           ("现有" in task_description or "existing" in lower_desc or 
+                                            "已有的" in task_description or "已有" in task_description)
+                    if needs_material_design and not is_evaluating_existing:
                         logger.info("Adding material_design task as it's required by other tasks")
                         valid_task_types.insert(0, "material_design")
+                    elif needs_material_design and is_evaluating_existing:
+                        logger.info("User wants to evaluate existing material, skipping material_design task")
                 
                 logger.info(f"LLM task allocation result: {valid_task_types}")
                 return valid_task_types
                 
             except json.JSONDecodeError as e:
                 logger.error(f"Error parsing LLM response as JSON: {e}")
-                logger.error(f"LLM response was: {response}")
+                logger.error(f"LLM response was: {response_content if 'response_content' in locals() else 'N/A'}")
+            except ImportError as e:
+                logger.error(f"Failed to import prompt_loader: {e}")
             except Exception as e:
                 logger.error(f"Error using LLM for task allocation: {e}")
             
-            # 如果LLM调用失败，回退到原来的逻辑
-            logger.warning("Falling back to keyword-based task allocation")
+            # 如果LLM调用失败，回退到默认模式
+            logger.warning("Falling back to default task allocation")
         
-        # 回退到原来的基于关键字的逻辑
-        # 转换为小写以便匹配
-        task_lower = task_description.lower()
-        
-        # 检查是否用户只对机理挖掘感兴趣
-        if ("只对机理挖掘感兴趣" in task_description or "only mechanism analysis" in task_lower or \
-            "just mechanism" in task_lower or "only mechanism" in task_lower or \
-            ("只想分析材料的反应机理" in task_description)) and \
-           ("机理" in task_description or "机制" in task_description or "反应" in task_description or \
-            "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
-            "analyze" in task_lower or "analysis" in task_lower):
-            # 如果用户只对机理挖掘感兴趣，则只运行机理挖掘任务
-            return ["mechanism_analysis"]
-        
-        required_task_types = ["material_design"]  # 材料设计任务总是需要
-        
-        # 检查是否需要评估任务 / Check if evaluation tasks are needed
-        if "评估" in task_description or "评价" in task_description or "性能" in task_description or \
-           "evaluation" in task_lower or "assess" in task_lower or "performance" in task_lower or \
-           "evaluate" in task_lower:
-            required_task_types.append("evaluation")
-            required_task_types.append("final_validation")
-            
-            # 检查是否需要机理分析任务 / Check if mechanism analysis task is needed
-            if "机理" in task_description or "机制" in task_description or "反应" in task_description or \
-               "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
-               "analyze" in task_lower or "analysis" in task_lower:
-                required_task_types.append("mechanism_analysis")
-        
-        # 检查是否需要机理分析任务（独立检查） / Check if mechanism analysis task is needed (independent check)
-        if "机理" in task_description or "机制" in task_description or "反应" in task_description or \
-           "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
-           "analyze" in task_lower or "analysis" in task_lower:
-            if "mechanism_analysis" not in required_task_types:
-                required_task_types.append("mechanism_analysis")
-        
-        # 检查是否需要合成方法任务 / Check if synthesis method task is needed
-        if "合成" in task_description or "制备" in task_description or "工艺" in task_description or \
-           "synthesis" in task_lower or "synthetic" in task_lower or "preparation" in task_lower or \
-           "method" in task_lower or "procedure" in task_lower or "synthesize" in task_lower:
-            required_task_types.append("synthesis_method")
-        
-        # 检查是否需要操作建议任务 / Check if operation suggestion task is needed
-        if "操作" in task_description or "运行" in task_description or "应用" in task_description or \
-           "operation" in task_lower or "application" in task_lower or "suggestion" in task_lower or \
-           "usage" in task_lower or "suggest" in task_lower:
-            required_task_types.append("operation_suggestion")
-            
-        # 去重并保持顺序
-        unique_task_types = []
-        seen = set()
-        for task_type in required_task_types:
-            if task_type not in seen:
-                unique_task_types.append(task_type)
-                seen.add(task_type)
-                
-        return unique_task_types
+        # 当LLM调用失败时，直接返回一个安全的默认值
+        logger.warning("LLM task allocation failed, returning default material design task")
+        return ["material_design"]
         
     def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]) -> None:
         """
@@ -174,11 +150,29 @@ class TaskAllocator:
         Args:
             agent_type: 智能体类型 / The type of the agent
             agent: 智能体实例或实例列表 / The agent instance or list of instances
+            
+        Raises:
+            ValueError: 当agent_type为空或agent为None时
         """
+        # 输入验证
+        if not agent_type or not agent_type.strip():
+            raise ValueError("agent_type cannot be empty")
+        if agent is None:
+            raise ValueError("agent cannot be None")
+            
+        agent_type = agent_type.strip()
+        
         # 如果传入的是单个智能体，转换为列表
         if isinstance(agent, Agent):
             agent = [agent]
+        elif not isinstance(agent, list):
+            raise ValueError("agent must be an Agent instance or a list of Agent instances")
             
+        # 验证列表中的每个元素都是Agent实例
+        for item in agent:
+            if not isinstance(item, Agent):
+                raise ValueError(f"All items in agent list must be Agent instances, got {type(item)}")
+        
         if agent_type in self.available_agents:
             self.available_agents[agent_type].extend(agent)
         else:

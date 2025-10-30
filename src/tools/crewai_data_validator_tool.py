@@ -1,7 +1,13 @@
 import json
 from typing import Optional, List, Dict, Any
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.data_validator_tool import get_data_validator_tool
+
+class DataValidatorToolInput(BaseModel):
+    """Data Validator工具输入参数模型"""
+    data: Dict[str, Any] = Field(description="要验证的数据字典")
+    validation_type: str = Field(default="full", description="验证类型 ('full', 'cid', 'cas', 'formula', 'h_statements', 'molecular_weight', 'material_id')")
 
 class CrewAIDataValidatorTool(BaseTool):
     """CrewAI工具包装器，用于验证化学品和材料数据"""
@@ -12,6 +18,7 @@ class CrewAIDataValidatorTool(BaseTool):
         "可以验证CID、CAS号、分子式、分子量、危险声明等信息。"
         "当需要验证生成的化学品数据是否真实有效时使用此工具。"
     )
+    args_schema: type[BaseModel] = DataValidatorToolInput
     
     def _run(
         self,

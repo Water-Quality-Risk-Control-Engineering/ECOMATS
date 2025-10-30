@@ -1,115 +1,90 @@
 #!/usr/bin/env python3
 """
-Formula2Properties工具
-根据化学式预测性质
+化学式到性质查询工具
+通过材料的化学式查询其关键物理化学性质
 """
 
+import json
 import logging
-from typing import Dict, Any, List
-from src.tools.pubchem_tool import get_pubchem_tool
+from typing import Dict, Any, Optional
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class Formula2PropertiesTool:
-    """Formula2Properties工具类 - 根据化学式预测性质"""
+class Formula2PropertiesInput(BaseModel):
+    """化学式到性质查询工具输入参数"""
+    formula: str = Field(..., description="化学式")
+
+class Formula2PropertiesTool(BaseTool):
+    """化学式到性质查询工具"""
     
-    def __init__(self):
-        """初始化Formula2Properties工具"""
-        self.pubchem_tool = get_pubchem_tool()
-        try:
-            self.materials_project_tool = get_materials_project_tool()
-        except Exception as e:
-            logger.warning(f"Materials Project工具不可用: {e}")
-            self.materials_project_tool = None
+    name: str = "Formula to Properties Query Tool"
+    description: str = (
+        "通过材料的化学式查询其关键物理化学性质。"
+        "输入化学式，返回材料的关键性质信息。"
+    )
+    args_schema: type[BaseModel] = Formula2PropertiesInput
     
-    def get_properties_by_formula(self, formula: str) -> Dict[str, Any]:
+    def _run(self, formula: str) -> str:
         """
-        根据化学式预测性质
+        通过化学式查询材料性质
         
         Args:
-            formula (str): 化学式
+            formula: 化学式
             
         Returns:
-            Dict[str, Any]: 包含预测性质的字典
+            JSON格式的材料性质信息
         """
         try:
-            result = {
-                "formula": formula,
-                "sources": []
+            # 获取Materials Project工具实例
+            mp_tool = get_materials_project_tool()
+            
+            # 搜索材料
+            search_result = mp_tool.search_materials(formula=formula, limit=5)
+            
+            if "error" in search_result:
+                return json.dumps({"error": search_result["error"]}, ensure_ascii=False)
+            
+            if not search_result.get("data"):
+                return json.dumps({"error": f"未找到化学式为 {formula} 的材料"}, ensure_ascii=False)
+            
+            # 获取第一个材料的详细信息
+            first_material = search_result["data"][0]
+            material_id = first_material.get("material_id")
+            
+            if not material_id or material_id == "N/A":
+                return json.dumps({"error": f"未找到化学式为 {formula} 的有效材料ID"}, ensure_ascii=False)
+            
+            # 获取材料详细信息
+            detail_result = mp_tool.get_material_by_id(material_id)
+            
+            if "error" in detail_result:
+                return json.dumps({"error": detail_result["error"]}, ensure_ascii=False)
+            
+            # 提取关键性质信息
+            properties = {
+                "formula": detail_result.get("formula", formula),
+                "material_id": detail_result.get("material_id", "N/A"),
+                "chemsys": detail_result.get("chemsys", "N/A"),
+                "volume": detail_result.get("volume", "N/A"),
+                "density": detail_result.get("density", "N/A"),
+                "nsites": detail_result.get("nsites", "N/A"),
+                "crystal_system": detail_result.get("crystal_system", "N/A")
             }
             
-            # 首先尝试从PubChem获取信息
-            pubchem_result = self.pubchem_tool.search_compound(formula, search_type="formula")
+            return json.dumps(properties, ensure_ascii=False, indent=2)
             
-            if "error" not in pubchem_result and "compounds" in pubchem_result:
-                result["sources"].append("PubChem")
-                compounds = pubchem_result["compounds"]
-                if len(compounds) > 0:
-                    # 取第一个化合物的信息
-                    first_compound = compounds[0]
-                    result.update({
-                        "molecular_weight": first_compound.get("molecular_weight", ""),
-                        "synonyms": first_compound.get("synonyms", []),
-                        "cid": first_compound.get("cid", "")
-                    })
-            
-            # 如果Materials Project可用，也尝试查询
-            if self.materials_project_tool:
-                try:
-                    mp_result = self.materials_project_tool.search_materials(formula=formula)
-                    if mp_result and "materials" in mp_result and len(mp_result["materials"]) > 0:
-                        result["sources"].append("Materials Project")
-                        # 取第一个材料的信息
-                        material = mp_result["materials"][0]
-                        result.update({
-                            "material_id": material.get("material_id", ""),
-                            "full_formula": material.get("formula", ""),
-                            "crystal_system": material.get("symmetry", {}).get("crystal_system", ""),
-                            "band_gap": material.get("band_gap", ""),
-                            "formation_energy": material.get("formation_energy_per_atom", ""),
-                            "energy_above_hull": material.get("energy_above_hull", ""),
-                            "density": material.get("density", ""),
-                            "volume": material.get("volume", ""),
-                            "nsites": material.get("nsites", ""),
-                            "elements": material.get("elements", []),
-                            "nelements": material.get("nelements", "")
-                        })
-                except Exception as e:
-                    logger.warning(f"从Materials Project查询时出错: {e}")
-            
-            # 如果没有找到任何信息，返回错误
-            if len(result["sources"]) == 0:
-                return {
-                    "success": False,
-                    "formula": formula,
-                    "error": "未找到该化学式的性质信息"
-                }
-            
-            result["success"] = True
-            return result
-                
         except Exception as e:
-            logger.error(f"根据化学式预测性质时出错: {e}")
-            return {
-                "success": False,
-                "formula": formula,
-                "error": f"预测失败: {str(e)}"
-            }
+            logger.error(f"查询化学式 {formula} 的性质时出错: {e}")
+            return json.dumps({"error": f"查询化学式 {formula} 的性质时出错: {str(e)}"}, ensure_ascii=False)
 
-# 全局实例
-_formula2properties_tool = None
+# 创建工具实例
+formula2properties_tool = Formula2PropertiesTool()
 
-def get_formula2properties_tool() -> Formula2PropertiesTool:
-    """
-    获取Formula2Properties工具实例
-    
-    Returns:
-        Formula2PropertiesTool: Formula2Properties工具实例
-    """
-    global _formula2properties_tool
-    if _formula2properties_tool is None:
-        _formula2properties_tool = Formula2PropertiesTool()
-    return _formula2properties_tool
+def get_formula2properties_tool():
+    """获取化学式到性质查询工具实例"""
+    return formula2properties_tool

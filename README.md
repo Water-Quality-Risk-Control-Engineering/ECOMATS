@@ -88,6 +88,11 @@ ECOMATS/
 │   ├── generate_catalysts_advanced.py # Advanced catalyst generation script
 │   ├── run_test.py            # Test running script
 │   └── test_new_tools.py      # New tools test script
+├── tests/                     # Unified test directory
+│   ├── agent_tool_validation.py
+│   ├── comprehensive_task_allocation_test.py
+│   ├── material_designer_tool_test.py
+│   └── ... (all test files)
 ├── examples/                  # Example files
 │   └── task_allocation_example.py
 ├── .env.example               # Environment variable example
@@ -104,7 +109,7 @@ The system includes the following core agents:
 3. **Assessment_Screening_agent_A** - Comprehensively evaluates all aspects of material solutions
 4. **Assessment_Screening_agent_B** - Comprehensively evaluates all aspects of material solutions
 5. **Assessment_Screening_agent_C** - Comprehensively evaluates all aspects of material solutions
-6. **Assessment_Screening_agent_Overall** - Synthesizes evaluation results from all experts, performs weighted calculations, and generates final material evaluation reports
+6. **Assessment_Screening_agent_Overall** - Synthesizes evaluation results from all experts, performs weighted calculations, generates final material evaluation reports, and provides improvement suggestions
 7. **Extracting_agent** - Processes and analyzes relevant technical literature
 8. **Mechanism_Mining_agent** - Analyzes the catalytic mechanisms and action principles of materials
 9. **Synthesis_Guiding_agent** - Designs synthesis methods and processes for materials
@@ -225,6 +230,18 @@ The system implements triple-blind review and consistency analysis mechanisms:
 2. Implement the specific functionality of the tool
 3. Integrate the new tool into agents through CrewAI's tool mechanism
 4. Update the prompt files of relevant agents to guide their use of the new tool
+
+### Tool Factory Pattern
+
+The system implements a tool factory pattern to manage and provide tools to agents:
+
+1. **ToolFactory Class** - Centralized tool management in `src/tools/factory.py`
+2. **Specialized Tool Sets** - Pre-defined tool sets for different agent types:
+   - Material Design Tools
+   - Material Assessment Tools
+   - Material Search Tools
+3. **Consistent Tool Interface** - All tools follow CrewAI's BaseTool interface
+4. **Easy Tool Management** - Simplified tool addition and removal through the factory pattern
 
 ## [中文版本](README_zh.md)
 

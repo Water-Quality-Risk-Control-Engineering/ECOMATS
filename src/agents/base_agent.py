@@ -2,6 +2,7 @@ import logging
 import os
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
+from src.config.config import Config
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -25,13 +26,27 @@ class BaseAgent:
         if self.temperature is not None:
             # 创建一个新的LLM实例，使用指定的温度
             # Create a new LLM instance with the specified temperature
+            # 获取原始LLM的属性
+            base_url = getattr(self.llm, 'base_url', None) or getattr(self.llm, 'openai_api_base', None)
+            api_key = getattr(self.llm, 'api_key', None) or getattr(self.llm, 'openai_api_key', None)
+            model = getattr(self.llm, 'model', None) or getattr(self.llm, 'model_name', None)
+            streaming = getattr(self.llm, 'streaming', False)
+            max_tokens = getattr(self.llm, 'max_tokens', None)
+            
+            # 根据API基础URL判断使用哪种前缀
+            if model and not model.startswith(('openai/', 'qwen/')):
+                if base_url and 'dashscope' in base_url:
+                    model = 'qwen/' + model
+                else:
+                    model = 'openai/' + model
+            
             agent_llm = type(self.llm)(
-                base_url=getattr(self.llm, 'base_url', None) or getattr(self.llm, 'openai_api_base', None),
-                api_key=getattr(self.llm, 'api_key', None) or getattr(self.llm, 'openai_api_key', None),
-                model=getattr(self.llm, 'model', None) or getattr(self.llm, 'model_name', None),
+                base_url=base_url,
+                api_key=api_key,
+                model=model,
                 temperature=self.temperature,
-                streaming=getattr(self.llm, 'streaming', False),
-                max_tokens=getattr(self.llm, 'max_tokens', None)
+                streaming=streaming,
+                max_tokens=max_tokens
             )
         
         return Agent(

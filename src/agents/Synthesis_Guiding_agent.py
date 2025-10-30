@@ -1,6 +1,7 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool, data_validator_tool
+from src.tools import ToolFactory
+from src.utils.tool_call_spec import SynthesisExpertToolSpec
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -52,6 +53,7 @@ class SynthesisGuidingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the synthesis guiding agent
-        agent.tools = [pubchem_tool, name2cas_tool, name2properties_tool, cid2properties_tool, data_validator_tool]
+        # Add chemical database query tools for the synthesis guiding agent using ToolFactory
+        # 使用工具工厂为合成指导专家添加化学数据库查询工具
+        agent.tools = ToolFactory.create_material_search_tools()
         return agent

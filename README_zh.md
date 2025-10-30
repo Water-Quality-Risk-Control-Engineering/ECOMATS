@@ -105,7 +105,7 @@ ECOMATS/
 3. **Assessment_Screening_agent_A** - 全面评估材料解决方案的各个方面
 4. **Assessment_Screening_agent_B** - 全面评估材料解决方案的各个方面
 5. **Assessment_Screening_agent_C** - 全面评估材料解决方案的各个方面
-6. **Assessment_Screening_agent_Overall** - 综合所有专家的评估结果，进行加权计算，生成最终材料评估报告
+6. **Assessment_Screening_agent_Overall** - 综合所有专家的评估结果，进行加权计算，生成最终材料评估报告，并提供改进建议
 7. **Extracting_agent** - 处理和分析相关技术文献
 8. **Mechanism_Mining_agent** - 分析材料的催化机制和作用原理
 9. **Synthesis_Guiding_agent** - 设计材料的合成方法和工艺
@@ -226,6 +226,18 @@ ECOMATS/
 2. 实现工具的具体功能
 3. 通过CrewAI的工具机制将新工具集成到代理中
 4. 更新相关代理的prompt文件以指导其使用新工具
+
+### 工具工厂模式
+
+系统实现了工具工厂模式来管理和向代理提供工具：
+
+1. **ToolFactory类** - 在`src/tools/factory.py`中集中管理工具
+2. **专用工具集** - 为不同类型的代理预定义工具集：
+   - 材料设计工具
+   - 材料评估工具
+   - 材料搜索工具
+3. **一致的工具接口** - 所有工具都遵循CrewAI的BaseTool接口
+4. **简易的工具管理** - 通过工厂模式简化工具的添加和移除
 
 ## 许可证
 

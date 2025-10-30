@@ -58,25 +58,35 @@ class TaskOrganizingAgent(BaseAgent):
     
     def delegate_tasks_dynamically(self, task_allocator, task_description):
         """
-        根据任务描述动态委派任务给合适的智能体
+        根据任务描述动态委派任务给合适的智能体，并建立上下文传递链
         
         Args:
             task_allocator: 任务分配器实例
             task_description: 任务描述
             
         Returns:
-            需要参与任务的智能体列表
+            需要参与任务的智能体列表及其依赖关系
         """
-        # 根据任务描述决定需要哪些任务类型
         required_task_types = task_allocator.determine_required_task_types(task_description)
         
-        # 根据任务类型获取相应的智能体
         required_agents = []
+        design_result = None  # 存储设计阶段的结果
+        
         for task_type in required_task_types:
             agent = task_allocator.get_agent_for_task(task_type)
-            if agent:
-                required_agents.append((task_type, agent))
-            else:
-                logger.warning(f"未找到适合任务类型 '{task_type}' 的智能体")
-        
+            if not agent:
+                continue
+                
+            # 特殊处理评估任务，注入设计结果作为上下文
+            if task_type in ["evaluation", "final_validation"] and design_result:
+                # 修改代理的backstory或goal，注入设计结果
+                agent.backstory += f"\n\n## 上游设计结果 ##\n{design_result}"
+            
+            required_agents.append((task_type, agent))
+            
+            # 如果是设计任务，保存其预期输出供后续使用
+            if task_type == "material_design":
+                # 这里可以设置一个回调或监听器来捕获实际输出
+                pass
+                
         return required_agents

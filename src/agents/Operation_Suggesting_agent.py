@@ -1,6 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, data_validator_tool, structure_validator_tool
+from src.tools import ToolFactory
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -45,6 +45,7 @@ class OperationSuggestingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the operation suggesting agent
-        agent.tools = [pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, data_validator_tool, structure_validator_tool]
+        # Add chemical database query tools for the operation suggesting agent using ToolFactory
+        # 使用工具工厂为操作建议专家添加化学数据库查询工具
+        agent.tools = ToolFactory.create_material_assessment_tools()
         return agent

@@ -1,7 +1,12 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.structure_validator_tool import get_structure_validator_tool
+
+class StructureValidatorToolInput(BaseModel):
+    """结构验证工具输入参数模型"""
+    material_formula: str = Field(description="材料化学式")
 
 class CrewAIStructureValidatorTool(BaseTool):
     """CrewAI工具包装器，用于材料结构验证"""
@@ -12,6 +17,7 @@ class CrewAIStructureValidatorTool(BaseTool):
         "支持金属材料（使用Materials Project数据库）和有机化合物（使用PubChem数据库）的结构验证。"
         "当需要确认设计的材料结构在现实中是否存在时使用此工具。"
     )
+    args_schema: type[BaseModel] = StructureValidatorToolInput
     
     def _run(
         self,

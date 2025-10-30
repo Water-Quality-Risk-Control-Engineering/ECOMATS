@@ -1,7 +1,13 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.material_search_tool import get_material_search_tool
+
+class MaterialSearchToolInput(BaseModel):
+    """Material Search工具输入参数模型"""
+    query: str = Field(description="查询内容（化学式、元素组合或材料名称）")
+    limit: int = Field(default=10, description="返回结果数量限制")
 
 class CrewAIMaterialSearchTool(BaseTool):
     """CrewAI工具包装器，用于检索相似材料的性能数据"""
@@ -12,6 +18,7 @@ class CrewAIMaterialSearchTool(BaseTool):
         "可以基于化学式、元素组成或材料名称搜索相似材料。"
         "当需要参考类似材料的性能数据来评估新材料时使用此工具。"
     )
+    args_schema: type[BaseModel] = MaterialSearchToolInput
     
     def _run(self, query: str, limit: int = 10) -> str:
         """

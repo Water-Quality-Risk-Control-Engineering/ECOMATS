@@ -1,7 +1,12 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.cid2properties_tool import get_cid2properties_tool
+
+class CID2PropertiesToolInput(BaseModel):
+    """CID2Properties工具输入参数模型"""
+    cid: str = Field(description="PubChem化合物ID")
 
 class CrewAICID2PropertiesTool(BaseTool):
     """CrewAI工具包装器，用于根据PubChem CID查询性质"""
@@ -12,6 +17,7 @@ class CrewAICID2PropertiesTool(BaseTool):
         "可以获取分子结构、物理化学性质、生物活性等信息。"
         "当需要通过已知的CID获取化合物详细信息时使用此工具。"
     )
+    args_schema: type[BaseModel] = CID2PropertiesToolInput
     
     def _run(self, cid: str) -> str:
         """

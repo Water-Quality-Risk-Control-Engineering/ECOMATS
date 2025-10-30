@@ -1,7 +1,20 @@
 import json
 from typing import Optional, List, Dict, Any
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
+
+class MaterialsProjectToolInput(BaseModel):
+    """Materials Project工具输入参数模型"""
+    action: str = Field(default="search", description="要执行的操作 ('search', 'get_material')")
+    material_id: Optional[str] = Field(default=None, description="材料ID（用于获取特定材料信息的操作）")
+    formula: Optional[str] = Field(default=None, description="化学式（用于搜索）")
+    elements: Optional[List[str]] = Field(default=None, description="必须包含的元素列表（用于搜索）")
+    exclude_elements: Optional[List[str]] = Field(default=None, description="必须排除的元素列表（用于搜索）")
+    crystal_system: Optional[str] = Field(default=None, description="晶体系统（用于搜索）")
+    limit: int = Field(default=100, description="返回结果数量限制（用于搜索）")
+    skip: int = Field(default=0, description="跳过的结果数量（用于搜索）")
+    fields: Optional[List[str]] = Field(default=None, description="要包含的数据字段列表")
 
 class CrewAIMaterialsProjectTool(BaseTool):
     """CrewAI工具包装器，用于Materials Project API"""
@@ -12,6 +25,7 @@ class CrewAIMaterialsProjectTool(BaseTool):
         "可以搜索具有特定化学式、元素组成、晶体结构或物理性质的材料。"
         "使用方法: action='search', formula='C3N4' 来搜索材料"
     )
+    args_schema: type[BaseModel] = MaterialsProjectToolInput
     
     def _run(
         self,
@@ -21,9 +35,6 @@ class CrewAIMaterialsProjectTool(BaseTool):
         elements: Optional[List[str]] = None,
         exclude_elements: Optional[List[str]] = None,
         crystal_system: Optional[str] = None,
-        band_gap_min: Optional[float] = None,
-        band_gap_max: Optional[float] = None,
-        is_stable: Optional[bool] = None,
         limit: int = 100,
         skip: int = 0,
         fields: Optional[List[str]] = None
@@ -38,9 +49,6 @@ class CrewAIMaterialsProjectTool(BaseTool):
             elements: 必须包含的元素列表（用于搜索）
             exclude_elements: 必须排除的元素列表（用于搜索）
             crystal_system: 晶体系统（用于搜索）
-            band_gap_min: 最小带隙（用于搜索，注意：当前API版本不支持此参数）
-            band_gap_max: 最大带隙（用于搜索，注意：当前API版本不支持此参数）
-            is_stable: 是否稳定（用于搜索，注意：当前API版本不支持此参数）
             limit: 返回结果数量限制（用于搜索）
             skip: 跳过的结果数量（用于搜索）
             fields: 要包含的数据字段列表（用于获取材料详情，注意：必须是API支持的字段）
@@ -59,9 +67,6 @@ class CrewAIMaterialsProjectTool(BaseTool):
                     elements=elements,
                     exclude_elements=exclude_elements,
                     crystal_system=crystal_system,
-                    band_gap_min=band_gap_min,
-                    band_gap_max=band_gap_max,
-                    is_stable=is_stable,
                     limit=limit,
                     skip=skip
                 )

@@ -1,7 +1,8 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import materials_project_tool, pubchem_tool, name2properties_tool, cid2properties_tool, pnec_tool, data_validator_tool, structure_validator_tool
-from src.utils.tool_initializer import initialize_assessment_agent_a_tools
+from src.tools import ToolFactory
+from src.utils.tool_call_spec import AssessmentExpertToolSpec
+from src.utils.assessment_tool_executor import AssessmentToolExecutor
 
 # Configure logging
 # 配置日志
@@ -53,33 +54,8 @@ class AssessmentScreeningAgentA(BaseAgent):
             # 保持self.llm不变
         
         agent = super().create_agent()
-        # Add chemical database query tools for the assessment expert
-        # 为评估专家添加化学数据库查询工具
-        # 使用改进的工具初始化器确保工具调用的可靠性
-        try:
-            agent.tools = initialize_assessment_agent_a_tools()
-            if not agent.tools:
-                logger.warning("评估代理A的工具初始化失败，使用默认工具列表")
-                agent.tools = [
-                    materials_project_tool,      # Materials Project database tool / 材料项目数据库工具
-                    pubchem_tool,               # PubChem database tool / PubChem数据库工具
-                    name2properties_tool,       # Chemical name to properties lookup tool / 化学名称到性质查找工具
-                    cid2properties_tool,        # CID (Compound ID) to properties lookup tool / 化合物ID到性质查找工具
-                    pnec_tool,                  # PNEC (Predicted No-Effect Concentration) estimation tool / 预测无效应浓度估算工具
-                    data_validator_tool,         # Data validation tool / 数据验证工具
-                    structure_validator_tool    # Structure validation tool / 结构验证工具
-                ]
-        except Exception as e:
-            logger.error(f"初始化评估代理A工具时出错: {e}")
-            # 回退到原始工具列表
-            agent.tools = [
-                materials_project_tool,      # Materials Project database tool / 材料项目数据库工具
-                pubchem_tool,               # PubChem database tool / PubChem数据库工具
-                name2properties_tool,       # Chemical name to properties lookup tool / 化学名称到性质查找工具
-                cid2properties_tool,        # CID (Compound ID) to properties lookup tool / 化合物ID到性质查找工具
-                pnec_tool,                  # PNEC (Predicted No-Effect Concentration) estimation tool / 预测无效应浓度估算工具
-                data_validator_tool,         # Data validation tool / 数据验证工具
-                structure_validator_tool    # Structure validation tool / 结构验证工具
-            ]
+        # 移除数据库查询工具，评估应基于设计阶段的结果
+        # Remove database query tools, assessment should be based on design phase results
+        agent.tools = []  # 仅保留基本工具或空工具列表
         
         return agent

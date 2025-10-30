@@ -47,6 +47,7 @@ quick_test.py
 full_test.py
 TEST_REPORT.md
 FIX_REPORT.md
+tests/
 
 # Log files
 *.log

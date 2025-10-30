@@ -2,7 +2,8 @@ import logging
 from src.agents.base_agent import BaseAgent
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
-from src.tools import materials_project_tool, pubchem_tool, name2cas_tool, name2properties_tool, formula2properties_tool, material_search_tool, cid2properties_tool, pnec_tool, structure_validator_tool
+from src.tools import ToolFactory
+from src.utils.tool_call_spec import MaterialDesignerToolSpec
 
 # Configure logging
 # 配置日志
@@ -50,19 +51,14 @@ class CreativeDesigningAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the material design expert
-        # 为材料设计专家添加化学数据库查询工具
-        agent.tools = [
-            materials_project_tool,      # Materials Project database tool
-            pubchem_tool,                # PubChem database tool  
-            name2cas_tool,               # Chemical name to CAS number lookup
-            name2properties_tool,        # Chemical name to properties lookup
-            cid2properties_tool,         # CID to properties lookup
-            formula2properties_tool,     # Chemical formula to properties lookup
-            material_search_tool,        # General material search tool
-            pnec_tool,                   # PNEC tool
-            structure_validator_tool     # Structure validation tool
-        ]
+        # Add chemical database query tools for the material design expert using ToolFactory
+        # 使用工具工厂为材料设计专家添加化学数据库查询工具
+        agent.tools = ToolFactory.create_material_design_tools()
+        
+        # 增强提示词，要求尽可能提供详细信息，包括MP-ID（如果已知）、结构式、带隙等关键参数
+        # Enhance prompt to require detailed output of key parameters, including MP-ID if available
+        agent.backstory += "\n\n在输出设计结果时，应尽可能包含以下详细信息：\n- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n- 化学式和晶体结构描述\n- 关键物理性质（如带隙、密度）\n- 热力学稳定性（能量凸包上的高度）"
+        
         return agent
 
 # 创建实例

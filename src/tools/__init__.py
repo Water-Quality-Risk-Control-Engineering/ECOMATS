@@ -27,17 +27,16 @@ from .crewai_material_search_tool import CrewAIMaterialSearchTool
 from .crewai_pnec_tool import CrewAIPNECTool
 from .crewai_material_identifier_tool import CrewAIMaterialIdentifierTool
 from .crewai_data_validator_tool import CrewAIDataValidatorTool
-from .crewai_structure_validator_tool import structure_validator_tool
+from .crewai_structure_validator_tool import CrewAIStructureValidatorTool
 
-# Create instances of CrewAI tools / 创建CrewAI工具实例
-name2cas_tool = CrewAIName2CASTool()
-name2properties_tool = CrewAIName2PropertiesTool()
-cid2properties_tool = CrewAICID2PropertiesTool()
-formula2properties_tool = CrewAIFormula2PropertiesTool()
-material_search_tool = CrewAIMaterialSearchTool()
-pnec_tool = CrewAIPNECTool()
-material_identifier_tool = CrewAIMaterialIdentifierTool()
-data_validator_tool = CrewAIDataValidatorTool()
+# Import tool factory / 导入工具工厂
+from .factory import ToolFactory
+
+# Import assessment tool executor / 导入评估工具执行器
+from src.utils.assessment_tool_executor import AssessmentToolExecutor
+
+# Import assessment scoring logic / 导入评估评分逻辑
+from src.utils.assessment_scoring_logic import AssessmentScoringLogic
 
 # Define the public interface of this module / 定义此模块的公共接口
 __all__ = [
@@ -55,13 +54,14 @@ __all__ = [
     'get_structure_validator_tool',
     'materials_project_tool',
     'pubchem_tool',
-    'name2cas_tool',
-    'name2properties_tool',
-    'cid2properties_tool',
-    'formula2properties_tool',
-    'material_search_tool',
-    'pnec_tool',
-    'material_identifier_tool',
-    'data_validator_tool',
-    'structure_validator_tool'
+    'CrewAIName2CASTool',
+    'CrewAIName2PropertiesTool',
+    'CrewAICID2PropertiesTool',
+    'CrewAIFormula2PropertiesTool',
+    'CrewAIMaterialSearchTool',
+    'CrewAIPNECTool',
+    'CrewAIMaterialIdentifierTool',
+    'CrewAIDataValidatorTool',
+    'structure_validator_tool',
+    'ToolFactory'
 ]

@@ -34,7 +34,7 @@ class PubChemTool:
         
         # 请求频率控制 / Request rate control
         self.last_request_time = 0
-        self.min_request_interval = 0.3  # 最小请求间隔0.3秒 / Minimum request interval 0.3 seconds
+        self.min_request_interval = 1.0  # 增加到1秒间隔 / Increase to 1 second interval
     
     def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 5) -> Dict[str, Any]:
         """

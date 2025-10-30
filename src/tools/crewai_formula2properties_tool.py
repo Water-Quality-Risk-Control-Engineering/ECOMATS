@@ -1,7 +1,12 @@
 import json
 from typing import Optional
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 from src.tools.formula2properties_tool import get_formula2properties_tool
+
+class Formula2PropertiesToolInput(BaseModel):
+    """Formula2Properties工具输入参数模型"""
+    formula: str = Field(description="化学分子式")
 
 class CrewAIFormula2PropertiesTool(BaseTool):
     """CrewAI工具包装器，用于根据化学式预测性质"""
@@ -12,6 +17,7 @@ class CrewAIFormula2PropertiesTool(BaseTool):
         "可以预测分子量、晶体结构、能带隙等信息。"
         "当需要基于化学式了解可能的材料性质时使用此工具。"
     )
+    args_schema: type[BaseModel] = Formula2PropertiesToolInput
     
     def _run(self, formula: str) -> str:
         """

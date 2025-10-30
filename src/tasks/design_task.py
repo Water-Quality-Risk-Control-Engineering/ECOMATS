@@ -18,7 +18,7 @@ class DesignTask(BaseTask):
         """
         super().__init__(
             agent=agent,
-            expected_output="设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等，按照详细的材料类型分类和结构描述要求进行设计",  # 设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等 / Detailed information of the 10 designed catalyst materials, including material structure, synthesis methods, etc.
+            expected_output="设计出的10种催化剂材料的详细信息，必须包含以下内容：\n- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n- 化学式和晶体结构描述\n- 关键物理性质（如带隙、密度）\n- 热力学稳定性（能量凸包上的高度）\n- 建议的合成方法\n- 预期性能指标",  # 设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等 / Detailed information of the 10 designed catalyst materials, including material structure, synthesis methods, etc.
             description="""基于用户需求和污染物特性，设计10种催化PMS活化的催化剂材料。
             要求给出每种材料的详细结构信息和具体的合成方法。
             / Based on user requirements and pollutant characteristics, design 10 catalyst materials for PMS activation.
@@ -58,6 +58,30 @@ class DesignTask(BaseTask):
         8. 优化材料结构参数以确保催化性能和稳定性
         9. 考虑材料多样性、结构稳定性、催化性能的平衡
         
+        工具使用策略：
+        1. **目标分析阶段**：
+           - 调用PubChem工具查询目标污染物的化学信息（包括分子式、分子量、CAS号、SMILES等）
+           - 分析污染物的化学结构和降解难点
+           - 记录工具调用的参数和返回结果
+        
+        2. **材料设计阶段**：
+           - 调用Material Identifier Tool确定设计材料的类型
+           - 根据材料类型调用相应的设计工具：
+             * 对于金属材料：调用Materials Project工具查询类似材料的晶体结构和性质数据
+             * 对于有机材料：调用PubChem工具验证分子结构和性质
+           - 调用Structure Validator Tool验证设计的材料结构是否真实存在
+           - 如果验证失败，记录失败原因并重新设计
+        
+        3. **性能优化阶段**：
+           - 调用Name2Properties Tool或Formula2Properties Tool获取材料关键组分的性质参数
+           - 调用Material Search Tool查询类似材料的催化性能数据
+           - 基于工具数据优化材料的活性位点和反应路径
+        
+        4. **最终验证阶段**：
+           - 对设计的材料进行综合验证，确保所有工具调用结果一致
+           - 记录所有工具调用的详细信息，包括参数、返回结果和验证状态
+           - 确保设计的材料结构在现实中确实存在或具有合成可行性
+        
         材料类型分类要求：
         1. **纯金属类**：单质金属、合金、纳米颗粒
         2. **金属氧化物类**：单一氧化物、复合氧化物、层状双金属氢氧化物
@@ -82,7 +106,11 @@ class DesignTask(BaseTask):
         - 满足目标污染物的降解需求
         - **必须验证设计的材料结构在现实中是否存在**
         - **必须使用Materials Project和PubChem工具获取数据支持设计**
+        - **如果Materials Project工具未返回有效的material_id，不得进行推断或生成虚假的MP-ID**
+        - **在没有有效material_id的情况下，应基于理论分析和已知的材料科学原理进行材料设计**
         - 遵循材料类型分类和结构描述的详细要求
+        - 每个工具调用都必须记录具体的参数和返回结果
+        - 如果工具调用失败，必须明确说明失败原因和对设计的影响
         """
         
         # 添加用户自定义需求到描述中

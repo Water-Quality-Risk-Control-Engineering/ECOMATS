@@ -213,6 +213,46 @@ def run_preset_workflow(user_requirement, llm):
     # 6. 创建操作建议任务，依赖于最终验证任务 / Create operation suggestion task, dependent on final validation task
     operation_suggesting_task = OperationSuggestingTask(llm).create_task(agents['operation_suggesting'], final_validation_task)
     
+    # 定义任务回调函数，用于保存整体流程结果
+    # 生成全局时间戳，确保所有任务使用相同的流程结果文件
+    import datetime
+    global_workflow_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    def task_callback(task_output):
+        import json
+        import os
+        
+        # 确保outputs目录存在
+        outputs_dir = os.path.join(project_root, "outputs")
+        os.makedirs(outputs_dir, exist_ok=True)
+        
+        # 生成流程结果文件名
+        workflow_result_filename = f"workflow_result_{global_workflow_timestamp}.txt"
+        workflow_result_filepath = os.path.join(outputs_dir, workflow_result_filename)
+        
+        # 获取任务名称
+        task_name = getattr(task_output, 'name', 'unknown_task')
+        if not task_name:
+            task_name = 'unknown_task'
+        
+        # 将任务输出追加到流程结果文件
+        with open(workflow_result_filepath, 'a', encoding='utf-8') as f:
+            f.write(f"\n\n{'='*60}\n")
+            f.write(f"任务名称: {task_name}\n")
+            f.write(f"执行时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write("=" * 60 + "\n")
+            f.write(f"任务描述: {getattr(task_output, 'description', 'N/A')}\n")
+            f.write(f"预期输出: {getattr(task_output, 'expected_output', 'N/A')}\n")
+            f.write("=" * 60 + "\n")
+            f.write(f"实际输出:\n{str(task_output)}\n")
+            
+            # 如果有JSON输出，也保存
+            if hasattr(task_output, 'json_dict') and task_output.json_dict:
+                f.write("\n" + "=" * 60 + "\n")
+                f.write("JSON输出:\n")
+                json.dump(task_output.json_dict, f, ensure_ascii=False, indent=2)
+            f.write(f"\n{'='*60}\n")
+    
     # 创建Crew / Create Crew
     ecomats_crew = Crew(
         agents=[
@@ -238,7 +278,8 @@ def run_preset_workflow(user_requirement, llm):
             operation_suggesting_task
         ],  # 任务按顺序执行 / Tasks executed in order
         process=Process.sequential,  # 使用顺序流程执行任务 / Use sequential process to execute tasks
-        verbose=Config.VERBOSE
+        verbose=Config.VERBOSE,
+        task_callback=task_callback  # 添加任务回调函数
     )
     
     # 执行 / Execute
@@ -258,7 +299,7 @@ def run_autonomous_workflow(user_requirement, llm):
     coordinator_agent = coordinator.create_agent()
     
     # 创建任务分配器并注册所有智能体 / Create task allocator and register all agents
-    task_allocator = TaskAllocator()
+    task_allocator = TaskAllocator(llm)
     task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
     task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
     task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
@@ -284,57 +325,87 @@ def run_autonomous_workflow(user_requirement, llm):
     # 使用任务分配器来确定需要哪些任务类型 / Use task allocator to determine which task types are needed
     required_task_types = task_allocator.determine_required_task_types(user_requirement)
     
-    # 获取需要的智能体 / Get required agents
-    required_agent_mapping = {}
-    for task_type in required_task_types:
-        if task_type == "material_design":
-            # 材料设计任务已经创建了
-            required_agent_mapping[task_type] = design_agent
-        else:
-            agent = task_allocator.get_agent_for_task(task_type)
-            if agent and agent.role not in seen_roles:
-                required_agent_mapping[task_type] = agent
-                required_agents.append(agent)
-                seen_roles.add(agent.role)
+    # 特殊处理：如果只运行机理挖掘任务，则不需要材料设计任务
+    if required_task_types == ["mechanism_analysis"]:
+        # 清空已有的智能体，只保留必要的智能体
+        required_agents = [coordinator_agent]
+        seen_roles = {coordinator_agent.role}
+        
+        # 获取机理挖掘智能体
+        mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+        if mechanism_agent and mechanism_agent.role not in seen_roles:
+            required_agents.append(mechanism_agent)
+            seen_roles.add(mechanism_agent.role)
+        
+        # 创建一个虚拟的设计任务，用于机理挖掘任务的上下文
+        from crewai import Task
+        design_task = Task(
+            agent=design_agent,
+            expected_output="材料设计方案",
+            description="用于机理挖掘任务上下文的虚拟设计任务"
+        )
+    else:
+        # 正常处理流程
+        # 获取需要的智能体 / Get required agents
+        required_agent_mapping = {}
+        for task_type in required_task_types:
+            if task_type == "material_design":
+                # 材料设计任务已经创建了
+                required_agent_mapping[task_type] = design_agent
+            else:
+                agent = task_allocator.get_agent_for_task(task_type)
+                if agent and agent.role not in seen_roles:
+                    required_agent_mapping[task_type] = agent
+                    required_agents.append(agent)
+                    seen_roles.add(agent.role)
     
     # 根据任务类型创建相应的任务 / Create tasks based on task types
     task_mapping = {}
     
-    # 首先处理材料设计任务 / First handle material design task
-    task_mapping["material_design"] = design_task
-    
-    # 然后处理其他任务 / Then handle other tasks
-    # 处理评估任务链 / Handle evaluation task chain
-    evaluation_tasks = []
-    final_validation_task = None
-    
-    if "evaluation" in required_task_types:
-        # 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
-        evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
-        for agent in evaluation_agents:
-            task = EvaluationTask(llm).create_task(agent, design_task)
-            evaluation_tasks.append(task)
-        
-        # 委派最终验证任务 / Delegate final validation task
-        final_validation_agent = task_allocator.get_agent_for_task("final_validation")
-        final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
-                                                               [design_task] + evaluation_tasks)
-        
-        task_mapping["evaluation"] = evaluation_tasks
-        task_mapping["final_validation"] = final_validation_task
-        required_tasks.extend(evaluation_tasks)
-        required_tasks.append(final_validation_task)
-    
-    # 处理独立任务（不依赖于评估任务） / Handle independent tasks (not dependent on evaluation tasks)
-    # 机理分析任务 / Mechanism analysis task
-    if "mechanism_analysis" in required_task_types:
+    # 特殊处理：如果只运行机理挖掘任务
+    if required_task_types == ["mechanism_analysis"]:
+        # 只创建机理挖掘任务
         mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
-        # 如果有最终验证任务，则依赖于最终验证任务；否则依赖于设计任务
-        # If there is a final validation task, depend on it; otherwise depend on the design task
-        context_task = final_validation_task if final_validation_task else design_task
-        mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, context_task)
+        mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, design_task)
         task_mapping["mechanism_analysis"] = mechanism_analysis_task
         required_tasks.append(mechanism_analysis_task)
+    else:
+        # 正常处理流程
+        # 首先处理材料设计任务 / First handle material design task
+        task_mapping["material_design"] = design_task
+        
+        # 然后处理其他任务 / Then handle other tasks
+        # 处理评估任务链 / Handle evaluation task chain
+        evaluation_tasks = []
+        final_validation_task = None
+        
+        if "evaluation" in required_task_types:
+            # 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
+            evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
+            for agent in evaluation_agents:
+                task = EvaluationTask(llm).create_task(agent, design_task)
+                evaluation_tasks.append(task)
+            
+            # 委派最终验证任务 / Delegate final validation task
+            final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+            final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
+                                                                   [design_task] + evaluation_tasks)
+            
+            task_mapping["evaluation"] = evaluation_tasks
+            task_mapping["final_validation"] = final_validation_task
+            required_tasks.extend(evaluation_tasks)
+            required_tasks.append(final_validation_task)
+        
+        # 处理独立任务（不依赖于评估任务） / Handle independent tasks (not dependent on evaluation tasks)
+        # 机理分析任务 / Mechanism analysis task
+        if "mechanism_analysis" in required_task_types:
+            mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+            # 如果有最终验证任务，则依赖于最终验证任务；否则依赖于设计任务
+            # If there is a final validation task, depend on it; otherwise depend on the design task
+            context_task = final_validation_task if final_validation_task else design_task
+            mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, context_task)
+            task_mapping["mechanism_analysis"] = mechanism_analysis_task
+            required_tasks.append(mechanism_analysis_task)
         
     # 合成方法任务 / Synthesis method task
     if "synthesis_method" in required_task_types:
@@ -356,12 +427,53 @@ def run_autonomous_workflow(user_requirement, llm):
         task_mapping["operation_suggestion"] = operation_suggesting_task
         required_tasks.append(operation_suggesting_task)
     
+    # 定义任务回调函数，用于保存整体流程结果
+    # 生成全局时间戳，确保所有任务使用相同的流程结果文件
+    import datetime
+    global_workflow_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    def task_callback(task_output):
+        import json
+        import os
+        
+        # 确保outputs目录存在
+        outputs_dir = os.path.join(project_root, "outputs")
+        os.makedirs(outputs_dir, exist_ok=True)
+        
+        # 生成流程结果文件名
+        workflow_result_filename = f"workflow_result_{global_workflow_timestamp}.txt"
+        workflow_result_filepath = os.path.join(outputs_dir, workflow_result_filename)
+        
+        # 获取任务名称
+        task_name = getattr(task_output, 'name', 'unknown_task')
+        if not task_name:
+            task_name = 'unknown_task'
+        
+        # 将任务输出追加到流程结果文件
+        with open(workflow_result_filepath, 'a', encoding='utf-8') as f:
+            f.write(f"\n\n{'='*60}\n")
+            f.write(f"任务名称: {task_name}\n")
+            f.write(f"执行时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write("=" * 60 + "\n")
+            f.write(f"任务描述: {getattr(task_output, 'description', 'N/A')}\n")
+            f.write(f"预期输出: {getattr(task_output, 'expected_output', 'N/A')}\n")
+            f.write("=" * 60 + "\n")
+            f.write(f"实际输出:\n{str(task_output)}\n")
+            
+            # 如果有JSON输出，也保存
+            if hasattr(task_output, 'json_dict') and task_output.json_dict:
+                f.write("\n" + "=" * 60 + "\n")
+                f.write("JSON输出:\n")
+                json.dump(task_output.json_dict, f, ensure_ascii=False, indent=2)
+            f.write(f"\n{'='*60}\n")
+    
     # 创建Crew / Create Crew
     ecomats_crew = Crew(
         agents=required_agents,
         tasks=[design_task] + required_tasks,
         process=Process.sequential,
-        verbose=Config.VERBOSE
+        verbose=Config.VERBOSE,
+        task_callback=task_callback  # 添加任务回调函数
     )
     
     # 执行 / Execute
@@ -410,7 +522,9 @@ def main():
     else:
         result = run_autonomous_workflow(user_requirement, llm)
     
-    print(result)
+    # 工作流结果已经通过task_callback保存到workflow_result文件中
+    # 不再生成单独的result文件
+    print("工作流执行完成，结果已保存到workflow_result文件中")
 
 if __name__ == "__main__":
     main()

@@ -78,95 +78,95 @@ class ToolInitializer:
 def initialize_assessment_agent_a_tools() -> List[Any]:
     """初始化评估代理A的工具"""
     from src.tools import (
-        get_materials_project_tool,
-        get_pubchem_tool,
-        get_name2properties_tool,
-        get_cid2properties_tool,
-        get_pnec_tool,
-        get_data_validator_tool,
-        get_structure_validator_tool
+        materials_project_tool,
+        pubchem_tool,
+        name2properties_tool,
+        cid2properties_tool,
+        pnec_tool,
+        data_validator_tool,
+        structure_validator_tool
     )
     
-    tool_configs = [
-        {"name": "materials_project_tool", "factory": get_materials_project_tool},
-        {"name": "pubchem_tool", "factory": get_pubchem_tool},
-        {"name": "name2properties_tool", "factory": get_name2properties_tool},
-        {"name": "cid2properties_tool", "factory": get_cid2properties_tool},
-        {"name": "pnec_tool", "factory": get_pnec_tool},
-        {"name": "data_validator_tool", "factory": get_data_validator_tool},
-        {"name": "structure_validator_tool", "factory": get_structure_validator_tool}
+    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
+    tools = [
+        materials_project_tool,      # CrewAIMaterialsProjectTool
+        pubchem_tool,                # CrewAIPubChemTool
+        name2properties_tool,        # CrewAIName2PropertiesTool
+        cid2properties_tool,         # CrewAICID2PropertiesTool
+        pnec_tool,                   # CrewAIPNECTool
+        data_validator_tool,         # CrewAIDataValidatorTool
+        structure_validator_tool     # CrewAIStructureValidatorTool
     ]
     
-    tools_dict = ToolInitializer.initialize_tools(tool_configs)
-    return list(tools_dict.values())
+    return tools
 
 def initialize_assessment_agent_b_tools() -> List[Any]:
     """初始化评估代理B的工具"""
     from src.tools import (
-        get_materials_project_tool,
-        get_pubchem_tool,
-        get_name2properties_tool,
-        get_cid2properties_tool,
-        get_pnec_tool,
-        get_structure_validator_tool
+        materials_project_tool,
+        pubchem_tool,
+        name2properties_tool,
+        cid2properties_tool,
+        pnec_tool,
+        structure_validator_tool
     )
     
-    tool_configs = [
-        {"name": "materials_project_tool", "factory": get_materials_project_tool},
-        {"name": "pubchem_tool", "factory": get_pubchem_tool},
-        {"name": "name2properties_tool", "factory": get_name2properties_tool},
-        {"name": "cid2properties_tool", "factory": get_cid2properties_tool},
-        {"name": "pnec_tool", "factory": get_pnec_tool},
-        {"name": "structure_validator_tool", "factory": get_structure_validator_tool}
+    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
+    tools = [
+        materials_project_tool,      # CrewAIMaterialsProjectTool
+        pubchem_tool,                # CrewAIPubChemTool
+        name2properties_tool,        # CrewAIName2PropertiesTool
+        cid2properties_tool,         # CrewAICID2PropertiesTool
+        pnec_tool,                   # CrewAIPNECTool
+        structure_validator_tool     # CrewAIStructureValidatorTool
     ]
     
-    tools_dict = ToolInitializer.initialize_tools(tool_configs)
-    return list(tools_dict.values())
+    return tools
 
 def initialize_assessment_agent_c_tools() -> List[Any]:
     """初始化评估代理C的工具"""
     from src.tools import (
-        get_materials_project_tool,
-        get_pubchem_tool,
-        get_name2properties_tool,
-        get_cid2properties_tool,
-        get_pnec_tool
+        materials_project_tool,
+        pubchem_tool,
+        name2properties_tool,
+        cid2properties_tool,
+        pnec_tool
     )
     
-    tool_configs = [
-        {"name": "materials_project_tool", "factory": get_materials_project_tool},
-        {"name": "pubchem_tool", "factory": get_pubchem_tool},
-        {"name": "name2properties_tool", "factory": get_name2properties_tool},
-        {"name": "cid2properties_tool", "factory": get_cid2properties_tool},
-        {"name": "pnec_tool", "factory": get_pnec_tool}
+    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
+    tools = [
+        materials_project_tool,      # CrewAIMaterialsProjectTool
+        pubchem_tool,                # CrewAIPubChemTool
+        name2properties_tool,        # CrewAIName2PropertiesTool
+        cid2properties_tool,         # CrewAICID2PropertiesTool
+        pnec_tool                     # CrewAIPNECTool
     ]
     
-    tools_dict = ToolInitializer.initialize_tools(tool_configs)
-    return list(tools_dict.values())
+    return tools
 
 def initialize_final_validator_tools() -> List[Any]:
     """初始化最终验证代理的工具"""
     from src.tools import (
-        get_materials_project_tool,
-        get_pubchem_tool,
-        get_name2properties_tool,
-        get_cid2properties_tool,
-        get_pnec_tool,
-        get_material_search_tool,
-        get_data_validator_tool,
-        get_structure_validator_tool
+        materials_project_tool,
+        pubchem_tool,
+        name2properties_tool,
+        cid2properties_tool,
+        pnec_tool,
+        material_search_tool,
+        data_validator_tool,
+        structure_validator_tool
     )
     
-    tool_configs = [
-        {"name": "materials_project_tool", "factory": get_materials_project_tool},
-        {"name": "pubchem_tool", "factory": get_pubchem_tool},
-        {"name": "name2properties_tool", "factory": get_name2properties_tool},
-        {"name": "cid2properties_tool", "factory": get_cid2properties_tool},
-        {"name": "pnec_tool", "factory": get_pnec_tool},
-        {"name": "material_search_tool", "factory": get_material_search_tool},
-        {"name": "data_validator_tool", "factory": get_data_validator_tool},
-        {"name": "structure_validator_tool", "factory": get_structure_validator_tool}
+    # 直接使用CrewAI工具包装器实例，确保它们继承自BaseTool
+    tools = [
+        materials_project_tool,      # CrewAIMaterialsProjectTool
+        pubchem_tool,                # CrewAIPubChemTool
+        name2properties_tool,        # CrewAIName2PropertiesTool
+        cid2properties_tool,         # CrewAICID2PropertiesTool
+        pnec_tool,                   # CrewAIPNECTool
+        material_search_tool,        # CrewAIMaterialSearchTool
+        data_validator_tool,         # CrewAIDataValidatorTool
+        structure_validator_tool     # CrewAIStructureValidatorTool
     ]
     
-    tools_dict = ToolInitializer.initialize_tools(tool_configs)
-    return list(tools_dict.values())
+    return tools

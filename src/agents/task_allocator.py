@@ -1,4 +1,5 @@
 import logging
+import json
 from typing import List, Dict, Any, Union
 from crewai import Agent
 
@@ -11,9 +12,12 @@ class TaskAllocator:
     任务分配器，根据任务类型自动选择合适的智能体 / Task allocator that automatically selects the appropriate agent based on task type
     """
     
-    def __init__(self):
+    def __init__(self, llm=None):
         """
         初始化任务分配器 / Initialize the TaskAllocator
+        
+        Args:
+            llm: 语言模型实例，用于智能任务分配 / Language model instance for intelligent task allocation
         """
         # 定义任务类型到智能体的映射关系 / Define mapping from task types to agents
         self.task_agent_mapping = {
@@ -31,6 +35,9 @@ class TaskAllocator:
         # 存储所有可用的智能体
         self.available_agents = {}
         
+        # 存储语言模型实例
+        self.llm = llm
+        
     def determine_required_task_types(self, task_description):
         """
         根据任务描述动态决定需要哪些任务类型
@@ -42,10 +49,81 @@ class TaskAllocator:
         Returns:
             需要的任务类型列表 / List of required task types
         """
-        required_task_types = ["material_design"]  # 材料设计任务总是需要
+        # 如果有LLM实例，使用LLM进行智能分配
+        if self.llm:
+            try:
+                # 加载提示文件
+                from src.utils.prompt_loader import load_prompt
+                prompt_template = load_prompt("task_allocation_prompt.md")
+                
+                # 格式化提示
+                prompt = prompt_template.format(user_requirement=task_description)
+                
+                # 调用LLM获取任务类型
+                response = self.llm.invoke(prompt)
+                
+                # 记录LLM响应用于调试
+                logger.debug(f"LLM task allocation response: {response}")
+                
+                # 解析LLM响应
+                task_types = json.loads(response)
+                
+                # 验证任务类型是否有效
+                valid_task_types = []
+                available_task_types = set(self.task_agent_mapping.keys())
+                
+                for task_type in task_types:
+                    if task_type in available_task_types:
+                        valid_task_types.append(task_type)
+                    else:
+                        logger.warning(f"Invalid task type detected: {task_type}")
+                
+                # 特殊处理：如果只包含机理分析任务，则只返回机理分析任务
+                if valid_task_types == ["mechanism_analysis"]:
+                    logger.info("User requested mechanism analysis only, returning mechanism_analysis task only")
+                    return ["mechanism_analysis"]
+                
+                # 确保返回非空列表
+                if not valid_task_types:
+                    logger.warning("LLM returned no valid task types, falling back to default")
+                    return ["material_design"]
+                
+                # 如果LLM没有包含material_design但其他任务需要它，则添加
+                if "material_design" not in valid_task_types:
+                    # 检查是否需要material_design（除了机理分析外的其他任务通常需要）
+                    needs_material_design = any(task_type in ["evaluation", "final_validation", "synthesis_method", "operation_suggestion"] 
+                                              for task_type in valid_task_types)
+                    if needs_material_design:
+                        logger.info("Adding material_design task as it's required by other tasks")
+                        valid_task_types.insert(0, "material_design")
+                
+                logger.info(f"LLM task allocation result: {valid_task_types}")
+                return valid_task_types
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"Error parsing LLM response as JSON: {e}")
+                logger.error(f"LLM response was: {response}")
+            except Exception as e:
+                logger.error(f"Error using LLM for task allocation: {e}")
+            
+            # 如果LLM调用失败，回退到原来的逻辑
+            logger.warning("Falling back to keyword-based task allocation")
         
+        # 回退到原来的基于关键字的逻辑
         # 转换为小写以便匹配
         task_lower = task_description.lower()
+        
+        # 检查是否用户只对机理挖掘感兴趣
+        if ("只对机理挖掘感兴趣" in task_description or "only mechanism analysis" in task_lower or \
+            "just mechanism" in task_lower or "only mechanism" in task_lower or \
+            ("只想分析材料的反应机理" in task_description)) and \
+           ("机理" in task_description or "机制" in task_description or "反应" in task_description or \
+            "mechanism" in task_lower or "reaction" in task_lower or "catalytic" in task_lower or \
+            "analyze" in task_lower or "analysis" in task_lower):
+            # 如果用户只对机理挖掘感兴趣，则只运行机理挖掘任务
+            return ["mechanism_analysis"]
+        
+        required_task_types = ["material_design"]  # 材料设计任务总是需要
         
         # 检查是否需要评估任务 / Check if evaluation tasks are needed
         if "评估" in task_description or "评价" in task_description or "性能" in task_description or \

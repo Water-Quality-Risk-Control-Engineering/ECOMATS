@@ -5,7 +5,9 @@
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
+from src.utils.tool_call_spec import ToolCallSpec
+from src.utils.context_store import ContextStore
 
 # 延迟导入以避免循环导入
 def get_material_identifier_tool():
@@ -36,7 +38,7 @@ def get_material_search_tool():
     from src.tools.material_search_tool import get_material_search_tool as _get_material_search_tool
     return _get_material_search_tool()
 
-from src.utils.tool_call_spec import ToolCallSpec
+ 
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -83,21 +85,26 @@ class AssessmentToolExecutor:
             # 2. 结构验证工具调用
             results["structure_validator"] = self.structure_validator_tool.validate_structure_exists(material_formula)
             
-            # 3. 根据材料类型调用相应的数据库工具
+            # 3. 根据材料类型调用相应的数据库工具（仅在验证通过时）
             material_type = results["material_identifier"].get("material_type", "unknown")
-            if material_type == "metal":
-                results["materials_project"] = self.materials_project_tool.search_materials(formula=material_formula, limit=5)
-            elif material_type == "organic":
-                results["pubchem"] = self.pubchem_tool.search_compound(material_formula)
+            if results["material_identifier"].get("is_verified"):
+                if material_type == "metal":
+                    results["materials_project"] = self.materials_project_tool.search_materials(
+                        formula=material_formula,
+                        limit=5,
+                        fields=["material_id", "formula_pretty"]
+                    )
+                elif material_type == "organic":
+                    results["pubchem"] = self.pubchem_tool.search_compound(material_formula)
             
-            # 4. 调用PNEC工具（环境风险评估）
-            # 根据材料类型调用相应的PNEC查询方法
-            if material_type == "organic":
-                results["pnec"] = self.pnec_tool.get_pnec_by_name(material_formula)
-            else:
-                # 对于金属材料，我们可能需要提取元素符号来查询
-                # 这里简化处理，直接使用名称查询
-                results["pnec"] = self.pnec_tool.get_pnec_by_name(material_formula)
+            # 4. 调用PNEC工具（环境风险评估）：仅在通过验证或解析出有效名称时尝试
+            try:
+                if results["material_identifier"].get("is_verified"):
+                    results["pnec"] = self.pnec_tool.get_pnec_by_name(material_formula)
+                else:
+                    results["pnec"] = {"warning": "材料未验证，跳过PNEC查询"}
+            except Exception:
+                results["pnec"] = {"error": "PNEC查询失败"}
             
             # 5. 调用数据验证工具
             # 创建一个包含材料信息的数据字典用于验证
@@ -107,8 +114,23 @@ class AssessmentToolExecutor:
             }
             results["data_validator"] = self.data_validator_tool.validate_chemical_data(material_data)
             
-            # 6. 调用材料搜索工具
-            results["material_search"] = self.material_search_tool.search_similar_materials(material_formula)
+            # 6. 调用材料搜索工具：该工具为 BaseTool，使用其 _run 接口
+            try:
+                results["material_search"] = self.material_search_tool._run(material_formula, limit=10)
+            except Exception:
+                results["material_search"] = {"error": "材料搜索工具调用失败"}
+            
+            # 写入全局上下文，供后续复用，避免重复查询
+            try:
+                ContextStore.set("material_identifier", results.get("material_identifier"))
+                if results.get("materials_project"):
+                    ContextStore.set("materials_project_search", results.get("materials_project"))
+                if results.get("structure_validator"):
+                    ContextStore.set("structure_validator", results.get("structure_validator"))
+                if results.get("material_search"):
+                    ContextStore.set("material_search", results.get("material_search"))
+            except Exception:
+                pass
             
         except Exception as e:
             results["errors"].append(f"工具调用过程中出现错误: {str(e)}")

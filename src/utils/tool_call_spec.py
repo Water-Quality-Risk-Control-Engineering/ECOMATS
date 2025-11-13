@@ -5,7 +5,7 @@
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 # 延迟导入以避免循环导入
 def get_material_identifier_tool():
@@ -196,9 +196,20 @@ class MaterialDesignerToolSpec(ToolCallSpec):
         }
         
         try:
-            # 调用材料标识符工具
+            # 优先从全局上下文读取，缺失再调用工具
+            try:
+                from src.utils.context_store import ContextStore
+                cached_identifier = ContextStore.get("material_identifier")
+                cached_validator = ContextStore.get("structure_validator")
+                cached_mp = ContextStore.get("materials_project_search")
+            except Exception:
+                cached_identifier = None
+                cached_validator = None
+                cached_mp = None
+
+            # 调用材料标识符工具（或复用缓存）
             identifier_tool = get_material_identifier_tool()
-            identifier_result = identifier_tool.identify_material(material_formula)
+            identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
             # 验证材料标识符结果
@@ -206,9 +217,9 @@ class MaterialDesignerToolSpec(ToolCallSpec):
                 result["validation_passed"] = False
                 result["errors"].append("材料标识符验证失败")
             
-            # 调用结构验证工具
+            # 调用结构验证工具（或复用缓存）
             validator_tool = get_structure_validator_tool()
-            validator_result = validator_tool.validate_structure_exists(material_formula)
+            validator_result = cached_validator or validator_tool.validate_structure_exists(material_formula)
             result["tool_calls"]["structure_validator"] = validator_result
             
             # 验证结构验证结果
@@ -219,12 +230,27 @@ class MaterialDesignerToolSpec(ToolCallSpec):
             # 根据材料类型调用相应的数据库工具
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
-                # 调用Materials Project工具
                 mp_tool = get_materials_project_tool()
-                mp_result = mp_tool.search_materials(formula=material_formula, limit=5)
+                if cached_mp and isinstance(cached_mp, dict) and cached_mp.get("data"):
+                    mp_result = cached_mp
+                else:
+                    # 优先复用结构验证的结果，避免重复查询
+                    validator_data = result["tool_calls"].get("structure_validator", {})
+                    if isinstance(validator_data, dict) and validator_data.get("valid") and validator_data.get("source") == "Materials Project" and validator_data.get("data"):
+                        mp_result = {
+                            "data": [validator_data["data"]],
+                            "meta": {"total_count": 1, "limit": 1}
+                        }
+                    else:
+                        # 其次复用标识符的material_id进行详情查询
+                        add_info = identifier_result.get("additional_info") or {}
+                        material_id = add_info.get("material_id")
+                        if material_id and mp_tool.validate_material_id(material_id):
+                            detail = mp_tool.get_material_by_id(material_id)
+                            mp_result = {"data": [detail] if "error" not in detail else [], "meta": {"total_count": 1, "limit": 1}}
+                        else:
+                            mp_result = mp_tool.search_materials(formula=material_formula, limit=5, fields=["material_id", "formula_pretty"])
                 result["tool_calls"]["materials_project"] = mp_result
-                
-                # 验证Materials Project结果
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
                     result["errors"].append("Materials Project数据验证失败")
@@ -285,9 +311,19 @@ class AssessmentExpertToolSpec(ToolCallSpec):
         }
         
         try:
-            # 调用材料标识符工具
+            # 优先复用上下文
+            try:
+                from src.utils.context_store import ContextStore
+                cached_identifier = ContextStore.get("material_identifier")
+                cached_validator = ContextStore.get("structure_validator")
+                cached_mp = ContextStore.get("materials_project_search")
+            except Exception:
+                cached_identifier = None
+                cached_validator = None
+                cached_mp = None
+
             identifier_tool = get_material_identifier_tool()
-            identifier_result = identifier_tool.identify_material(material_formula)
+            identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
             # 验证材料标识符结果
@@ -295,9 +331,8 @@ class AssessmentExpertToolSpec(ToolCallSpec):
                 result["validation_passed"] = False
                 result["errors"].append("材料标识符验证失败")
             
-            # 调用结构验证工具
             validator_tool = get_structure_validator_tool()
-            validator_result = validator_tool.validate_structure_exists(material_formula)
+            validator_result = cached_validator or validator_tool.validate_structure_exists(material_formula)
             result["tool_calls"]["structure_validator"] = validator_result
             
             # 验证结构验证结果
@@ -308,12 +343,25 @@ class AssessmentExpertToolSpec(ToolCallSpec):
             # 根据材料类型调用相应的数据库工具
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
-                # 调用Materials Project工具
                 mp_tool = get_materials_project_tool()
-                mp_result = mp_tool.search_materials(formula=material_formula, limit=5)
+                if cached_mp and isinstance(cached_mp, dict) and cached_mp.get("data"):
+                    mp_result = cached_mp
+                else:
+                    validator_data = result["tool_calls"].get("structure_validator", {})
+                    if isinstance(validator_data, dict) and validator_data.get("valid") and validator_data.get("source") == "Materials Project" and validator_data.get("data"):
+                        mp_result = {
+                            "data": [validator_data["data"]],
+                            "meta": {"total_count": 1, "limit": 1}
+                        }
+                    else:
+                        add_info = identifier_result.get("additional_info") or {}
+                        material_id = add_info.get("material_id")
+                        if material_id and mp_tool.validate_material_id(material_id):
+                            detail = mp_tool.get_material_by_id(material_id)
+                            mp_result = {"data": [detail] if "error" not in detail else [], "meta": {"total_count": 1, "limit": 1}}
+                        else:
+                            mp_result = mp_tool.search_materials(formula=material_formula, limit=5, fields=["material_id", "formula_pretty"])
                 result["tool_calls"]["materials_project"] = mp_result
-                
-                # 验证Materials Project结果
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
                     result["errors"].append("Materials Project数据验证失败")
@@ -401,12 +449,22 @@ class FinalValidatorToolSpec(ToolCallSpec):
             # 根据材料类型调用相应的数据库工具
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
-                # 调用Materials Project工具
                 mp_tool = get_materials_project_tool()
-                mp_result = mp_tool.search_materials(formula=material_formula, limit=5)
+                validator_data = result["tool_calls"].get("structure_validator", {})
+                if isinstance(validator_data, dict) and validator_data.get("valid") and validator_data.get("source") == "Materials Project" and validator_data.get("data"):
+                    mp_result = {
+                        "data": [validator_data["data"]],
+                        "meta": {"total_count": 1, "limit": 1}
+                    }
+                else:
+                    add_info = identifier_result.get("additional_info") or {}
+                    material_id = add_info.get("material_id")
+                    if material_id and mp_tool.validate_material_id(material_id):
+                        detail = mp_tool.get_material_by_id(material_id)
+                        mp_result = {"data": [detail] if "error" not in detail else [], "meta": {"total_count": 1, "limit": 1}}
+                    else:
+                        mp_result = mp_tool.search_materials(formula=material_formula, limit=5, fields=["material_id", "formula_pretty"])
                 result["tool_calls"]["materials_project"] = mp_result
-                
-                # 验证Materials Project结果
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
                     result["errors"].append("Materials Project数据验证失败")
@@ -463,20 +521,35 @@ class MechanismExpertToolSpec(ToolCallSpec):
         }
         
         try:
-            # 调用材料标识符工具获取材料类型
+            # 优先复用上下文
+            try:
+                from src.utils.context_store import ContextStore
+                cached_identifier = ContextStore.get("material_identifier")
+                cached_mp = ContextStore.get("materials_project_search")
+            except Exception:
+                cached_identifier = None
+                cached_mp = None
+
             identifier_tool = get_material_identifier_tool()
-            identifier_result = identifier_tool.identify_material(material_formula)
+            identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
             # 根据材料类型调用相应的数据库工具
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
-                # 调用Materials Project工具
                 mp_tool = get_materials_project_tool()
-                mp_result = mp_tool.search_materials(formula=material_formula, limit=5)
+                if cached_mp and isinstance(cached_mp, dict) and cached_mp.get("data"):
+                    mp_result = cached_mp
+                else:
+                    validator_data = result["tool_calls"].get("material_identifier", {})
+                    add_info = validator_data.get("additional_info") if isinstance(validator_data, dict) else {}
+                    material_id = (add_info or {}).get("material_id")
+                    if material_id and mp_tool.validate_material_id(material_id):
+                        detail = mp_tool.get_material_by_id(material_id)
+                        mp_result = {"data": [detail] if "error" not in detail else [], "meta": {"total_count": 1, "limit": 1}}
+                    else:
+                        mp_result = mp_tool.search_materials(formula=material_formula, limit=5, fields=["material_id", "formula_pretty"])
                 result["tool_calls"]["materials_project"] = mp_result
-                
-                # 验证Materials Project结果
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
                     result["errors"].append("Materials Project数据验证失败")

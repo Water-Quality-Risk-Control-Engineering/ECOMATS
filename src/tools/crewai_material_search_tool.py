@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.material_search_tool import get_material_search_tool
@@ -35,11 +34,9 @@ class CrewAIMaterialSearchTool(BaseTool):
             # 获取工具实例
             tool = get_material_search_tool()
             
-            # 执行搜索
-            result = tool.search_similar_materials(query, limit)
-            
-            # 返回JSON格式的结果
-            return json.dumps(result, ensure_ascii=False, indent=2)
+            # 执行搜索（底层工具返回JSON字符串）
+            result_json = tool._run(query, limit)
+            return result_json
             
         except Exception as e:
             return json.dumps({"error": f"执行搜索时出错: {str(e)}"}, ensure_ascii=False)

@@ -6,7 +6,7 @@
 
 import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Optional, List
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
@@ -49,7 +49,11 @@ class MaterialSearchTool(BaseTool):
             materials = []
             
             # 首先尝试按化学式搜索
-            formula_result = mp_tool.search_materials(formula=query, limit=limit)
+            formula_result = mp_tool.search_materials(
+                formula=query,
+                limit=limit,
+                fields=["material_id", "formula_pretty", "chemsys", "volume", "density", "nsites"]
+            )
             
             if "error" not in formula_result and formula_result.get("data"):
                 materials.extend(formula_result["data"])
@@ -59,7 +63,11 @@ class MaterialSearchTool(BaseTool):
                 # 尝试将查询解析为元素列表
                 elements = self._parse_elements(query)
                 if elements:
-                    element_result = mp_tool.search_materials(elements=elements, limit=limit)
+                    element_result = mp_tool.search_materials(
+                        elements=elements,
+                        limit=limit,
+                        fields=["material_id", "formula_pretty", "chemsys", "volume", "density", "nsites"]
+                    )
                     if "error" not in element_result and element_result.get("data"):
                         materials.extend(element_result["data"])
             
@@ -69,7 +77,11 @@ class MaterialSearchTool(BaseTool):
                 if "-" in query:
                     element_list = [elem.strip() for elem in query.split("-") if elem.strip()]
                     if element_list:
-                        combo_result = mp_tool.search_materials(elements=element_list, limit=limit)
+                        combo_result = mp_tool.search_materials(
+                            elements=element_list,
+                            limit=limit,
+                            fields=["material_id", "formula_pretty", "chemsys", "volume", "density", "nsites"]
+                        )
                         if "error" not in combo_result and combo_result.get("data"):
                             materials.extend(combo_result["data"])
             

@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.cid2properties_tool import get_cid2properties_tool

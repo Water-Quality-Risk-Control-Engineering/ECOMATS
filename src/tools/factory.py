@@ -72,8 +72,14 @@ class ToolFactory:
         Returns:
             list: 材料设计工具实例的列表
         """
-        # 使用增强验证工具确保更频繁的工具调用
-        tools = ToolFactory.create_enhanced_validation_tools()
+        # 轻量化设计模式：减少即时工具数量，优先标识与结构验证，MP最小字段查询
+        tools = [
+            materials_project_tool,
+            pubchem_tool,
+            CrewAIMaterialIdentifierTool(),
+            CrewAIStructureValidatorTool(),
+            CrewAIMaterialSearchTool()
+        ]
         return tools
     
     @staticmethod
@@ -84,15 +90,14 @@ class ToolFactory:
         Returns:
             list: 材料评估工具实例的列表
         """
-        # 使用增强验证工具确保更频繁的工具调用
-        tools = ToolFactory.create_enhanced_validation_tools()
-        
-        # 添加评估专用工具
-        tools.extend([
-            CrewAIPNECTool(),                   # PNEC工具（用于环境风险评估）
-            CrewAIDataValidatorTool(),          # 数据验证工具（用于验证数据质量）
-        ])
-        
+        tools = [
+            materials_project_tool,
+            pubchem_tool,
+            CrewAIMaterialIdentifierTool(),
+            CrewAIStructureValidatorTool(),
+            CrewAIPNECTool(),
+            CrewAIDataValidatorTool()
+        ]
         return tools
     
     @staticmethod

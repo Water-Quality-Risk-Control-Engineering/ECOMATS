@@ -1,8 +1,6 @@
 import logging
-import os
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
-from src.config.config import Config
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -20,35 +18,15 @@ class BaseAgent:
         self.temperature = temperature
     
     def create_agent(self):
-        # 如果提供了特定温度，则使用该温度，否则使用LLM的默认温度
-        # If a specific temperature is provided, use that temperature, otherwise use the LLM's default temperature
         agent_llm = self.llm
-        if self.temperature is not None:
-            # 创建一个新的LLM实例，使用指定的温度
-            # Create a new LLM instance with the specified temperature
-            # 获取原始LLM的属性
-            base_url = getattr(self.llm, 'base_url', None) or getattr(self.llm, 'openai_api_base', None)
-            api_key = getattr(self.llm, 'api_key', None) or getattr(self.llm, 'openai_api_key', None)
-            model = getattr(self.llm, 'model', None) or getattr(self.llm, 'model_name', None)
-            streaming = getattr(self.llm, 'streaming', False)
-            max_tokens = getattr(self.llm, 'max_tokens', None)
-            
-            # 根据API基础URL判断使用哪种前缀
-            if model and not model.startswith(('openai/', 'qwen/')):
-                if base_url and 'dashscope' in base_url:
-                    model = 'qwen/' + model
-                else:
-                    model = 'openai/' + model
-            
-            agent_llm = type(self.llm)(
-                base_url=base_url,
-                api_key=api_key,
-                model=model,
-                temperature=self.temperature,
-                streaming=streaming,
-                max_tokens=max_tokens
-            )
-        
+        try:
+            from src.config.config import Config
+            if self.temperature is not None and Config.EAS_ENDPOINT and Config.EAS_TOKEN and Config.EAS_MODEL_NAME:
+                from src.utils.llm_config import create_eas_llm
+                agent_llm = create_eas_llm(temperature=self.temperature)
+        except Exception:
+            pass
+
         return Agent(
             role=self.role,
             goal=self.goal,

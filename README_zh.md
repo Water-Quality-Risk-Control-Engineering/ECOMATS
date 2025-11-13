@@ -162,6 +162,35 @@ ECOMATS/
    pip install -r requirements.txt
    ```
 
+### 升级到 CrewAI 1.2.1 的注意事项（LiteLLM 集成）
+
+- CrewAI 使用 LiteLLM 作为统一的模型连接层。为避免版本升级导致的调用异常（例如模型前缀导致 provider 识别错误、httpx 依赖冲突等），项目已统一改为使用 CrewAI 原生的 `LLM` 构造方式。
+- 代码中的 LLM 创建已迁移至 `src/utils/llm_config.py` 的工厂函数：
+  - `create_llm(temperature=None)`：用于默认 OpenAI 兼容端点（本项目对接 DashScope/Qwen3）。
+  - `create_eas_llm(temperature=None)`：用于阿里云 EAS 自部署模型端点。
+- 迁移后的好处：
+  - 不再在模型名上添加 `openai/` 或 `qwen/` 等前缀，避免 LiteLLM 在 CrewAI 1.2.1 中无法识别 provider 的问题。
+  - 统一在 Agent 层按需重建温度，避免直接克隆底层 ChatOpenAI 实例导致不兼容。
+
+示例：
+
+```python
+from src.utils.llm_config import create_llm, create_eas_llm
+
+# 默认（DashScope/Qwen3）
+llm = create_llm()
+
+# 若已配置 EAS：
+llm = create_eas_llm(temperature=0.3)
+```
+
+升级步骤建议：
+- 保持 `requirements.txt` 中只声明 `crewai`，不要手动指定 `litellm` 版本，避免与 CrewAI 的固定版本冲突。
+- 如遇到 `ModuleNotFoundError: No module named 'litellm'` 或 `provider not provided`：
+  - 确认未在模型名添加手动前缀；
+  - 使用上述工厂函数创建 `LLM`；
+  - 检查环境变量是否正确（`QWEN_API_BASE`、`QWEN_API_KEY`、`QWEN_MODEL_NAME`；或 `EAS_ENDPOINT`、`EAS_TOKEN`、`EAS_MODEL_NAME`）。
+
 5. 运行系统：
    ```bash
    python scripts/main.py

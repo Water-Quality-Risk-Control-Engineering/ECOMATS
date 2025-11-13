@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.formula2properties_tool import get_formula2properties_tool
@@ -33,8 +32,8 @@ class CrewAIFormula2PropertiesTool(BaseTool):
             # 获取工具实例
             tool = get_formula2properties_tool()
             
-            # 执行预测
-            result = tool.get_properties_by_formula(formula)
+            # 执行查询（包装器统一调用底层 _run 返回JSON字符串）
+            result = json.loads(tool._run(formula))
             
             # 返回JSON格式的结果
             return json.dumps(result, ensure_ascii=False, indent=2)

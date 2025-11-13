@@ -56,6 +56,13 @@ class MaterialsProjectTool:
             
         # 初始化MPRester客户端
         self.mpr = MPRester(self.api_key)
+        self._cache = {
+            "search": {},
+            "search_norm": {},
+            "by_id": {},
+            "verify": {}
+        }
+        self._ttl_seconds = 600
     
     def search_materials(self, 
                         formula: Optional[str] = None,
@@ -63,7 +70,8 @@ class MaterialsProjectTool:
                         exclude_elements: Optional[List[str]] = None,
                         crystal_system: Optional[str] = None,
                         limit: int = 100,
-                        skip: int = 0) -> Dict[str, Any]:
+                        skip: int = 0,
+                        fields: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         搜索材料 / Search materials
         
@@ -102,24 +110,61 @@ class MaterialsProjectTool:
                     if crystal_system:
                         kwargs["crystal_system"] = crystal_system
                         
-                    # 优化：限制搜索结果数量以避免超时
-                    # 对于元素搜索，使用更小的chunk_size
                     chunk_size = min(limit, 50) if elements else min(limit, 100)  # 减少chunk_size
                     
-                    # 优化：只获取需要的字段以提高查询速度
-                    # 使用API支持的字段
-                    fields = [
+                    default_fields = [
                         "material_id", 
-                        "formula_pretty", 
-                        "chemsys", 
-                        "volume", 
-                        "density", 
-                        "nsites"
+                        "formula_pretty"
                     ]
+                    fields = fields or default_fields
+                    normalized_key = (
+                        formula or "",
+                        tuple(elements) if elements else (),
+                        tuple(exclude_elements) if exclude_elements else (),
+                        crystal_system or ""
+                    )
+                    # 优先尝试规范化缓存：忽略limit/skip，按需切片与字段子集
+                    norm_entry = self._cache["search_norm"].get(normalized_key)
+                    now = time.time()
+                    if norm_entry and now - norm_entry["timestamp"] < self._ttl_seconds:
+                        cached_materials = norm_entry["materials"]
+                        cached_fields_set = norm_entry.get("fields_set", set())
+                        requested_fields_set = set(fields)
+                        if requested_fields_set.issubset(cached_fields_set) and len(cached_materials) >= (skip + limit):
+                            slice_materials = cached_materials[skip:skip+limit]
+                            # 根据请求字段返回子集
+                            subset_list = []
+                            for m in slice_materials:
+                                subset = {k: v for k, v in m.items() if k in requested_fields_set or k in {"material_id", "formula"}}
+                                # 确保存在formula字段
+                                if "formula" not in subset and "formula" in m:
+                                    subset["formula"] = m.get("formula")
+                                subset_list.append(subset)
+                            return {
+                                "data": subset_list,
+                                "meta": {
+                                    "total_count": len(subset_list),
+                                    "limit": limit
+                                }
+                            }
+                    cache_key = (
+                        formula or "",
+                        tuple(elements) if elements else (),
+                        tuple(exclude_elements) if exclude_elements else (),
+                        crystal_system or "",
+                        limit,
+                        skip,
+                        tuple(fields)
+                    )
+                    now = time.time()
+                    cached = self._cache["search"].get(cache_key)
+                    if cached and now - cached[0] < self._ttl_seconds:
+                        return cached[1]
                     
                     # 执行搜索
                     docs = self.mpr.materials.search(
                         **kwargs,
+                        num_chunks=1,
                         chunk_size=chunk_size,
                         fields=fields
                     )
@@ -135,30 +180,46 @@ class MaterialsProjectTool:
                     # 转换为字典格式
                     materials_data = []
                     for doc in docs:
-                        # 为数值数据添加单位信息
-                        volume_value = getattr(doc, "volume", "N/A")
-                        volume_with_unit = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
-                        
-                        density_value = getattr(doc, "density", "N/A")
-                        density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
-                        
                         material_dict = {
                             "material_id": str(getattr(doc, "material_id", "N/A")),
                             "formula": getattr(doc, "formula_pretty", getattr(doc, "formula", "N/A")),
-                            "chemsys": getattr(doc, "chemsys", "N/A"),
-                            "volume": volume_with_unit,
-                            "density": density_with_unit,
-                            "nsites": getattr(doc, "nsites", "N/A")
+                            "chemsys": getattr(doc, "chemsys", "N/A")
                         }
+                        if "volume" in fields:
+                            volume_value = getattr(doc, "volume", "N/A")
+                            material_dict["volume"] = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
+                        if "density" in fields:
+                            density_value = getattr(doc, "density", "N/A")
+                            material_dict["density"] = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
+                        if "nsites" in fields:
+                            material_dict["nsites"] = getattr(doc, "nsites", "N/A")
                         materials_data.append(material_dict)
                     
-                    return {
+                    result = {
                         "data": materials_data,
                         "meta": {
                             "total_count": len(materials_data),
                             "limit": limit
                         }
                     }
+                    self._cache["search"][cache_key] = (time.time(), result)
+                    # 更新规范化缓存：保存更大的列表与字段并供后续切片复用
+                    prev = self._cache["search_norm"].get(normalized_key)
+                    merged_list = materials_data
+                    fields_set = set()
+                    for item in merged_list:
+                        fields_set.update(item.keys())
+                    if prev and now - prev["timestamp"] < self._ttl_seconds:
+                        # 若已有缓存，合并并取更大的结果集
+                        if len(prev["materials"]) > len(merged_list):
+                            merged_list = prev["materials"]
+                            fields_set.update(prev.get("fields_set", set()))
+                    self._cache["search_norm"][normalized_key] = {
+                        "timestamp": time.time(),
+                        "materials": merged_list,
+                        "fields_set": fields_set
+                    }
+                    return result
                     
                 except Exception as e:
                     retries += 1
@@ -194,6 +255,10 @@ class MaterialsProjectTool:
             
             while retries < _max_retries:
                 try:
+                    now = time.time()
+                    cached = self._cache["by_id"].get(material_id)
+                    if cached and now - cached[0] < self._ttl_seconds:
+                        return cached[1]
                     current_time = time.time()
                     time_since_last_call = current_time - _last_call_time
                     if time_since_last_call < _call_interval:
@@ -270,7 +335,7 @@ class MaterialsProjectTool:
                         "validated": True,
                         "validation_time": time.time()
                     }
-                    
+                    self._cache["by_id"][material_id] = (time.time(), material_info)
                     return material_info
                     
                 except Exception as e:
@@ -316,12 +381,18 @@ class MaterialsProjectTool:
             bool: 材料ID是否存在
         """
         try:
-            # 首先进行基本格式验证
             if not self.validate_material_id(material_id):
                 return False
             
             # 添加调用间隔控制
             global _last_call_time, _call_interval
+            now = time.time()
+            cached_by_id = self._cache["by_id"].get(material_id)
+            if cached_by_id and now - cached_by_id[0] < self._ttl_seconds and isinstance(cached_by_id[1], dict) and not cached_by_id[1].get("error"):
+                return True
+            cached_verify = self._cache["verify"].get(material_id)
+            if cached_verify and now - cached_verify[0] < self._ttl_seconds:
+                return cached_verify[1]
             current_time = time.time()
             time_since_last_call = current_time - _last_call_time
             if time_since_last_call < _call_interval:
@@ -334,8 +405,10 @@ class MaterialsProjectTool:
             # 如果返回了结果且第一个结果的material_id与查询的ID匹配，则材料存在
             if docs and len(docs) > 0:
                 retrieved_material_id = str(getattr(docs[0], "material_id", ""))
-                return retrieved_material_id == material_id
-            
+                result = retrieved_material_id == material_id
+                self._cache["verify"][material_id] = (time.time(), result)
+                return result
+            self._cache["verify"][material_id] = (time.time(), False)
             return False
         except Exception as e:
             logger.warning(f"验证材料ID时出错: {e}")

@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.name2properties_tool import get_name2properties_tool
@@ -34,7 +33,7 @@ class CrewAIName2PropertiesTool(BaseTool):
             tool = get_name2properties_tool()
             
             # 执行查询 / Execute query
-            result = tool.get_properties_by_name(material_name)
+            result = json.loads(tool._run(material_name))
             
             # 返回JSON格式的结果 / Return result in JSON format
             return json.dumps(result, ensure_ascii=False, indent=2)

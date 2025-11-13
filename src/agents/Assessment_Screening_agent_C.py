@@ -1,8 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
 from src.tools import ToolFactory
-from src.utils.tool_call_spec import AssessmentExpertToolSpec
-from src.utils.assessment_tool_executor import AssessmentToolExecutor
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -48,8 +46,14 @@ class AssessmentScreeningAgentC(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 移除数据库查询工具，评估应基于设计阶段的结果
-        # Remove database query tools, assessment should be based on design phase results
-        agent.tools = []  # 仅保留基本工具或空工具列表
+        # 在 DashScope 兼容端点默认禁用工具调用；否则启用评估工具集
+        try:
+            from src.utils.llm_config import tools_enabled
+            if tools_enabled():
+                agent.tools = ToolFactory.create_material_assessment_tools()
+            else:
+                agent.tools = []
+        except Exception:
+            agent.tools = ToolFactory.create_material_assessment_tools()
         
         return agent

@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import List, Dict, Any, Union
+from typing import List, Union
 from crewai import Agent
 
 # 配置日志
@@ -54,94 +54,38 @@ class TaskAllocator:
             logger.warning("Empty task description provided, using default task")
             return ["material_design"]
             
-        # 使用LLM进行智能分配
-        if self.llm:
-            try:
-                # 加载提示文件
-                from src.utils.prompt_loader import load_prompt
-                prompt_template = load_prompt("task_allocation_prompt.md")
-                
-                # 格式化提示
-                prompt = prompt_template.format(user_requirement=task_description.strip())
-                
-                # 调用LLM获取任务类型
-                response = self.llm.invoke(prompt)
-                
-                # 确保response是字符串格式
-                if hasattr(response, 'content'):
-                    response_content = response.content
-                else:
-                    response_content = str(response)
-                
-                # 记录LLM响应用于调试
-                logger.debug(f"LLM task allocation response: {response_content}")
-                
-                # 解析LLM响应
-                task_types = json.loads(response_content)
-                
-                # 验证task_types是否为列表
-                if not isinstance(task_types, list):
-                    logger.warning(f"LLM response is not a list: {task_types}")
-                    return ["material_design"]
-                
-                # 验证任务类型是否有效
-                valid_task_types = []
-                available_task_types = set(self.task_agent_mapping.keys())
-                
-                for task_type in task_types:
-                    if not isinstance(task_type, str):
-                        logger.warning(f"Invalid task type format: {task_type}")
-                        continue
-                    if task_type in available_task_types:
-                        valid_task_types.append(task_type)
-                    else:
-                        logger.warning(f"Invalid task type detected: {task_type}")
-                
-                # 特殊处理：如果只包含独立任务，则只返回该任务
-                independent_tasks = ["mechanism_analysis", "synthesis_method", "operation_suggestion"]
-                if len(valid_task_types) == 1 and valid_task_types[0] in independent_tasks:
-                    logger.info(f"User requested {valid_task_types[0]} only, returning that task only")
-                    return valid_task_types
-                
-                # 确保返回非空列表
-                if not valid_task_types:
-                    logger.warning("LLM returned no valid task types, falling back to default")
-                    return ["material_design"]
-                
-                # 如果LLM没有包含material_design但其他任务需要它，则添加
-                if "material_design" not in valid_task_types:
-                    # 检查是否需要material_design（除了独立任务外的其他任务通常需要）
-                    # 但如果是评估现有材料，则不需要设计任务
-                    needs_material_design = any(task_type in ["evaluation", "final_validation"] 
-                                              for task_type in valid_task_types)
-                    # 检查用户是否明确表示要评估现有材料
-                    lower_desc = task_description.lower()
-                    is_evaluating_existing = ("评估" in task_description or "evaluate" in lower_desc) and \
-                                           ("现有" in task_description or "existing" in lower_desc or 
-                                            "已有的" in task_description or "已有" in task_description)
-                    if needs_material_design and not is_evaluating_existing:
-                        logger.info("Adding material_design task as it's required by other tasks")
-                        valid_task_types.insert(0, "material_design")
-                    elif needs_material_design and is_evaluating_existing:
-                        logger.info("User wants to evaluate existing material, skipping material_design task")
-                
-                logger.info(f"LLM task allocation result: {valid_task_types}")
-                return valid_task_types
-                
-            except json.JSONDecodeError as e:
-                logger.error(f"Error parsing LLM response as JSON: {e}")
-                logger.error(f"LLM response was: {response_content if 'response_content' in locals() else 'N/A'}")
-            except ImportError as e:
-                logger.error(f"Failed to import prompt_loader: {e}")
-            except Exception as e:
-                logger.error(f"Error using LLM for task allocation: {e}")
-            
-            # 如果LLM调用失败，回退到默认模式
-            logger.warning("Falling back to default task allocation")
-        
-        # 当LLM调用失败时，直接返回一个安全的默认值
-        logger.warning("LLM task allocation failed, returning default material design task")
-        return ["material_design"]
+        desc = task_description.strip()
+        if not desc:
+            return ["material_design"]
+        d = desc.lower()
+        result: List[str] = []
+        if any(k in desc for k in ["设计", "设计出", "方案"]):
+            result.append("material_design")
+        if any(k in desc for k in ["评估", "评价", "assessment", "evaluate"]):
+            result.extend(["evaluation", "final_validation"])
+        if any(k in desc for k in ["机理", "机制", "mechanism"]):
+            result.append("mechanism_analysis")
+        if any(k in desc for k in ["合成", "制备", "synthesis"]):
+            result.append("synthesis_method")
+        if any(k in desc for k in ["操作", "运行", "建议", "operation"]):
+            result.append("operation_suggestion")
+        if not result:
+            result = ["material_design"]
+        # 独立任务单独返回
+        independent_tasks = ["mechanism_analysis", "synthesis_method", "operation_suggestion"]
+        if len(result) == 1 and result[0] in independent_tasks:
+            return result
+        # 确保评估链需要设计任务
+        if "material_design" not in result and any(t in ["evaluation", "final_validation"] for t in result):
+            result.insert(0, "material_design")
+        # 去重并保持顺序
+        seen = set()
+        ordered = []
+        for t in result:
+            if t not in seen:
+                seen.add(t)
+                ordered.append(t)
+        return ordered
         
     def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]) -> None:
         """

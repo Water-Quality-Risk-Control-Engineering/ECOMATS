@@ -121,6 +121,6 @@ class EvaluationTool:
                 # 非字符串格式，默认认为达标
                 return True
                 
-        except Exception as e:
+        except Exception:
             # 出现异常时，默认认为达标
             return True

@@ -1,7 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
 from src.tools import ToolFactory
-from src.utils.tool_call_spec import SynthesisExpertToolSpec
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -53,7 +52,13 @@ class SynthesisGuidingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the synthesis guiding agent using ToolFactory
-        # 使用工具工厂为合成指导专家添加化学数据库查询工具
-        agent.tools = ToolFactory.create_material_search_tools()
+        # 在 DashScope 兼容端点默认禁用工具调用
+        try:
+            from src.utils.llm_config import tools_enabled
+            if tools_enabled():
+                agent.tools = ToolFactory.create_material_search_tools()
+            else:
+                agent.tools = []
+        except Exception:
+            agent.tools = ToolFactory.create_material_search_tools()
         return agent

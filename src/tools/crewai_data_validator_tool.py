@@ -1,5 +1,5 @@
 import json
-from typing import Optional, List, Dict, Any
+from typing import Dict, Any
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.data_validator_tool import get_data_validator_tool

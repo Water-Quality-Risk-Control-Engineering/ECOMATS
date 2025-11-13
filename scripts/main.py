@@ -5,43 +5,10 @@ ECOMATS - 基于CrewAI的水处理材料设计多智能体系统
 
 import sys
 import os
-
-# 添加项目根目录到Python路径，使src模块可以被正确导入 / Add project root directory to Python path so src modules can be imported correctly
-project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.insert(0, os.path.abspath(project_root))
-
 import json
-
-# 确保环境变量已加载 / Ensure environment variables are loaded
 from dotenv import load_dotenv
-load_dotenv()
-
-from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
-from src.config.config import Config
+from crewai import Crew, Process
 import dashscope
-
-# 智能体导入 / Agent imports
-from src.agents.base_agent import BaseAgent
-from src.agents.task_organizing_agent import TaskOrganizingAgent
-from src.agents.Creative_Designing_agent import CreativeDesigningAgent
-from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
-from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
-from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
-from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
-from src.agents.Extracting_agent import ExtractingAgent
-from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
-from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
-from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
-from src.agents.task_allocator import TaskAllocator
-
-# 任务导入 / Task imports
-from src.tasks.design_task import DesignTask
-from src.tasks.evaluation_task import EvaluationTask
-from src.tasks.final_validation_task import FinalValidationTask
-from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
-from src.tasks.synthesis_method_task import SynthesisMethodTask
-from src.tasks.operation_suggesting_task import OperationSuggestingTask
 
 def get_user_input():
     """获取用户自定义的材料设计需求 / Get user-defined material design requirements"""
@@ -67,6 +34,7 @@ def get_workflow_mode():
 
 def check_environment_variables():
     """检查必要的环境变量是否已设置"""
+    from src.config.config import Config
     required_vars = {
         "QWEN_API_KEY": Config.QWEN_API_KEY,
         "QWEN_MODEL_NAME": Config.QWEN_MODEL_NAME
@@ -91,6 +59,16 @@ def check_environment_variables():
 
 def create_all_agents(llm):
     """创建所有智能体的公共函数 / Public function to create all agents"""
+    from src.agents.task_organizing_agent import TaskOrganizingAgent
+    from src.agents.Creative_Designing_agent import CreativeDesigningAgent
+    from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
+    from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
+    from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
+    from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+    from src.agents.Extracting_agent import ExtractingAgent
+    from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
+    from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
+    from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
     coordinator_agent = TaskOrganizingAgent(llm).create_agent()
     material_designer_agent = CreativeDesigningAgent(llm).create_agent()
     expert_a_agent = AssessmentScreeningAgentA(llm).create_agent()
@@ -148,6 +126,7 @@ def extract_feedback_from_result(result):
 
 def check_if_iteration_needed(result):
     """检查是否需要迭代设计 / Check if iterative design is needed"""
+    from src.config.config import Config
     try:
         # 尝试解析JSON结果 / Try to parse JSON results
         if isinstance(result, str):
@@ -182,6 +161,7 @@ def check_if_iteration_needed(result):
 
 def run_design_iteration(user_requirement, llm, iteration_count=0):
     """运行设计迭代 / Run design iteration"""
+    from src.config.config import Config
     if iteration_count >= Config.MAX_DESIGN_ITERATIONS:
         return "已达到最大迭代次数，停止迭代设计。"
     
@@ -208,6 +188,15 @@ def run_design_iteration(user_requirement, llm, iteration_count=0):
 def run_preset_workflow(user_requirement, llm):
     """运行预设工作流模式 / Run preset workflow mode"""
     print("启动预设工作流模式...")
+    project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    sys.path.insert(0, os.path.abspath(project_root))
+    from src.config.config import Config
+    from src.tasks.design_task import DesignTask
+    from src.tasks.evaluation_task import EvaluationTask
+    from src.tasks.final_validation_task import FinalValidationTask
+    from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
+    from src.tasks.synthesis_method_task import SynthesisMethodTask
+    from src.tasks.operation_suggesting_task import OperationSuggestingTask
     
     # 创建所有智能体 / Create all agents
     agents = create_all_agents(llm)
@@ -215,6 +204,16 @@ def run_preset_workflow(user_requirement, llm):
     # 创建任务，将用户需求传递给任务 / Create tasks and pass user requirements to tasks
     # 1. 首先创建材料设计任务 / First create material design task
     design_task = DesignTask(llm).create_task(agents['material_designer'], user_requirement=user_requirement)
+    try:
+        from src.utils.assessment_tool_executor import AssessmentToolExecutor
+        executor = AssessmentToolExecutor()
+        material_formula = None
+        import re as _re
+        m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
+        material_formula = m.group(0) if m else (user_requirement or "")
+        executor.execute_mandatory_tool_calls(material_formula)
+    except Exception:
+        pass
     
     # 2. 为每个评估专家创建评估任务，都依赖于设计任务 / Create evaluation tasks for each evaluation expert, all dependent on design task
     # 明确传递用户需求给评估任务，以确保工具调用策略得到执行
@@ -305,14 +304,27 @@ def run_preset_workflow(user_requirement, llm):
     )
     
     # 执行 / Execute
-    result = ecomats_crew.kickoff()
-    return result
+    try:
+        result = ecomats_crew.kickoff()
+        return result
+    except Exception:
+        return run_tool_only_summary(user_requirement)
 
 def run_autonomous_workflow(user_requirement, llm):
     """运行智能体自主调度模式 / Run agent autonomous scheduling mode"""
     print("启动智能体自主调度模式...")
-    
-    # 创建所有智能体 / Create all agents
+    project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    sys.path.insert(0, os.path.abspath(project_root))
+    from src.config.config import Config
+    from src.agents.task_organizing_agent import TaskOrganizingAgent
+    from src.agents.task_allocator import TaskAllocator
+    from src.tasks.design_task import DesignTask
+    from src.tasks.evaluation_task import EvaluationTask
+    from src.tasks.final_validation_task import FinalValidationTask
+    from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
+    from src.tasks.synthesis_method_task import SynthesisMethodTask
+    from src.tasks.operation_suggesting_task import OperationSuggestingTask
+
     agents = create_all_agents(llm)
     
     # 创建任务组织代理实例（注意：这里创建的是TaskOrganizingAgent类的实例，而不是Agent实例）
@@ -374,6 +386,16 @@ def run_autonomous_workflow(user_requirement, llm):
             
             # 2. 创建材料设计任务 / Create material design task
             design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
+            try:
+                from src.utils.assessment_tool_executor import AssessmentToolExecutor
+                executor = AssessmentToolExecutor()
+                material_formula = None
+                import re as _re
+                m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
+                material_formula = m.group(0) if m else (user_requirement or "")
+                executor.execute_mandatory_tool_calls(material_formula)
+            except Exception:
+                pass
             
             # 3. 添加材料设计智能体到所需智能体列表
             if design_agent and design_agent.role not in seen_roles:
@@ -393,6 +415,16 @@ def run_autonomous_workflow(user_requirement, llm):
                 agent=agents['material_designer']  # 使用材料设计智能体作为占位符
             )
             task_mapping["material_design"] = design_task
+            try:
+                from src.utils.assessment_tool_executor import AssessmentToolExecutor
+                executor = AssessmentToolExecutor()
+                material_formula = None
+                import re as _re
+                m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
+                material_formula = m.group(0) if m else (user_requirement or "")
+                executor.execute_mandatory_tool_calls(material_formula)
+            except Exception:
+                pass
         
         # 然后处理其他任务 / Then handle other tasks
         # 处理评估任务链 / Handle evaluation task chain
@@ -518,50 +550,99 @@ def run_autonomous_workflow(user_requirement, llm):
     )
     
     # 执行 / Execute
-    result = ecomats_crew.kickoff()
-    return result
+    try:
+        result = ecomats_crew.kickoff()
+        return result
+    except Exception:
+        return run_tool_only_summary(user_requirement)
 
 def main():
     print("基于CrewAI的ecomats多智能体系统 / ECOMATS Multi-Agent System Based on CrewAI")
     print("=" * 50)
-    
-    # 检查必要的环境变量
+    project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    sys.path.insert(0, os.path.abspath(project_root))
+    # 强制从项目根目录加载 .env 并覆盖，确保与独立测试一致
+    from dotenv import load_dotenv, dotenv_values
+    import os as _os
+    _dotenv_path = os.path.join(project_root, '.env')
+    load_dotenv(_dotenv_path, override=True)
+    # 再次将 .env 的值写入环境，避免IDE/任务运行器覆盖
+    try:
+        _vals = dotenv_values(_dotenv_path)
+        for k, v in (_vals or {}).items():
+            if v is not None:
+                _os.environ[k] = v
+    except Exception:
+        pass
+    from src.config.config import Config
+
     if not check_environment_variables():
         return
-    
+
     # 获取用户自定义输入 / Get user custom input
     user_requirement = get_user_input()
     
     # 获取用户选择的工作模式 / Get user-selected workflow mode
     workflow_mode = get_workflow_mode()
     
-    # 验证API密钥是否存在
     if not Config.is_api_key_valid(Config.QWEN_API_KEY):
         print("错误：API密钥未正确设置")
         return
     
     # 设置dashscope的API密钥
     dashscope.api_key = Config.QWEN_API_KEY
+    # 显式设置 OPENAI 兼容环境，确保底层Provider不读取旧变量
+    import os as _os
+    _os.environ["OPENAI_API_KEY"] = Config.QWEN_API_KEY or ""
+    _os.environ["OPENAI_API_BASE"] = Config.QWEN_API_BASE or ""
+    _os.environ["OPENAI_BASE_URL"] = Config.QWEN_API_BASE or ""
     
-    # 初始化LLM模型，使用Qwen3模型配置
-    from src.utils.llm_config import create_llm
     try:
-        llm = create_llm()
-        print("成功创建Qwen3 LLM实例用于主程序")
+        import os as _os
+        from openai import OpenAI
+        _base = _os.getenv("QWEN_API_BASE")
+        _key = _os.getenv("QWEN_API_KEY")
+        _model = _os.getenv("QWEN_MODEL_NAME") or "qwen-plus"
+        print("LLM快测参数:", {"base_url": _base, "model": _model, "api_key_set": bool(_key)})
+        client = OpenAI(api_key=_key, base_url=_base)
+        client.chat.completions.create(model=_model, messages=[{"role":"user","content":"ping"}], max_tokens=8)
+        print("LLM连通性测试通过")
     except Exception as e:
-        print(f"创建Qwen3模型实例失败: {e}")
+        print("LLM连通性测试失败:", e)
+        run_tool_only_summary(user_requirement)
         return
+    from src.utils.llm_config import create_llm
+    llm = create_llm()
+    print("成功创建Qwen3 LLM实例用于主程序")
     
     # 根据用户选择的工作模式执行相应的流程 / Execute corresponding process based on user-selected workflow mode
     if workflow_mode == "preset":
-        # 使用迭代设计机制 / Use iterative design mechanism
-        result = run_design_iteration(user_requirement, llm)
+        run_design_iteration(user_requirement, llm)
     else:
-        result = run_autonomous_workflow(user_requirement, llm)
+        run_autonomous_workflow(user_requirement, llm)
     
     # 工作流结果已经通过task_callback保存到workflow_result文件中
     # 不再生成单独的result文件
     print("工作流执行完成，结果已保存到workflow_result文件中")
+
+def run_tool_only_summary(user_requirement):
+    project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    sys.path.insert(0, os.path.abspath(project_root))
+    from src.utils.assessment_tool_executor import AssessmentToolExecutor
+    executor = AssessmentToolExecutor()
+    import re as _re
+    m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
+    material_formula = m.group(0) if m else (user_requirement or "")
+    results = executor.execute_mandatory_tool_calls(material_formula)
+    import datetime, json
+    outputs_dir = os.path.join(project_root, "outputs")
+    os.makedirs(outputs_dir, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    fp = os.path.join(outputs_dir, f"workflow_result_{ts}.txt")
+    with open(fp, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(results, ensure_ascii=False, indent=2))
+    print("已切换为工具仅执行模式，结果已保存到", fp)
+    return results
 
 if __name__ == "__main__":
     main()

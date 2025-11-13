@@ -1,6 +1,4 @@
-crewai
-langchain
-langchain-openai
+crewai==1.2.1
 python-dotenv
 requests
 mp-api

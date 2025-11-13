@@ -1,9 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from crewai import Agent
-from src.utils.prompt_loader import load_prompt
 from src.tools import ToolFactory
-from src.utils.tool_call_spec import MaterialDesignerToolSpec
 
 # Configure logging
 # 配置日志
@@ -51,13 +48,29 @@ class CreativeDesigningAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the material design expert using ToolFactory
-        # 使用工具工厂为材料设计专家添加化学数据库查询工具
-        agent.tools = ToolFactory.create_material_design_tools()
+        # 在 DashScope 兼容端点默认禁用工具调用，避免函数调用不兼容导致 500
+        try:
+            from src.utils.llm_config import tools_enabled
+            if tools_enabled():
+                agent.tools = ToolFactory.create_material_design_tools()
+            else:
+                agent.tools = []
+        except Exception:
+            agent.tools = ToolFactory.create_material_design_tools()
         
-        # 增强提示词，要求尽可能提供详细信息，包括MP-ID（如果已知）、结构式、带隙等关键参数
-        # Enhance prompt to require detailed output of key parameters, including MP-ID if available
-        agent.backstory += "\n\n在输出设计结果时，应尽可能包含以下详细信息：\n- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n- 化学式和晶体结构描述\n- 关键物理性质（如带隙、密度）\n- 热力学稳定性（能量凸包上的高度）"
+        # 增强提示词，强调复用上下文、最小字段与限流
+        # Enhance prompt to require context reuse, minimal fields and rate-limited calls
+        agent.backstory += (
+            "\n\n在输出设计结果时，应尽可能包含以下详细信息：\n"
+            "- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n"
+            "- 化学式和晶体结构描述\n"
+            "- 关键物理性质（如带隙、密度）\n"
+            "- 热力学稳定性（能量凸包上的高度）\n"
+            "\n工具使用策略（限流与复用）：\n"
+            "- 优先复用已获取的结构验证或材料标识符结果，不重复发起数据库搜索\n"
+            "- 仅当缺失必要信息时再调用Materials Project搜索，并使用最小字段集合\n"
+            "- 元素组合查询限制返回数量，避免大范围拉取\n"
+        )
         
         return agent
 

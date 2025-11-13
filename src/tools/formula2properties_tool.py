@@ -6,7 +6,6 @@
 
 import json
 import logging
-from typing import Dict, Any, Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
@@ -44,7 +43,7 @@ class Formula2PropertiesTool(BaseTool):
             mp_tool = get_materials_project_tool()
             
             # 搜索材料
-            search_result = mp_tool.search_materials(formula=formula, limit=5)
+            search_result = mp_tool.search_materials(formula=formula, limit=5, fields=["material_id", "formula_pretty"])
             
             if "error" in search_result:
                 return json.dumps({"error": search_result["error"]}, ensure_ascii=False)

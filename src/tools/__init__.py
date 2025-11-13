@@ -62,6 +62,8 @@ __all__ = [
     'CrewAIPNECTool',
     'CrewAIMaterialIdentifierTool',
     'CrewAIDataValidatorTool',
-    'structure_validator_tool',
-    'ToolFactory'
+    'ToolFactory',
+    'CrewAIStructureValidatorTool',
+    'AssessmentToolExecutor',
+    'AssessmentScoringLogic'
 ]

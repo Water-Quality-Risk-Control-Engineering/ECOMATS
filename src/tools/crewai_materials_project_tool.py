@@ -1,8 +1,9 @@
 import json
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.materials_project_tool import get_materials_project_tool
+from src.utils.context_store import ContextStore
 
 class MaterialsProjectToolInput(BaseModel):
     """Materials Project工具输入参数模型"""
@@ -26,6 +27,20 @@ class CrewAIMaterialsProjectTool(BaseTool):
         "使用方法: action='search', formula='C3N4' 来搜索材料"
     )
     args_schema: type[BaseModel] = MaterialsProjectToolInput
+
+    def __init__(self):
+        super().__init__()
+        self._cache: dict = {}
+        self._ttl_seconds = 600
+
+    def _sanitize_fields(self, fields: Optional[List[str]], action: str) -> Optional[List[str]]:
+        if not fields:
+            return None
+        allowed_search = {"material_id", "formula_pretty", "chemsys", "volume", "density", "nsites"}
+        allowed_detail = allowed_search | {"symmetry"}
+        if action == "search":
+            return [f for f in fields if f in allowed_search]
+        return [f for f in fields if f in allowed_detail]
     
     def _run(
         self,
@@ -59,21 +74,56 @@ class CrewAIMaterialsProjectTool(BaseTool):
         try:
             # 获取工具实例
             tool = get_materials_project_tool()
-            
+            key = (
+                action,
+                material_id or "",
+                formula or "",
+                tuple(elements) if elements else (),
+                tuple(exclude_elements) if exclude_elements else (),
+                crystal_system or "",
+                int(limit or 0),
+                int(skip or 0),
+                tuple(fields) if fields else ()
+            )
+            import time as _t
+            now = _t.time()
+            if action == "search":
+                cached_ctx = ContextStore.get("materials_project_search")
+                if cached_ctx is not None:
+                    return json.dumps(cached_ctx, ensure_ascii=False, indent=2)
+                if formula:
+                    cached_ctx = ContextStore.get(f"materials_project_search:{formula}")
+                    if cached_ctx is not None:
+                        return json.dumps(cached_ctx, ensure_ascii=False, indent=2)
+            elif action == "get_material" and material_id:
+                cached_ctx = ContextStore.get(f"materials_project_get:{material_id}")
+                if cached_ctx is not None:
+                    return json.dumps(cached_ctx, ensure_ascii=False, indent=2)
+            cached = self._cache.get(key)
+            if cached and now - cached[0] < self._ttl_seconds:
+                return json.dumps(cached[1], ensure_ascii=False, indent=2)
+
             # 根据操作类型执行相应功能
             if action == "search":
+                fields = self._sanitize_fields(fields, action)
+                # 限制元素组合查询的limit，避免大范围拉取
+                if elements and (limit is None or limit > 10):
+                    limit = 10
                 result = tool.search_materials(
                     formula=formula,
                     elements=elements,
                     exclude_elements=exclude_elements,
                     crystal_system=crystal_system,
-                    limit=limit,
-                    skip=skip
+                    limit=min(limit or 100, 10),
+                    skip=skip,
+                    fields=fields
                 )
             elif action == "get_material":
                 if not material_id:
                     return json.dumps({"error": "获取材料详情需要提供material_id"})
+                fields = self._sanitize_fields(fields, action)
                 result = tool.get_material_by_id(material_id)
+                ContextStore.set(f"materials_project_get:{material_id}", result)
             elif action == "get_structure":
                 if not material_id:
                     return json.dumps({"error": "获取晶体结构需要提供material_id"})
@@ -95,7 +145,12 @@ class CrewAIMaterialsProjectTool(BaseTool):
             else:
                 return json.dumps({"error": f"不支持的操作: {action}"})
                 
-            # 返回JSON格式的结果
+            # 缓存并返回
+            self._cache[key] = (now, result)
+            if action == "search":
+                ContextStore.set("materials_project_search", result)
+                if formula:
+                    ContextStore.set(f"materials_project_search:{formula}", result)
             return json.dumps(result, ensure_ascii=False, indent=2)
             
         except Exception as e:

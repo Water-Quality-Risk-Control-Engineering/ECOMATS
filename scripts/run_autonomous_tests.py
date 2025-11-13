@@ -3,60 +3,26 @@
 运行自主调度模式测试
 """
 
-import sys
-import os
-import json
 from datetime import datetime
-
-# 添加项目根目录到Python路径
-project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.insert(0, os.path.abspath(project_root))
-
-from dotenv import load_dotenv
-load_dotenv()
-
-from crewai import Agent, Task, Crew, Process
-from langchain_openai import ChatOpenAI
-from src.config.config import Config
 import dashscope
-
-# 智能体导入
-from src.agents.base_agent import BaseAgent
-from src.agents.task_organizing_agent import TaskOrganizingAgent
-from src.agents.Creative_Designing_agent import CreativeDesigningAgent
-from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
-from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
-from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
-from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
-from src.agents.Extracting_agent import ExtractingAgent
-from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
-from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
-from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
-from src.agents.task_allocator import TaskAllocator
-
-# 任务导入
-from src.tasks.design_task import DesignTask
-from src.tasks.evaluation_task import EvaluationTask
-from src.tasks.final_validation_task import FinalValidationTask
-from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
-from src.tasks.synthesis_method_task import SynthesisMethodTask
-from src.tasks.operation_suggesting_task import OperationSuggestingTask
+from crewai import Crew, Process
 
 def create_test_llm():
-    """创建测试用的LLM实例"""
-    # 使用默认配置创建LLM实例
-    llm = ChatOpenAI(
-        base_url=Config.OPENAI_API_BASE,
-        api_key=Config.OPENAI_API_KEY,
-        model="openai/" + Config.QWEN_MODEL_NAME,
-        temperature=0.3,  # 使用较低的温度以获得更一致的结果
-        streaming=False,
-        max_tokens=Config.MODEL_MAX_TOKENS
-    )
-    return llm
+    from src.utils.llm_config import create_llm
+    return create_llm(temperature=0.3)
 
 def create_all_agents(llm):
-    """创建所有智能体的公共函数"""
+    from src.agents.task_organizing_agent import TaskOrganizingAgent
+    from src.agents.Creative_Designing_agent import CreativeDesigningAgent
+    from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
+    from src.agents.Assessment_Screening_agent_B import AssessmentScreeningAgentB
+    from src.agents.Assessment_Screening_agent_C import AssessmentScreeningAgentC
+    from src.agents.Assessment_Screening_agent_Overall import AssessmentScreeningAgentOverall
+    from src.agents.Extracting_agent import ExtractingAgent
+    from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
+    from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
+    from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
+    
     coordinator_agent = TaskOrganizingAgent(llm).create_agent()
     material_designer_agent = CreativeDesigningAgent(llm).create_agent()
     expert_a_agent = AssessmentScreeningAgentA(llm).create_agent()
@@ -82,17 +48,12 @@ def create_all_agents(llm):
     }
 
 def run_autonomous_workflow(user_requirement, llm):
-    """运行智能体自主调度模式"""
     print(f"启动智能体自主调度模式处理: {user_requirement}")
-    
-    # 创建所有智能体
     agents = create_all_agents(llm)
-    
-    # 创建任务组织代理实例
+    from src.agents.task_organizing_agent import TaskOrganizingAgent
+    from src.agents.task_allocator import TaskAllocator
     coordinator = TaskOrganizingAgent(llm)
     coordinator_agent = coordinator.create_agent()
-    
-    # 创建任务分配器并注册所有智能体
     task_allocator = TaskAllocator()
     task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
     task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
@@ -108,7 +69,18 @@ def run_autonomous_workflow(user_requirement, llm):
     design_agent = coordinator.delegate_task("material_design", task_allocator, user_requirement)
     
     # 2. 创建材料设计任务
+    from src.tasks.design_task import DesignTask
     design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
+    try:
+        from src.utils.assessment_tool_executor import AssessmentToolExecutor
+        executor = AssessmentToolExecutor()
+        material_formula = None
+        import re as _re
+        m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
+        material_formula = m.group(0) if m else (user_requirement or "")
+        executor.execute_mandatory_tool_calls(material_formula)
+    except Exception:
+        pass
     
     # 3. 根据用户需求动态决定需要哪些任务
     required_tasks = []
@@ -143,11 +115,13 @@ def run_autonomous_workflow(user_requirement, llm):
         evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
         evaluation_tasks = []
         for agent in evaluation_agents:
+            from src.tasks.evaluation_task import EvaluationTask
             task = EvaluationTask(llm).create_task(agent, design_task)
             evaluation_tasks.append(task)
         
         # 委派最终验证任务
         final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+        from src.tasks.final_validation_task import FinalValidationTask
         final_validation_task = FinalValidationTask(llm).create_task(final_validation_agent, 
                                                                [design_task] + evaluation_tasks)
         
@@ -159,18 +133,21 @@ def run_autonomous_workflow(user_requirement, llm):
         # 处理依赖于最终验证任务的任务
         if "mechanism_analysis" in required_task_types:
             mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+            from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
             mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(mechanism_agent, final_validation_task)
             task_mapping["mechanism_analysis"] = mechanism_analysis_task
             required_tasks.append(mechanism_analysis_task)
             
         if "synthesis_method" in required_task_types:
             synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
+            from src.tasks.synthesis_method_task import SynthesisMethodTask
             synthesis_method_task = SynthesisMethodTask(llm).create_task(synthesis_agent, final_validation_task)
             task_mapping["synthesis_method"] = synthesis_method_task
             required_tasks.append(synthesis_method_task)
             
         if "operation_suggestion" in required_task_types:
             operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+            from src.tasks.operation_suggesting_task import OperationSuggestingTask
             operation_suggesting_task = OperationSuggestingTask(llm).create_task(operation_suggesting_agent, final_validation_task)
             task_mapping["operation_suggestion"] = operation_suggesting_task
             required_tasks.append(operation_suggesting_task)
@@ -178,12 +155,14 @@ def run_autonomous_workflow(user_requirement, llm):
         # 如果不需要评估任务，则其他任务直接依赖于设计任务
         if "synthesis_method" in required_task_types:
             synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
+            from src.tasks.synthesis_method_task import SynthesisMethodTask
             synthesis_method_task = SynthesisMethodTask(llm).create_task(synthesis_agent, design_task)
             task_mapping["synthesis_method"] = synthesis_method_task
             required_tasks.append(synthesis_method_task)
             
         if "operation_suggestion" in required_task_types:
             operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
+            from src.tasks.operation_suggesting_task import OperationSuggestingTask
             operation_suggesting_task = OperationSuggestingTask(llm).create_task(operation_suggesting_agent, design_task)
             task_mapping["operation_suggestion"] = operation_suggesting_task
             required_tasks.append(operation_suggesting_task)
@@ -198,7 +177,7 @@ def run_autonomous_workflow(user_requirement, llm):
         agents=required_agents,
         tasks=[design_task] + required_tasks,
         process=Process.sequential,
-        verbose=Config.VERBOSE
+        verbose=__import__('src.config.config', fromlist=['Config']).Config.VERBOSE
     )
     
     # 执行
@@ -225,7 +204,7 @@ def main():
     print("=" * 60)
     
     # 设置dashscope的API密钥
-    dashscope.api_key = Config.QWEN_API_KEY
+    dashscope.api_key = __import__('src.config.config', fromlist=['Config']).Config.QWEN_API_KEY
     
     # 创建测试LLM实例
     try:
@@ -266,13 +245,13 @@ def main():
         results.append(result)
         
         if result["success"]:
-            print(f"✓ 测试成功")
+            print("✓ 测试成功")
             print(f"  任务类型: {result['task_types']}")
             print(f"  任务数量: {result['task_count']}")
             print(f"  智能体数量: {result['agent_count']}")
             print(f"  执行时间: {result['duration']:.2f}秒")
         else:
-            print(f"✗ 测试失败")
+            print("✗ 测试失败")
             print(f"  错误信息: {result['error']}")
             print(f"  任务类型: {result['task_types']}")
             print(f"  任务数量: {result['task_count']}")

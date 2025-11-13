@@ -34,9 +34,9 @@ class PubChemTool:
         
         # 请求频率控制 / Request rate control
         self.last_request_time = 0
-        self.min_request_interval = 1.0  # 增加到1秒间隔 / Increase to 1 second interval
+        self.min_request_interval = 2.0
     
-    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 5) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
         """
         发送API请求，带重试机制 / Send API request with retry mechanism
         
@@ -306,7 +306,6 @@ class PubChemTool:
             return False
             
         # 检查是否包含有效的化学元素符号
-        import re
         # 检查是否包含至少一个常见的化学元素符号
         common_elements = ['C', 'H', 'O', 'N', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'B', 'Si']
         if not any(element in smiles for element in common_elements):

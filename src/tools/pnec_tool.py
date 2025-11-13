@@ -7,8 +7,7 @@ PNEC (Predicted No Effect Concentration) 数据库查询工具 / PNEC (Predicted
 
 import logging
 import requests
-import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)

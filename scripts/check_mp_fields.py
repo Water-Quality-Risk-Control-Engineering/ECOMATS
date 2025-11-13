@@ -10,9 +10,9 @@ import os
 project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, os.path.abspath(project_root))
 
-# 确保环境变量已加载
-from dotenv import load_dotenv
-load_dotenv()
+def _load_env():
+    from dotenv import load_dotenv
+    load_dotenv()
 
 try:
     from mp_api.client import MPRester
@@ -65,6 +65,7 @@ def check_available_fields():
 
 def main():
     """主函数"""
+    _load_env()
     print("检查Materials Project API支持的字段...")
     check_available_fields()
     print("\n检查完成。")

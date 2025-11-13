@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from src.tools.name2cas_tool import get_name2cas_tool
 

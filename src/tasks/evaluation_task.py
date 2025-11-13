@@ -19,8 +19,8 @@ class EvaluationTask(BaseTask):
         """
         super().__init__(
             agent=agent,
-            expected_output="对材料方案的全面评估报告，包含五个维度的评分（1-10分）以及具体的优势和改进建议。评估必须基于上游设计智能体提供的详细信息，不得进行独立数据库查询。",
-            description=f"根据以下由设计智能体提供的材料信息进行评估:\n{material_info}\n\n请从催化性能、经济可行性、环境友好性、技术可行性和结构合理性五个维度进行全面评价。"
+            expected_output="对材料方案的全面评估报告，包含五个维度的评分（1-10分）以及具体的优势和改进建议。评估必须以设计智能体提供的信息为基础，并结合工具验证结果进行佐证。",
+            description=f"根据以下由设计智能体提供的材料信息进行评估:\n{material_info}\n\n请从催化性能、经济可行性、环境友好性、技术可行性和结构合理性五个维度进行全面评价，并记录所有工具调用参数与结果以确保可追溯性。"
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):

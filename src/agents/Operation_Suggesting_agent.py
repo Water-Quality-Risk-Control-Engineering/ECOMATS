@@ -45,7 +45,13 @@ class OperationSuggestingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the operation suggesting agent using ToolFactory
-        # 使用工具工厂为操作建议专家添加化学数据库查询工具
-        agent.tools = ToolFactory.create_material_assessment_tools()
+        # 在 DashScope 兼容端点默认禁用工具调用
+        try:
+            from src.utils.llm_config import tools_enabled
+            if tools_enabled():
+                agent.tools = ToolFactory.create_material_assessment_tools()
+            else:
+                agent.tools = []
+        except Exception:
+            agent.tools = ToolFactory.create_material_assessment_tools()
         return agent

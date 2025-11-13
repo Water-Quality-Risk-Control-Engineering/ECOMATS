@@ -1,5 +1,4 @@
 import json
-from typing import Dict, Any
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.material_identifier_tool import get_material_identifier_tool

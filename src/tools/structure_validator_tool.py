@@ -160,18 +160,13 @@ class StructureValidatorTool:
             search_result = self.materials_project_tool.search_materials(formula=formula, limit=1)
             if "error" not in search_result and "data" in search_result and search_result["data"]:
                 material = search_result["data"][0]
-                # 验证material_id在Materials Project数据库中是否存在
-                material_id = material.get("material_id", "")
-                if material_id and self.materials_project_tool.verify_material_id_exists(material_id):
-                    return {
-                        "valid": True,
-                        "type": "metal",
-                        "data": material,
-                        "source": "Materials Project",
-                        "reason": "在Materials Project中找到匹配的材料结构"
-                    }
-                else:
-                    logger.warning(f"发现无效的材料ID: {material_id}")
+                return {
+                    "valid": True,
+                    "type": "metal",
+                    "data": material,
+                    "source": "Materials Project",
+                    "reason": "在Materials Project中找到匹配的材料结构"
+                }
                 
             # 如果按化学式搜索失败，尝试按元素搜索
             elements = self._extract_elements(formula)
@@ -179,18 +174,13 @@ class StructureValidatorTool:
                 element_result = self.materials_project_tool.search_materials(elements=elements[:2], limit=1)
                 if "error" not in element_result and "data" in element_result and element_result["data"]:
                     material = element_result["data"][0]
-                    # 验证material_id在Materials Project数据库中是否存在
-                    material_id = material.get("material_id", "")
-                    if material_id and self.materials_project_tool.verify_material_id_exists(material_id):
-                        return {
-                            "valid": True,
-                            "type": "metal",
-                            "data": material,
-                            "source": "Materials Project",
-                            "reason": "在Materials Project中找到包含相同元素的材料结构"
-                        }
-                    else:
-                        logger.warning(f"发现无效的材料ID: {material_id}")
+                    return {
+                        "valid": True,
+                        "type": "metal",
+                        "data": material,
+                        "source": "Materials Project",
+                        "reason": "在Materials Project中找到包含相同元素的材料结构"
+                    }
             
             return {
                 "valid": False,

@@ -23,10 +23,8 @@ from src.tools import (
 from src.tools.factory import ToolFactory
 
 # 导入评估工具执行器
-from src.utils.assessment_tool_executor import AssessmentToolExecutor
 
 # 导入评估评分逻辑
-from src.utils.assessment_scoring_logic import AssessmentScoringLogic
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)

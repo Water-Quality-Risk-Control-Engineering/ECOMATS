@@ -6,9 +6,11 @@ load_dotenv()
 
 class Config:
     # Qwen3模型配置 / Qwen3 model configuration
-    QWEN_API_BASE = os.getenv("QWEN_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+    # 默认使用国际站兼容端点，避免区域不匹配导致的上游错误
+    QWEN_API_BASE = os.getenv("QWEN_API_BASE", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
     QWEN_API_KEY = os.getenv("QWEN_API_KEY")  # API密钥应通过环境变量设置 / API key should be set through environment variables
-    QWEN_MODEL_NAME = os.getenv("QWEN_MODEL_NAME", "qwen3-30b-a3b-instruct-2507")  # 使用项目规范的默认模型
+    # 默认使用更稳定的商用兼容模型，避免 OpenAI 兼容接口的思考模式/流式要求导致错误
+    QWEN_MODEL_NAME = os.getenv("QWEN_MODEL_NAME", "qwen-plus")
     
     # 兼容OpenAI的配置（CrewAI需要） / OpenAI-compatible configuration (required by CrewAI)
     OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")

@@ -1,7 +1,6 @@
 import logging
 from .base_agent import BaseAgent
 from src.tools import ToolFactory
-from src.utils.tool_call_spec import MechanismExpertToolSpec
 
 # 配置日志
 logging.basicConfig(level=logging.WARNING)
@@ -34,7 +33,13 @@ class MechanismMiningAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the mechanism mining expert using ToolFactory
-        # 使用工具工厂为机理分析专家添加化学数据库查询工具
-        agent.tools = ToolFactory.create_all_tools()
+        # 在 DashScope 兼容端点默认禁用工具调用；否则启用全工具集
+        try:
+            from src.utils.llm_config import tools_enabled
+            if tools_enabled():
+                agent.tools = ToolFactory.create_all_tools()
+            else:
+                agent.tools = []
+        except Exception:
+            agent.tools = ToolFactory.create_all_tools()
         return agent

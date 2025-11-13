@@ -8,7 +8,7 @@ import logging
 import requests
 import time
 import random
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 # 配置日志 / Configure logging
 logging.basicConfig(level=logging.WARNING)

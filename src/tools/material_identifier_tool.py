@@ -221,7 +221,11 @@ class MaterialIdentifierTool:
             
         try:
             # 尝试按化学式搜索
-            result = self.materials_project_tool.search_materials(formula=query, limit=5)
+            result = self.materials_project_tool.search_materials(
+                formula=query,
+                limit=5,
+                fields=["material_id", "formula_pretty", "chemsys"]
+            )
             if "error" not in result and "data" in result and result["data"]:
                 # 检查返回的材料是否与查询相关
                 for material in result["data"]:
@@ -242,7 +246,11 @@ class MaterialIdentifierTool:
             # 如果按化学式搜索失败，尝试按元素搜索
             elements = self._extract_elements(query)
             if elements:
-                result = self.materials_project_tool.search_materials(elements=elements[:3], limit=5)
+                result = self.materials_project_tool.search_materials(
+                    elements=elements[:3],
+                    limit=5,
+                    fields=["material_id", "formula_pretty", "chemsys"]
+                )
                 if "error" not in result and "data" in result and result["data"]:
                     # 检查返回的材料是否包含查询中的元素
                     for material in result["data"]:

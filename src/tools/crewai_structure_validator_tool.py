@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 from src.tools.structure_validator_tool import get_structure_validator_tool

@@ -58,3 +58,6 @@ tests/
 
 # Claude Code configuration
 CLAUDE.md
+
+# Output files
+outputs/

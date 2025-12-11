@@ -59,6 +59,19 @@ class TaskAllocator:
             return ["material_design"]
         d = desc.lower()
         result: List[str] = []
+        
+        # 检查是否只要评估不要总结（优先级最高）
+        only_evaluation_keywords = ["仅评估", "只评估", "不总结", "不要总结", "不需要总结", 
+                                   "只要评分", "仅评分", "三个ASA", "3个ASA", "三个评分",
+                                   "only evaluation", "no summary", 
+                                   "evaluation only", "without summary"]
+        if any(k in d or k in desc for k in only_evaluation_keywords):
+            # 仅返回评估任务，不包含final_validation
+            if "material_design" not in result:
+                result.append("material_design")
+            result.append("evaluation_only")
+            return result
+        
         if any(k in desc for k in ["设计", "设计出", "方案"]):
             result.append("material_design")
         if any(k in desc for k in ["评估", "评价", "assessment", "evaluate"]):

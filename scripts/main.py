@@ -431,7 +431,22 @@ def run_autonomous_workflow(user_requirement, llm):
         evaluation_tasks = []
         final_validation_task = None
         
-        if "evaluation" in required_task_types:
+        # 新增：处理仅评估模式（不需要最终总结）
+        if "evaluation_only" in required_task_types:
+            # 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
+            evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
+            for agent in evaluation_agents:
+                if agent.role not in seen_roles:
+                    required_agents.append(agent)
+                    seen_roles.add(agent.role)
+                task = EvaluationTask(llm).create_task(agent, design_task, user_requirement)
+                evaluation_tasks.append(task)
+            
+            # 仅评估模式：不创建最终验证任务
+            task_mapping["evaluation_only"] = evaluation_tasks
+            required_tasks.extend(evaluation_tasks)
+            print(f"✓ 仅评估模式：将运行三个ASA评估专家，不进行最终总结")
+        elif "evaluation" in required_task_types:
             # 委派评估任务给所有评估专家 / Delegate evaluation tasks to all evaluation experts
             evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
             for agent in evaluation_agents:

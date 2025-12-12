@@ -22,21 +22,19 @@ class PubChemTool:
     def __init__(self, api_key: str = None):
         self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
         self.api_key = api_key or os.getenv('PUBCHEM_API_KEY')
-        self.session = requests.Session()
         # 设置请求头 / Set request headers
-        headers = {
+        self.headers = {
             "User-Agent": "ECOMATS-PubChem-Tool/1.0"
         }
         # 如果有API密钥，添加到请求头 / Add API key to request headers if available
         if self.api_key:
-            headers["X-PubChem-API-Key"] = self.api_key
-        self.session.headers.update(headers)
+            self.headers["X-PubChem-API-Key"] = self.api_key
         
         # 请求频率控制 / Request rate control
         self.last_request_time = 0
-        self.min_request_interval = 2.0
+        self.min_request_interval = 1.0  # 减少到1秒,提高响应速度
     
-    def _make_request(self, endpoint: str, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, timeout: int = 10, max_retries: int = 2) -> Dict[str, Any]:
         """
         发送API请求，带重试机制 / Send API request with retry mechanism
         
@@ -62,7 +60,7 @@ class PubChemTool:
                 # 更新最后请求时间 / Update last request time
                 self.last_request_time = time.time()
                 
-                response = self.session.get(url, timeout=timeout)
+                response = requests.get(url, headers=self.headers, timeout=timeout)
                 
                 # 检查是否是503错误（服务器繁忙） / Check if it's a 503 error (server busy)
                 if response.status_code == 503:
@@ -76,11 +74,20 @@ class PubChemTool:
                 response.raise_for_status()
                 return response.json()
                 
+            except requests.exceptions.Timeout:
+                logger.warning(f"PubChem API请求超时 (尝试 {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    delay = 2
+                    logger.info(f"等待 {delay} 秒后重试")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"PubChem API请求最终超时")
+                    return {"error": f"API请求超时: 请检查网络连接"}
             except requests.exceptions.RequestException as e:
                 logger.warning(f"PubChem API请求失败 (尝试 {attempt + 1}/{max_retries}): {e} / PubChem API request failed (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:  # 不是最后一次尝试
                     # 指数退避延迟，增加基础延迟时间
-                    delay = (3 ** attempt) + (random.randint(0, 2000) / 1000)  # 1-5秒随机延迟
+                    delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)  # 1-3秒随机延迟
                     logger.info(f"等待 {delay:.2f} 秒后重试 / Waiting {delay:.2f} seconds before retry")
                     time.sleep(delay)
                 else:

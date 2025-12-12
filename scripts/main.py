@@ -612,20 +612,6 @@ def main():
     _os.environ["OPENAI_API_BASE"] = Config.QWEN_API_BASE or ""
     _os.environ["OPENAI_BASE_URL"] = Config.QWEN_API_BASE or ""
     
-    try:
-        import os as _os
-        from openai import OpenAI
-        _base = _os.getenv("QWEN_API_BASE")
-        _key = _os.getenv("QWEN_API_KEY")
-        _model = _os.getenv("QWEN_MODEL_NAME") or "qwen-plus"
-        print("LLM快测参数:", {"base_url": _base, "model": _model, "api_key_set": bool(_key)})
-        client = OpenAI(api_key=_key, base_url=_base)
-        client.chat.completions.create(model=_model, messages=[{"role":"user","content":"ping"}], max_tokens=8)
-        print("LLM连通性测试通过")
-    except Exception as e:
-        print("LLM连通性测试失败:", e)
-        run_tool_only_summary(user_requirement)
-        return
     from src.utils.llm_config import create_llm
     llm = create_llm()
     print("成功创建Qwen3 LLM实例用于主程序")

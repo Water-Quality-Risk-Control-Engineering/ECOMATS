@@ -65,11 +65,6 @@ def create_llm(temperature=None, max_tokens=None):
         base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
     # 使用CrewAI原生LLM以提高与OpenAI兼容接口的兼容性
-    # 记录脱敏信息，便于定位 no healthy upstream
-    if os.getenv("VERBOSE", "True").lower() == "true":
-        print("[LLM] base_url:", (base_url or "<none>")[:80])
-        print("[LLM] model:", (model_name or "<none>")[:80])
-        print("[LLM] api_key set:", bool(api_key))
     llm = CrewLLM(
         model=model_name,
         base_url=base_url,

@@ -8,8 +8,22 @@ import sys
 import os
 import json
 import asyncio
+import logging
 from dotenv import load_dotenv
 from crewai import Crew, Process
+
+# 配置日志,抑制EAS相关的ERROR提示
+logging.basicConfig(level=logging.WARNING)
+# 将src.agents的日志级别设为CRITICAL,避免EAS错误提示
+for logger_name in ['src.agents.Creative_Designing_agent',
+                     'src.agents.Assessment_Screening_agent_A',
+                     'src.agents.Assessment_Screening_agent_B', 
+                     'src.agents.Assessment_Screening_agent_C',
+                     'src.agents.Assessment_Screening_agent_Overall',
+                     'src.agents.Mechanism_Mining_agent',
+                     'src.agents.Synthesis_Guiding_agent',
+                     'src.agents.Operation_Suggesting_agent']:
+    logging.getLogger(logger_name).setLevel(logging.CRITICAL)
 
 # 添加项目路径
 project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -92,9 +106,11 @@ async def run_preset_workflow_async(user_requirement, llm):
     
     # 1. 材料设计任务
     design_task = DesignTask(
+        agent=agents['material_designer']
+    ).create_task(
         agent=agents['material_designer'],
         user_requirement=user_requirement
-    ).create_task()
+    )
     
     # 2. 三个评估任务(可并行)
     eval_a_task = EvaluationTask(
@@ -185,6 +201,9 @@ def run_preset_workflow_sync(user_requirement, llm):
 async def main_async():
     """异步主函数"""
     load_dotenv()
+    
+    # 再次确保EAS日志被抑制
+    logging.getLogger('src.agents').setLevel(logging.CRITICAL)
     
     # 检查环境变量
     if not Config.QWEN_API_KEY:

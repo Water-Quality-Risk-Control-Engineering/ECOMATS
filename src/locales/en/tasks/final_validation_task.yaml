@@ -1,0 +1,79 @@
+description: |
+  Please synthesize the evaluation results from all experts, perform weighted calculations, and form the final material assessment report:
+  
+  Processing Steps:
+  1. Collect and analyze evaluation results from Experts A, B, and C
+  2. Calculate average scores and standard deviations for each dimension
+  3. Apply consistency coefficients to adjust final scores
+  4. Calculate comprehensive scores using weighted formulas
+  5. Determine final material rankings
+  6. **Use Structure Validator tool to verify structures of top-ranked materials**
+  
+  Tool Usage Strategy:
+  1. **Expert Data Verification Phase**:
+     - First verify whether tool data cited in expert evaluation results actually exists
+     - Check validity of all database identifiers like MP-ID, CAS numbers, etc.
+     - For tool query results provided by experts, independently verify using the same tools
+     - Mark any data that cannot be verified or is obviously erroneous
+  
+  2. **Material Structure Verification Phase**:
+     - For top 5 ranked materials, call Structure Validator Tool one by one to verify structural authenticity
+     - For metallic materials, also call Materials Project tool for cross-verification
+     - For organic materials, also call PubChem tool for cross-verification
+     - Record query parameters and returned results for all verification tools
+     - Mark materials that cannot be verified and affect final ranking accordingly
+  
+  3. **Data Consistency Analysis Phase**:
+     - Use Data Validator Tool to verify consistency of expert scoring data
+     - Calculate standard deviation and coefficient of variation for each dimension across three expert scores
+     - Identify dimensions with large scoring differences and analyze causes
+     - Focus on and re-evaluate dimensions with poor consistency
+  
+  4. **Comprehensive Verification Phase**:
+     - Comprehensively analyze all tool verification results
+     - Identify and mark any fabricated or inconsistent data
+     - Verify reasonableness and credibility of material performance data
+     - Ensure final ranking is based on authentic tool-verified data
+  
+  5. **Improvement Suggestion Data Support Phase**:
+     - For lower-ranked materials, call relevant tools to obtain data support for improvement suggestions
+     - Query performance data of similar optimized materials
+     - Provide specific improvement directions based on tool data
+     - Ensure feasibility and scientific validity of improvement suggestions
+  
+  Weighted Calculation Formula:
+  Final Score = 0.50×Catalytic Performance + 0.10×Economic Feasibility + 0.10×Environmental Friendliness + 0.10×Technical Feasibility + 0.20×Structural Reasonableness
+  
+  Consistency Analysis Requirements:
+  1. Calculate standard deviation for each dimension across three expert scores
+  2. Identify dimensions with large scoring differences and analyze causes
+  3. Calculate consistency coefficient Cj = 1 - (SD/mean)
+  4. Apply consistency coefficient to adjust final scores
+  
+  Ranking Determination Rules:
+  - Excellent: All dimensions ≥8 and comprehensive score ≥8.0
+  - Good: All dimensions ≥6 and comprehensive score ≥6.0
+  - Average: Comprehensive score ≥4.0
+  - Poor: Comprehensive score ≥2.0
+  - Invalid: Any dimension =1 or comprehensive score <2.0
+  
+  Output Requirements:
+  1. Display detailed calculation process
+  2. Provide consistency analysis results
+  3. Give final ranking and comprehensive score
+  4. Provide specific improvement suggestions
+  5. **Verify structural authenticity of top 3 materials using Structure Validator tool**
+  6. Record all tool call parameters and results in detail
+  7. Clearly identify any discovered fabricated or inconsistent data
+  8. **If Materials Project tool does not return a valid material_id, do not infer or generate false MP-IDs**
+
+expected_output: |
+  Provide a complete final validation report, including:
+  1. Summary of expert scores
+  2. Average score and standard deviation calculations
+  3. Consistency analysis results
+  4. Weighted calculation process and final scores
+  5. Final ranking determination
+  6. Specific improvement suggestions
+
+user_requirement_prefix: "\n\nUser Specific Requirement: "

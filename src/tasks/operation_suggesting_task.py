@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-操作建议任务
+操作建议任务 / Operation Suggesting Task
 负责提供材料合成、生产和应用的详细操作建议
 """
 
-from .base_task import BaseTask
+from .base_task import BaseTask, load_task_text
+
 
 class OperationSuggestingTask(BaseTask):
     """运行建议任务类 / Operation suggestion task class"""
@@ -17,116 +18,28 @@ class OperationSuggestingTask(BaseTask):
             agent: 运行建议智能体 / Operation suggestion agent
             material_info: 材料信息 / Material information
         """
+        # 加载任务文本 / Load task text
+        task_text = load_task_text('operation_suggesting_task')
+        
         super().__init__(
             agent=agent,
-            expected_output="水处理工艺的运行参数建议和优化策略",  # 水处理工艺的运行参数建议和优化策略 / Operational parameter recommendations and optimization strategies for water treatment processes
-            description=f"""为基于催化剂的水处理工艺提供运行参数建议和优化策略。
-            包括pH值、温度、催化剂投加量等关键参数。
-            {material_info}
-            / Provide operational parameter recommendations and optimization strategies for catalyst-based water treatment processes.
-            Include key parameters such as pH, temperature, and catalyst dosage.
-            {material_info}"""
+            expected_output=task_text.get('expected_output', ''),
+            description=task_text.get('description', '')
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):
-        description = """
-        请基于最终验证通过的材料方案，提供详细的操作建议，重点分为实验室初试和中试级别两个部分：
+        # 加载任务文本 / Load task text from file
+        task_text = load_task_text('operation_suggesting_task')
         
-        1. 实验室初试操作建议
-        1.1 实验安全性：
-            - 评估实验使用设备是否包含高压、高温、蒸汽等危险条件
-            - 评估材料毒性及环境危害，使用工具查询化学品安全数据
-        1.2 实验参数：
-            - 确定反应器体积，活性物质用量，pH值，温度等关键参数
-            - 确定搅拌环境（传质）要求
-            - 明确催化剂的使用量及使用方式（直接投加/合成电极/合成膜材料等）
-        1.3 污染物检测：
-            - 如有污染物，给出推荐的多种检测方法（根据不同仪器的检测限给出推荐）
-            - 给出降解实验预计的时间（尽量谨慎）
+        description = task_text.get('description', '')
+        expected_output = task_text.get('expected_output', '')
+        user_req_prefix = task_text.get('user_requirement_prefix', '\n\nUser Requirement: ')
         
-        2. 中试级别操作建议
-        2.1 经济性分析：
-            - 分析材料、反应的应用经济性
-            - 评估能耗情况
-        2.2 环境影响：
-            - 如果环境影响高，给出降低环境影响的具体建议
-        2.3 基质影响：
-            - 考虑基质对材料性能和稳定性的影响
-        
-        工具使用策略：
-        1. **化学品安全信息收集阶段**：
-           - 调用PubChem工具查询所有涉及化学品的安全数据（包括毒性、环境危害、危险性等）
-           - 调用Name2Properties Tool获取关键化学品的详细安全信息
-           - 整理化学品的安全技术说明书（SDS）要点
-           - 识别潜在的安全风险并提出防护措施
-        
-        2. **材料性质参数确定阶段**：
-           - 调用Name2Properties Tool或Formula2Properties Tool获取材料的关键物理化学性质（溶解度、稳定性、反应活性等）
-           - 调用Material Search Tool查询类似应用的工艺参数和操作条件
-           - 基于工具数据确定合理的参数范围和控制要求
-           - 对关键参数进行敏感性分析
-        
-        3. **经济性分析阶段**：
-           - 调用PubChem工具获取原材料的市场价格信息和供应情况
-           - 调用Materials Project工具查询金属材料的成本数据和市场趋势
-           - 调用Name2Properties Tool获取关键组分的成本信息
-           - 评估整体应用经济性和成本控制要点
-           - 提供成本优化建议
-        
-        4. **环境影响评估阶段**：
-           - 调用PNEC Tool评估材料的环境影响和安全阈值
-           - 调用PubChem工具查询化学品的生物降解性、生态毒性等环境数据
-           - 评估材料生命周期的环境影响
-           - 提出降低环境影响的具体建议和替代方案
-        
-        5. **操作参数优化阶段**：
-           - 基于所有工具数据综合分析，优化操作参数
-           - 确定关键控制点和监控要求
-           - 提供参数调整的指导原则和注意事项
-           - 考虑不同规模应用的参数差异
-        
-        6. **数据验证阶段**：
-           - 对所有工具查询结果进行交叉验证
-           - 确保操作建议基于可靠的数据支持
-           - 标记任何不确定或有争议的数据
-           - 说明数据不确定性对建议的影响
-        
-        要求：
-        - 重点关注操作安全性和可行性
-        - 使用工具验证所有化学品信息
-        - 提供具体的参数范围和控制方法
-        - 考虑实际应用中的各种影响因素
-        - **必须验证所涉及材料结构在现实中是否存在**
-        - **如果Materials Project工具未返回有效的material_id，不得进行推断或生成虚假的MP-ID**
-        - **在没有有效material_id的情况下，应基于理论分析和已知的材料科学原理进行操作建议制定**
-        - 每个工具调用都必须记录具体的参数和返回结果
-        - 如果工具调用失败，必须明确说明失败原因和对建议的影响
-        """
-        
-        # 添加用户需求到描述中
+        # 添加用户自定义需求到描述中 / Add user requirement to description
         if user_requirement:
-            description += f"\n\n用户具体需求：{user_requirement}"
+            description += f"{user_req_prefix}{user_requirement}"
         
-        expected_output = """
-        提供完整的操作建议方案，按照以下结构组织：
-        
-        1. 实验室初试操作建议
-        1.1 实验安全性评估（设备危险性、材料毒性、环境危害）
-        1.2 实验参数确定（反应器体积、活性物质用量、pH、温度、搅拌环境、催化剂使用方式等）
-        1.3 污染物检测方案（检测方法推荐、降解实验时间预估）
-        
-        2. 中试级别操作建议
-        2.1 应用经济性分析（材料成本、反应经济性、能耗评估）
-        2.2 环境影响评估及降低建议
-        2.3 基质影响考虑
-        
-        要求：
-        - 使用工具验证所有化学品信息
-        - 提供具体的数据支持和参数范围
-        - 给出明确的操作指导和注意事项
-        """
-        
-        # 创建新的任务实例而不是调用父类方法
+        # 创建任务实例 / Create task instance
         from crewai import Task
         task = Task(
             agent=agent,
@@ -134,7 +47,7 @@ class OperationSuggestingTask(BaseTask):
             description=description
         )
         
-        # 如果有上下文任务，添加依赖关系
+        # 如果有上下文任务，添加依赖关系 / Add context dependency
         if context_task:
             if isinstance(context_task, list):
                 task.context = context_task

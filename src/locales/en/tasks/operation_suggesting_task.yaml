@@ -1,0 +1,92 @@
+description: |
+  Based on the validated material design, provide detailed operational suggestions, focusing on laboratory pilot and pilot-scale levels:
+  
+  1. Laboratory Pilot Operation Suggestions
+  1.1 Experimental Safety:
+      - Assess whether experimental equipment involves high pressure, high temperature, steam, or other hazardous conditions
+      - Evaluate material toxicity and environmental hazards, query chemical safety data using tools
+  1.2 Experimental Parameters:
+      - Determine reactor volume, active substance dosage, pH, temperature, and other key parameters
+      - Determine stirring environment (mass transfer) requirements
+      - Specify catalyst dosage and application method (direct addition/electrode synthesis/membrane material synthesis, etc.)
+  1.3 Pollutant Detection:
+      - If pollutants are present, recommend multiple detection methods (based on detection limits of different instruments)
+      - Provide estimated degradation experiment duration (be conservative)
+  
+  2. Pilot-Scale Operation Suggestions
+  2.1 Economic Analysis:
+      - Analyze material and reaction application economics
+      - Evaluate energy consumption
+  2.2 Environmental Impact:
+      - If environmental impact is high, provide specific suggestions to reduce it
+  2.3 Matrix Effects:
+      - Consider matrix effects on material performance and stability
+  
+  Tool Usage Strategy:
+  1. **Chemical Safety Information Collection Phase**:
+     - Call PubChem tool to query safety data for all chemicals involved (toxicity, environmental hazards, risks, etc.)
+     - Call Name2Properties Tool to obtain detailed safety information for key chemicals
+     - Compile key points from Safety Data Sheets (SDS)
+     - Identify potential safety risks and propose protective measures
+  
+  2. **Material Property Parameter Determination Phase**:
+     - Call Name2Properties Tool or Formula2Properties Tool to obtain key physicochemical properties (solubility, stability, reactivity, etc.)
+     - Call Material Search Tool to query process parameters and operating conditions for similar applications
+     - Determine reasonable parameter ranges and control requirements based on tool data
+     - Perform sensitivity analysis for key parameters
+  
+  3. **Economic Analysis Phase**:
+     - Call PubChem tool to obtain raw material market prices and supply information
+     - Call Materials Project tool to query metal material cost data and market trends
+     - Call Name2Properties Tool to obtain cost information for key components
+     - Evaluate overall application economics and cost control points
+     - Provide cost optimization suggestions
+  
+  4. **Environmental Impact Assessment Phase**:
+     - Call PNEC Tool to assess environmental impact and safety thresholds
+     - Call PubChem tool to query biodegradability, ecotoxicity, and other environmental data
+     - Evaluate material lifecycle environmental impact
+     - Propose specific suggestions for reducing environmental impact and alternatives
+  
+  5. **Operation Parameter Optimization Phase**:
+     - Comprehensively analyze all tool data to optimize operation parameters
+     - Determine critical control points and monitoring requirements
+     - Provide guidelines and precautions for parameter adjustments
+     - Consider parameter differences for different application scales
+  
+  6. **Data Verification Phase**:
+     - Cross-verify all tool query results
+     - Ensure operational suggestions are based on reliable data support
+     - Mark any uncertain or controversial data
+     - Explain the impact of data uncertainty on suggestions
+  
+  Requirements:
+  - Focus on operational safety and feasibility
+  - Use tools to verify all chemical information
+  - Provide specific parameter ranges and control methods
+  - Consider various influencing factors in practical applications
+  - **Must verify that the involved material structures exist in reality**
+  - **If Materials Project tool does not return a valid material_id, do not infer or generate false MP-IDs**
+  - **Without a valid material_id, base operational suggestions on theoretical analysis and known materials science principles**
+  - Record specific parameters and results for each tool call
+  - If tool calls fail, clearly state the failure reason and impact on suggestions
+
+expected_output: |
+  Provide a complete operational suggestions plan, organized as follows:
+  
+  1. Laboratory Pilot Operation Suggestions
+  1.1 Experimental Safety Assessment (equipment hazards, material toxicity, environmental hazards)
+  1.2 Experimental Parameter Determination (reactor volume, active substance dosage, pH, temperature, stirring environment, catalyst application method, etc.)
+  1.3 Pollutant Detection Plan (detection method recommendations, degradation experiment time estimation)
+  
+  2. Pilot-Scale Operation Suggestions
+  2.1 Application Economic Analysis (material cost, reaction economics, energy consumption assessment)
+  2.2 Environmental Impact Assessment and Reduction Suggestions
+  2.3 Matrix Effect Considerations
+  
+  Requirements:
+  - Use tools to verify all chemical information
+  - Provide specific data support and parameter ranges
+  - Give clear operational guidance and precautions
+
+user_requirement_prefix: "\n\nUser Specific Requirement: "

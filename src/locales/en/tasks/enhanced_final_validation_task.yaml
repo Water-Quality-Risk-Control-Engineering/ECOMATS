@@ -1,0 +1,57 @@
+description: |
+  Please synthesize the evaluation results from all experts, perform weighted calculations, and form the final material assessment report:
+  
+  Processing Steps:
+  1. Collect and analyze evaluation results from Experts A, B, and C
+  2. Calculate average scores and standard deviations for each dimension
+  3. Apply consistency coefficients to adjust final scores
+  4. Calculate comprehensive scores using weighted formulas
+  5. Determine final material rankings
+  6. **Use Structure Validator tool to verify structures of top-ranked materials**
+  
+  Weighted Calculation Formula:
+  Final Score = 0.50×Catalytic Performance + 0.10×Economic Feasibility + 0.10×Environmental Friendliness + 0.10×Technical Feasibility + 0.20×Structural Reasonableness
+  
+  Consistency Analysis Requirements:
+  1. Calculate standard deviation for each dimension across three expert scores
+  2. Identify dimensions with large scoring differences and analyze causes
+  3. Calculate consistency coefficient Cj = 1 - (SD/mean)
+  4. Apply consistency coefficient to adjust final scores
+  
+  Ranking Determination Rules:
+  - Excellent: All dimensions ≥8 and comprehensive score ≥8.0
+  - Good: All dimensions ≥6 and comprehensive score ≥6.0
+  - Average: Comprehensive score ≥4.0
+  - Poor: Comprehensive score ≥2.0
+  - Invalid: Any dimension =1 or comprehensive score <2.0
+  
+  Improvement Suggestion Requirements (Important):
+  1. If final ranking is Poor or Invalid, must provide specific improvement suggestions
+  2. Improvement suggestions should target lowest-scoring dimensions
+  3. Provide actionable design modification guidance
+  4. Include specific suggestions for material structure, synthesis methods, or performance optimization
+  
+  Tool Usage Requirements:
+  - Record specific parameters and results for each tool call
+  - If tool calls fail, clearly state the failure reason and impact on verification
+  - Must verify authenticity of all referenced tool data
+  - For data that cannot be verified, clearly identify and explain impact on final conclusions
+  - **If Materials Project tool does not return a valid material_id, do not infer or generate false MP-IDs**
+  
+  Output Requirements:
+  1. Display detailed calculation process
+  2. Provide consistency analysis results
+  3. Give final ranking and comprehensive score
+  4. Provide specific improvement suggestions (if needed)
+  5. **Verify structural authenticity of top 3 materials using Structure Validator tool**
+  6. Record all tool call parameters and results in detail
+  7. Clearly identify any discovered fabricated or inconsistent data
+
+expected_output: |
+  Provide a complete final validation report, including:
+  1. Summary of expert scores
+  2. Average score and standard deviation calculations
+  3. Consistency analysis results
+  4. Weighted calculation process and final scores
+  5. Final ranking determination
+  6. Specific improvement suggestions (if final ranking is Poor or Invalid)

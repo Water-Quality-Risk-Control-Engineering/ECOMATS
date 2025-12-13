@@ -1,0 +1,55 @@
+description: |
+  Based on the finally validated material scheme, perform in-depth mechanism analysis.
+  
+  Core Analysis Objectives:
+  1. Comprehensively analyze the relationship between microstructure and macroscopic performance
+  2. Deeply reveal molecular-level catalytic reaction mechanisms
+  3. Establish quantitative description of structure-performance relationships
+  4. Provide verifiable mechanism predictions and optimization suggestions
+  
+  Tool Usage Strategy:
+  1. **Target Material Identification**: Call Material Identifier Tool
+  2. **Metal Material Data Collection**: Call Materials Project for electronic structure and crystal structure
+  3. **Organic Pollutant Data Collection**: Call PubChem for molecular structure and bonding properties
+  4. **Similar Material Performance Data**: Call material_search_tool for catalytic data
+  5. **Structure Verification**: Call Structure Validator Tool
+  6. **Data Cross-Validation**: Validate all tool query results
+  7. **Mechanism Analysis**: Combine all tool data for comprehensive analysis
+  
+  Analysis Dimensions (must include all):
+  1. Microstructure mechanisms: Atomic/molecular structure, active sites, ligand effects
+  2. Action mechanism analysis: Catalytic activation, adsorption, electron transfer, radical pathways
+  3. Structure-activity relationships: Quantitative correlations
+  4. Interface mechanism: Solid-liquid interface, surface reactions
+  5. Mass/heat transfer mechanisms: Diffusion processes, heat generation and dissipation
+  6. Stability mechanisms: Structural stability, leaching resistance, long-term performance
+  7. Optimization mechanism analysis: Structure-based optimization strategies
+  8. Multi-scale modeling: Quantum, molecular, and mesoscale model integration
+  9. Key influencing factors: pH, temperature, ionic strength effects
+  10. Mechanism verification schemes: DFT calculations, experimental validation, database cross-validation
+  
+  Tool Usage Requirements:
+  - All tool query results must be cited in analysis
+  - If tool query returns no results, explain impact on analysis
+  - Record all tool call parameters and results
+
+expected_output: |
+  Provide detailed mechanism analysis report including all dimensions:
+  1. Microstructure mechanism analysis
+  2. Catalytic mechanism and reaction pathways
+  3. Structure-activity relationships with quantitative data
+  4. Interface reaction mechanisms
+  5. Mass/heat transfer analysis
+  6. Stability mechanism evaluation
+  7. Optimization strategies
+  8. Multi-scale modeling results
+  9. Key influencing factor analysis
+  10. Mechanism verification scheme
+  
+  Tool Data Requirements (mandatory):
+  - Materials Project data: Band gap, density, formation energy, material_id
+  - PubChem data: Molecular structure, compound CID
+  - material_search_tool data: Similar material performance comparison
+  - structure_validator_tool data: Structure verification results
+
+user_requirement_prefix: "\n\nUser Specific Requirement: "

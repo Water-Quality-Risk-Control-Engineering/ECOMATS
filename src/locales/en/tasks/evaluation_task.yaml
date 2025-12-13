@@ -1,0 +1,47 @@
+description: |
+  Please evaluate the material scheme based on the following five dimensions:
+  1. Catalytic Performance (Weight 50%)
+  2. Economic Feasibility (Weight 10%)
+  3. Environmental Friendliness (Weight 10%)
+  4. Technical Feasibility (Weight 10%)
+  5. Structural Rationality (Weight 20%)
+  
+  Catalytic performance is the core criterion.
+  
+  Evaluation Steps:
+  1. Analyze material performance across all five dimensions
+  2. Focus on whether catalytic performance meets standards
+  3. If catalytic performance fails, clearly identify issues and recommend redesign
+  4. If catalytic performance passes, comprehensively evaluate other dimensions
+  
+  Tool Usage Strategy:
+  1. **Data Collection Phase**: Call Material Identifier Tool and Structure Validator Tool
+  2. **Structural Rationality Verification**: Call Materials Project and PubChem tools
+  3. **Catalytic Performance Evaluation**: Call Material Search Tool for similar material data
+  4. **Economic Feasibility Evaluation**: Call tools for cost-related data
+  5. **Environmental Friendliness Evaluation**: Call PNEC Tool and PubChem tools
+  6. **Technical Feasibility Evaluation**: Evaluate synthesis methods and industrialization
+  7. **Data Validation Phase**: Cross-validate all tool query results
+  
+  Evaluation Requirements:
+  - Conduct independent evaluation, focus on scientific rationality and application potential
+  - Must use tools to verify material information accuracy
+  - **Must verify material structures exist in reality**
+  - Record all tool call parameters and results
+  
+  Evaluation Output Format:
+  1. Dimension scores (max 10)
+  2. Core criterion assessment: Pass/Fail
+  3. Comprehensive evaluation and decision recommendation
+  4. Tool verification results
+
+expected_output: |
+  Provide detailed material evaluation report including:
+  1. Dimension scores and analysis
+  2. Core criterion assessment results
+  3. Clear decision recommendation (pass or return for redesign)
+  4. If redesign needed, provide specific improvement suggestions
+  5. Tool verification results with specific data
+  6. How tool data supports scoring decisions
+
+user_requirement_prefix: "\n\nUser-provided material information: "

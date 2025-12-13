@@ -1,0 +1,38 @@
+description: |
+  Based on the finally validated material scheme, design detailed synthesis methods and process flows:
+  
+  **Important**: Before designing synthesis methods, you must identify the specific materials ranked highest in the final validation report as synthesis targets.
+  
+  Design Steps:
+  1. Identify Synthesis Target: Specify the highest-ranked material from final validation
+  2. Synthesis Strategy Design: Design synthesis route based on material structure parameters
+  3. Synthesis Step Refinement: Specify concrete operations for each step
+  4. Process Parameter Optimization: Determine key parameter value ranges
+  5. Equipment and Safety Requirements: List required equipment and safety measures
+  6. Quality Control Indicators: Determine key quality control points and characterization methods
+  
+  Tool Usage Strategy:
+  1. **Synthesis Target Confirmation**: Call Material Identifier Tool and Structure Validator Tool
+  2. **Raw Material Information Collection**: Call PubChem tool for properties and safety data
+  3. **Synthesis Route Design**: Call Material Search Tool for similar material synthesis methods
+  4. **Process Parameter Optimization**: Call Formula2Properties Tool for product property predictions
+  5. **Safety Risk Assessment**: Call PubChem tool for safety data sheets
+  6. **Feasibility Verification**: Cross-validate all tool query results
+  
+  Design Key Points:
+  - Ensure synthesis method feasibility and reproducibility
+  - Optimize process parameters for best material performance
+  - Consider industrialization feasibility and cost control
+  - **Must specify the exact material name and formula at design start**
+  - Record all tool call parameters and results
+
+expected_output: |
+  Provide complete synthesis method scheme including:
+  1. Clear synthesis target: Specific material name, formula, and selection rationale
+  2. Detailed synthesis strategy and route design
+  3. Specific synthesis steps and operating conditions
+  4. Key process parameters and control ranges
+  5. Required equipment and safety requirements
+  6. Quality control indicators and characterization methods
+
+user_requirement_prefix: "\n\nUser Specific Requirement: "

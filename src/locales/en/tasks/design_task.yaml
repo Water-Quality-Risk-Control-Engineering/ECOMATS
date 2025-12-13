@@ -1,0 +1,55 @@
+description: |
+  Design water treatment material solutions based on user requirements.
+  
+  Design Steps:
+  1. Analyze target pollutant characteristics and treatment requirements
+  2. Select appropriate material types (e.g., single-atom catalysts, dual-atom catalysts, MOF materials)
+  3. Prioritize reusing previously obtained structure validation or identifier results
+  4. **Mandatory: Use PubChem tool to verify target pollutant chemical information**
+  5. Design material structure based on tool data
+  6. **Mandatory: Use Structure Validator tool to verify if designed material structures exist**
+  7. Redesign if validation fails
+  8. Optimize material structure parameters for catalytic performance and stability
+  9. Balance material diversity, structural stability, and catalytic performance
+  
+  Tool Usage Strategy:
+  1. **Target Analysis Phase**:
+     - Call PubChem tool for pollutant chemical information (formula, molecular weight, CAS, SMILES)
+     - Analyze pollutant chemical structure and degradation challenges
+     - Record tool call parameters and results
+  
+  2. **Material Design Phase (Rate Limiting & Reuse)**:
+     - Call Material Identifier Tool to determine material type
+     - Call appropriate design tools based on material type
+     - Call Structure Validator Tool to verify material structures
+     - If validation fails, record failure reason and redesign
+  
+  3. **Performance Optimization Phase**:
+     - Call Name2Properties Tool or Formula2Properties Tool for property parameters
+     - Call Material Search Tool for similar material catalytic data
+     - Optimize active sites and reaction pathways based on tool data
+  
+  4. **Final Validation Phase**:
+     - Comprehensive validation ensuring all tool results are consistent
+     - Record all tool call details
+     - Ensure designed structures exist or have synthesis feasibility
+  
+  Design Key Points:
+  - Ensure materials have good catalytic performance and structural stability
+  - Optimize active sites and reaction pathways
+  - Meet target pollutant degradation requirements
+  - **Must verify designed material structures exist in reality**
+  - **Must use Materials Project and PubChem tools for data support**
+  - Record all tool call parameters and results
+
+expected_output: |
+  Provide complete material design solution including:
+  1. Material composition (material type and key structural parameters)
+  2. Design principle explanation
+  3. Stability assurance measures
+  4. Expected catalytic performance
+  5. Detailed structure description (following material type and structure requirements)
+  6. Synthesis feasibility assessment
+
+user_requirement_prefix: "\n\nUser Specific Requirement: "
+feedback_prefix: "\n\nOptimize design based on evaluation feedback:\n"

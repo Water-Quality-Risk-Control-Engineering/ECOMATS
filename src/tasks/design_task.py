@@ -4,7 +4,8 @@
 负责设计和优化水处理材料方案
 """
 
-from .base_task import BaseTask, get_language, is_english
+from .base_task import BaseTask, load_task_text
+
 
 class DesignTask(BaseTask):
     """材料设计任务类 / Material design task class"""
@@ -16,196 +17,23 @@ class DesignTask(BaseTask):
         Args:
             agent: 材料设计智能体 / Material design agent
         """
+        # 加载任务文本 / Load task text
+        task_text = load_task_text('design_task')
+        
         super().__init__(
             agent=agent,
-            expected_output="设计出的10种催化剂材料的详细信息，必须包含以下内容：\n- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n- 化学式和晶体结构描述\n- 关键物理性质（如带隙、密度）\n- 热力学稳定性（能量凸包上的高度）\n- 建议的合成方法\n- 预期性能指标",  # 设计出的10种催化剂材料的详细信息，包括材料结构、合成方法等 / Detailed information of the 10 designed catalyst materials, including material structure, synthesis methods, etc.
-            description="""基于用户需求和污染物特性，设计10种催化PMS活化的催化剂材料。
-            要求给出每种材料的详细结构信息和具体的合成方法。
-            / Based on user requirements and pollutant characteristics, design 10 catalyst materials for PMS activation.
-            Provide detailed structural information and specific synthesis methods for each material.
-            
-            材料类型分类要求：
-            1. 纯金属类：单质金属、合金、纳米颗粒
-            2. 金属氧化物类：单一氧化物、复合氧化物、层状双金属氢氧化物
-            3. 金属硫化物类：过渡金属硫化物及其复合材料
-            4. 金属氮化物/碳化物类：各类金属氮化物和碳化物
-            5. MOF/COF材料：传统及功能化框架材料
-            6. 碳基材料：石墨烯、碳纳米管、多孔碳等
-            7. 单原子催化剂：单原子、双原子、多原子簇催化剂
-            8. 复合材料：多种材料的复合体系
-            9. 生物基材料：酶催化剂和生物聚合物基材料
-            
-            结构描述要求：
-            1. 基本结构信息：化学式、分子量、晶体结构、电子结构
-            2. 活性位点描述：中心原子、配位环境、配位结构、几何构型
-            3. 基底结构描述：结构形式、化学连接、拓扑结构
-            4. 配体信息：配体类型、结构、配位模式
-            5. 结构参数：原子位置、空间群、配位数、几何参数"""
+            expected_output=task_text.get('expected_output', ''),
+            description=task_text.get('description', '')
         )
     
     def create_task(self, agent, context_task=None, feedback=None, user_requirement=None):
-        # 获取多语言文本 / Get multilingual text
-        lang = get_language()
+        # 加载任务文本 / Load task text from file
+        task_text = load_task_text('design_task')
         
-        if lang == 'en':
-            description = """
-Design water treatment material solutions based on user requirements.
-
-Design Steps:
-1. Analyze target pollutant characteristics and treatment requirements
-2. Select appropriate material types (e.g., single-atom catalysts, dual-atom catalysts, MOF materials)
-3. Prioritize reusing previously obtained structure validation or identifier results; only call Materials Project minimal field search when necessary
-4. **Mandatory: Use PubChem tool to verify target pollutant chemical information**
-5. Design material structure based on tool data
-6. **Mandatory: Use Structure Validator tool to verify if designed material structures actually exist**
-7. Redesign if validation fails
-8. Optimize material structure parameters to ensure catalytic performance and stability
-9. Balance material diversity, structural stability, and catalytic performance
-
-Tool Usage Strategy:
-1. **Target Analysis Phase**:
-   - Call PubChem tool to query target pollutant chemical information (formula, molecular weight, CAS number, SMILES, etc.)
-   - Analyze pollutant chemical structure and degradation challenges
-   - Record tool call parameters and results
-
-2. **Material Design Phase (Rate Limiting & Reuse)**:
-   - Call Material Identifier Tool to determine material type
-   - Based on material type, call appropriate design tools:
-     * For metal materials: Prioritize using identifier's material_id for details
-     * For organic materials: Call PubChem tool to verify molecular structure
-   - Call Structure Validator Tool to verify designed material structures
-   - If validation fails, record failure reason and redesign
-
-3. **Performance Optimization Phase**:
-   - Call Name2Properties Tool or Formula2Properties Tool to get material property parameters
-   - Call Material Search Tool to query similar material catalytic performance data
-   - Optimize active sites and reaction pathways based on tool data
-
-4. **Final Validation Phase**:
-   - Comprehensive validation ensuring all tool call results are consistent
-   - Record all tool call details including parameters, results, and validation status
-   - Ensure designed material structures exist in reality or have synthesis feasibility
-
-Material Type Classification:
-1. **Pure Metals**: Elemental metals, alloys, nanoparticles
-2. **Metal Oxides**: Single oxides, composite oxides, layered double hydroxides
-3. **Metal Sulfides**: Transition metal sulfides and composites
-4. **Metal Nitrides/Carbides**: Various metal nitrides and carbides
-5. **MOF/COF Materials**: Traditional and functionalized framework materials
-6. **Carbon-based Materials**: Graphene, carbon nanotubes, porous carbon, etc.
-7. **Single-atom Catalysts**: Single-atom, dual-atom, multi-atom cluster catalysts
-8. **Composite Materials**: Multi-material composite systems
-9. **Bio-based Materials**: Enzyme catalysts and biopolymer-based materials
-
-Structure Description Requirements:
-1. **Basic Structure Info**: Chemical formula, molecular weight, crystal structure, electronic structure
-2. **Active Site Description**: Central atom, coordination environment, coordination structure, geometry
-3. **Substrate Structure**: Structural form, chemical bonding, topological structure
-4. **Ligand Info**: Ligand type, structure, coordination mode
-5. **Structural Parameters**: Atomic positions, space group, coordination number, geometric parameters
-
-Design Key Points:
-- Ensure materials have good catalytic performance and structural stability
-- Optimize active sites and reaction pathways
-- Meet target pollutant degradation requirements
-- **Must verify designed material structures exist in reality**
-- **Must use Materials Project and PubChem tools for data support**
-- **If Materials Project returns no valid material_id, do not fabricate MP-IDs**
-- Follow material type classification and structure description requirements
-- Record specific parameters and results for each tool call
-- If tool call fails, clearly explain failure reason and impact on design
-"""
-            user_req_prefix = "\n\nUser Specific Requirement: "
-            feedback_prefix = "\n\nOptimize design based on evaluation feedback:\n"
-            expected_output = """
-Provide complete material design solution including:
-1. Material composition (material type and key structural parameters)
-2. Design principle explanation
-3. Stability assurance measures
-4. Expected catalytic performance
-5. Detailed structure description (following material type and structure requirements)
-6. Synthesis feasibility assessment
-"""
-        else:
-            description = """
-        根据用户需求设计水处理材料方案。
-        
-        设计步骤：
-        1. 分析目标污染物特性和处理要求
-        2. 选择合适的材料类型（如单原子催化剂、双原子催化剂、MOF材料等）
-        3. 优先复用已获取的结构验证或标识符结果；仅在缺失必要信息时调用Materials Project最小字段搜索
-        4. **强制使用PubChem工具验证目标污染物的化学信息**
-        5. 基于工具数据设计材料结构
-        6. **强制使用Structure Validator工具验证设计的材料结构是否真实存在**
-        7. 如果验证失败，需要重新设计
-        8. 优化材料结构参数以确保催化性能和稳定性
-        9. 考虑材料多样性、结构稳定性、催化性能的平衡
-        
-        工具使用策略：
-        1. **目标分析阶段**：
-           - 调用PubChem工具查询目标污染物的化学信息（包括分子式、分子量、CAS号、SMILES等）
-           - 分析污染物的化学结构和降解难点
-           - 记录工具调用的参数和返回结果
-        
-        2. **材料设计阶段（限流与复用）**：
-           - 调用Material Identifier Tool确定设计材料的类型
-           - 根据材料类型调用相应的设计工具：
-            * 对于金属材料：优先使用标识符的material_id获取详情，必要时再最小字段搜索类似材料
-             * 对于有机材料：调用PubChem工具验证分子结构和性质
-           - 调用Structure Validator Tool验证设计的材料结构是否真实存在，并将验证结果在上下文中复用
-           - 如果验证失败，记录失败原因并重新设计
-        
-        3. **性能优化阶段**：
-           - 调用Name2Properties Tool或Formula2Properties Tool获取材料关键组分的性质参数
-           - 调用Material Search Tool查询类似材料的催化性能数据
-           - 基于工具数据优化材料的活性位点和反应路径
-        
-        4. **最终验证阶段**：
-           - 对设计的材料进行综合验证，确保所有工具调用结果一致
-           - 记录所有工具调用的详细信息，包括参数、返回结果和验证状态
-           - 确保设计的材料结构在现实中确实存在或具有合成可行性
-        
-        材料类型分类要求：
-        1. **纯金属类**：单质金属、合金、纳米颗粒
-        2. **金属氧化物类**：单一氧化物、复合氧化物、层状双金属氢氧化物
-        3. **金属硫化物类**：过渡金属硫化物及其复合材料
-        4. **金属氮化物/碳化物类**：各类金属氮化物和碳化物
-        5. **MOF/COF材料**：传统及功能化框架材料
-        6. **碳基材料**：石墨烯、碳纳米管、多孔碳等
-        7. **单原子催化剂**：单原子、双原子、多原子簇催化剂
-        8. **复合材料**：多种材料的复合体系
-        9. **生物基材料**：酶催化剂和生物聚合物基材料
-        
-        结构描述要求：
-        1. **基本结构信息**：化学式、分子量、晶体结构、电子结构
-        2. **活性位点描述**：中心原子、配位环境、配位结构、几何构型
-        3. **基底结构描述**：结构形式、化学连接、拓扑结构
-        4. **配体信息**：配体类型、结构、配位模式
-        5. **结构参数**：原子位置、空间群、配位数、几何参数
-        
-        设计要点：
-        - 确保材料具有良好的催化性能和结构稳定性
-        - 优化材料的活性位点和反应路径
-        - 满足目标污染物的降解需求
-        - **必须验证设计的材料结构在现实中是否存在**
-        - **必须使用Materials Project和PubChem工具获取数据支持设计**
-        - **如果Materials Project工具未返回有效的material_id，不得进行推断或生成虚假的MP-ID**
-        - **在没有有效material_id的情况下，应基于理论分析和已知的材料科学原理进行材料设计**
-        - 遵循材料类型分类和结构描述的详细要求
-        - 每个工具调用都必须记录具体的参数和返回结果
-        - 如果工具调用失败，必须明确说明失败原因和对设计的影响
-        """
-            user_req_prefix = "\n\n用户具体需求："
-            feedback_prefix = "\n\n根据评估反馈进行优化设计：\n"
-            expected_output = """
-        提供完整的材料设计方案，包括：
-        1. 材料组成（材料类型和关键结构参数）
-        2. 设计原理说明
-        3. 稳定性保障措施
-        4. 预期的催化性能
-        5. 详细的结构描述（按照材料类型分类和结构描述要求）
-        6. 合成可行性评估
-        """
+        description = task_text.get('description', '')
+        expected_output = task_text.get('expected_output', '')
+        user_req_prefix = task_text.get('user_requirement_prefix', '\n\nUser Requirement: ')
+        feedback_prefix = task_text.get('feedback_prefix', '\n\nFeedback:\n')
         
         # 添加用户自定义需求到描述中 / Add user requirement to description
         if user_requirement:
@@ -214,7 +42,7 @@ Provide complete material design solution including:
         if feedback:
             description += f"{feedback_prefix}{feedback}"
         
-        # 创建新的任务实例而不是调用父类方法
+        # 创建任务实例 / Create task instance
         from crewai import Task
         task = Task(
             agent=agent,
@@ -222,7 +50,7 @@ Provide complete material design solution including:
             description=description
         )
         
-        # 如果有上下文任务，添加依赖关系
+        # 如果有上下文任务，添加依赖关系 / Add context dependency
         if context_task:
             if isinstance(context_task, list):
                 task.context = context_task

@@ -4,7 +4,8 @@
 负责分析材料的催化机理和作用机制
 """
 
-from .base_task import BaseTask, get_language, is_english
+from .base_task import BaseTask, load_task_text
+
 
 class MechanismAnalysisTask(BaseTask):
     """机理分析任务类 / Mechanism analysis task class"""
@@ -17,236 +18,28 @@ class MechanismAnalysisTask(BaseTask):
             agent: 机理分析智能体 / Mechanism analysis agent
             material_info: 材料信息 / Material information
         """
+        # 加载任务文本 / Load task text
+        task_text = load_task_text('mechanism_analysis_task')
+        
         super().__init__(
             agent=agent,
-            expected_output="污染物降解的反应机理和动力学特性分析报告",  # 污染物降解的反应机理和动力学特性分析报告 / Analysis report on reaction mechanisms and kinetic characteristics of pollutant degradation
-            description=f"""分析目标污染物在催化剂作用下的降解机理和动力学特性。
-            要求详细描述反应路径和关键中间体。
-            {material_info}
-            / Analyze the degradation mechanisms and kinetic characteristics of target pollutants under the action of catalysts.
-            Describe the reaction pathways and key intermediates in detail.
-            {material_info}"""
+            expected_output=task_text.get('expected_output', ''),
+            description=task_text.get('description', '') + f"\n{material_info}" if material_info else task_text.get('description', '')
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):
-        # 获取多语言文本 / Get multilingual text
-        lang = get_language()
+        # 加载任务文本 / Load task text from file
+        task_text = load_task_text('mechanism_analysis_task')
         
-        if lang == 'en':
-            description = """
-Based on the finally validated material scheme, perform in-depth mechanism analysis.
-The analysis must comprehensively cover the material's catalytic mechanism and be supported by data from database tools.
-
-Core Analysis Objectives:
-1. Comprehensively analyze the relationship between microstructure and macroscopic performance
-2. Deeply reveal molecular-level catalytic reaction mechanisms
-3. Establish quantitative description of structure-performance relationships
-4. Provide verifiable mechanism predictions and optimization suggestions
-
-Analysis Methodology Requirements:
-- Multi-scale analysis from atomic structure to macroscopic performance
-- Cross-validation combining computational simulation and experimental data
-- Use professional database tools for authoritative data support
-- Establish reproducible analysis framework
-
-Tool Usage Strategy:
-1. **Target Material Identification**: Call Material Identifier Tool
-2. **Metal Material Data Collection**: Call Materials Project for electronic structure, crystal structure
-3. **Organic Pollutant Data Collection**: Call PubChem for molecular structure, bonding properties
-4. **Similar Material Performance Data**: Call material_search_tool for catalytic activity, stability
-5. **Structure Verification**: Call Structure Validator Tool
-6. **Data Cross-Validation**: Validate all tool query results
-7. **Mechanism Analysis**: Combine all tool data for comprehensive analysis
-
-Analysis Dimensions (must include all):
-1. Microstructure mechanisms (atomic/molecular structure, active sites, ligand effects)
-2. Action mechanism analysis (catalytic activation, adsorption, electron transfer, radical pathways)
-3. Structure-activity relationships (quantitative correlations)
-4. Interface mechanism (solid-liquid interface, surface reactions)
-5. Mass/heat transfer mechanisms
-6. Stability mechanisms
-7. Optimization mechanism analysis
-8. Multi-scale modeling
-9. Key influencing factors (pH, temperature, ionic strength)
-10. Mechanism verification schemes (DFT calculations, experimental validation)
-"""
-            user_req_prefix = "\n\nUser Specific Requirement: "
-            expected_output = """
-Provide detailed mechanism analysis report including:
-1. Microstructure mechanism analysis
-2. Catalytic mechanism and reaction pathways
-3. Structure-activity relationships with quantitative data
-4. Interface reaction mechanisms
-5. Mass/heat transfer analysis
-6. Stability mechanism evaluation
-7. Optimization strategies
-8. Multi-scale modeling results
-9. Key influencing factor analysis
-10. Mechanism verification scheme
-
-Tool Data Requirements (mandatory):
-- Materials Project data: band gap, density, formation energy with material_id
-- PubChem data: molecular structure with compound CID
-- material_search_tool data: similar material performance comparison
-- structure_validator_tool data: structure verification results
-- All data must be clearly cited in the report
-"""
-        else:
-            description = """
-        请基于最终验证通过的材料方案，进行深入的机理分析。分析必须覆盖材料催化机制的全貌，并结合数据库工具获取的数据支撑分析结论。
+        description = task_text.get('description', '')
+        expected_output = task_text.get('expected_output', '')
+        user_req_prefix = task_text.get('user_requirement_prefix', '\n\nUser Requirement: ')
         
-        核心分析目标：
-        1. 全面解析材料的微观结构与宏观性能关系
-        2. 深入揭示催化反应的分子-level机制
-        3. 建立结构-性能关系的定量描述
-        4. 提供可验证的机理预测和优化建议
-        
-        分析方法要求：
-        - 采用多尺度分析方法，从原子结构到宏观性能
-        - 结合计算模拟和实验数据进行交叉验证
-        - 利用专业数据库工具获取权威数据支撑
-        - 建立可重现的分析框架
-        
-        工具使用策略：
-        1. **目标材料识别阶段**：
-           - 调用Material Identifier Tool确定分析材料的类型和基本属性
-           - 记录材料的化学式、结构类型等关键信息
-        
-        2. **金属材料数据收集阶段**：
-           - 调用Materials Project工具查询材料的电子结构数据（如带隙、态密度、能带结构）
-           - 查询晶体结构信息（晶格参数、空间群、晶胞参数）
-           - 获取计算材料属性（如形成能、弹性常数、体积、密度、表面能）
-           - 记录所有查询的material_id和具体数据
-        
-        3. **有机污染物数据收集阶段**：
-           - 调用PubChem工具查询分子结构信息（SMILES、InChI、分子式）
-           - 获取键合性质（键长、键角、二面角）和热力学数据（分子量、熔点、沸点、溶解度）
-           - 查询化学反应性和稳定性数据
-           - 记录化合物CID和关键属性数据
-        
-        4. **相似材料性能数据收集阶段**：
-           - 调用material_search_tool检索相似材料的性能数据
-           - 收集催化活性、选择性、稳定性等关键性能指标
-           - 整理构效关系数据用于对比分析
-        
-        5. **结构验证阶段**：
-           - 调用Structure Validator工具验证所有涉及的材料结构是否真实存在
-           - 对无法验证的结构进行标记并说明对分析的影响
-           - 确保所有分析基于真实存在的材料结构
-        
-        6. **数据交叉验证阶段**：
-           - 对所有工具查询结果进行交叉验证
-           - 识别和标记任何不一致或可疑的数据
-           - 验证关键数据的可靠性和一致性
-           - 如果工具查询未返回结果，明确说明对分析的影响并提出替代方案
-        
-        7. **机理分析阶段**：
-           - 结合所有工具数据，全面分析材料的催化机制
-           - 建立结构-性能关系的定量描述
-           - 提供可验证的机理预测和优化建议
-           - 确保每个分析结论都有具体的工具数据支持
-        
-        工具使用要求（必须严格遵守）：
-        - 对于金属材料，使用Materials Project工具查询材料的电子结构数据（如带隙、态密度）、晶体结构信息（晶格参数、空间群）和计算材料属性（如形成能、弹性常数、体积、密度）
-        - 对于有机污染物，使用PubChem工具查询分子结构信息（SMILES、InChI）、键合性质（键长、键角）和热力学数据（分子量、熔点、沸点）
-        - 必须使用material_search_tool检索相似材料的性能数据，以支持构效关系分析，包括催化活性、稳定性、选择性等性能对比
-        - **必须使用Structure Validator工具验证所有涉及的材料结构是否真实存在**
-        - **如果Materials Project工具未返回有效的material_id，不得进行推断或生成虚假的MP-ID**
-        - **在没有有效material_id的情况下，应基于理论分析和已知的材料科学原理进行机理分析**
-        - 所有工具查询结果必须在分析中引用，并详细解释这些数据如何支持你的机理分析结论
-        - 如果工具查询未返回结果，必须说明这对机理分析的影响，并提出替代分析方案
-        - 每个工具调用都必须记录具体的参数和返回结果
-        - 如果工具调用失败，必须明确说明失败原因和对分析的影响
-        """
-        
-        # 添加用户需求到描述中
+        # 添加用户需求到描述中 / Add user requirement to description
         if user_requirement:
-            description += f"\n\n用户具体需求：{user_requirement}"
+            description += f"{user_req_prefix}{user_requirement}"
         
-        expected_output = """
-        提供详细的机理分析报告，必须包含以下所有维度，并在每个维度中提供具体详细的分析：
-
-         1. 微观结构机理：
-           - 原子/分子结构：分析材料的原子排列、晶体结构和分子几何
-           - 关键结构特征：识别活性位点、配位环境和结构基序
-           - 配体作用：考察配体对电子结构和催化活性的影响
-           - 金属-配体协同：分析金属中心与配体之间的协同效应
-           
-        2. 作用机理分析：
-           - 催化活化过程：详细描述催化剂活化氧化剂（如过氧单硫酸盐、过氧化氢、臭氧等）的途径
-           - 吸附机制：分析污染物在材料表面的吸附机制
-           - 电子转移：阐述电子转移路径和氧化还原过程
-           - 自由基介导：说明自由基物种在降解机制中的作用
-           - 非自由基途径：分析非自由基途径在污染物降解中的作用
-           - 催化循环：详细描述完整的催化循环过程，包括催化剂的氧化还原状态变化
-           
-        3. 构效关系：
-           - 结构与催化性能的定量关系：建立材料结构参数与催化活性之间的定量关系
-           - 电子结构-活性相关性：分析材料的电子结构与催化活性的关系
-           - 几何效应对反应性的影响：探讨材料几何结构对反应活性的影响
-           - 表面结构与活性关系：分析材料表面原子排列、缺陷结构对催化性能的影响
-           - 活性位点密度与性能关系：建立活性位点密度与催化效率之间的定量关系
-           
-        4. 界面作用机理：
-           - 固-液界面相互作用：分析催化剂与溶液界面的相互作用
-           - 表面反应机制：详细描述在催化剂表面发生的反应机制
-           - 界面电子转移过程：阐述界面电子转移的动力学过程
-           - 界面传质过程：分析反应物和产物在界面的传质过程
-           - 界面稳定性：评估界面在反应条件下的稳定性
-           
-        5. 传质和热传导机理：
-           - 扩散过程和传输限制：分析反应物向催化剂表面的扩散过程，识别传质限制步骤和增强传质的策略
-           - 反应中的热量产生和耗散：详细描述催化反应过程中的热量产生机制和散热途径
-           - 温度对反应动力学的影响：分析温度对反应速率、活化能和反应路径的影响，建立Arrhenius关系
-           - 浓度梯度效应：探讨反应物和产物浓度梯度对传质和反应的影响
-           - 流体力学效应：分析流体流动对传质和传热的影响
-           
-        6. 稳定性机理：
-           - 反应条件下的结构稳定性：分析材料在不同pH、温度、离子强度等条件下的结构稳定性，包括相变、溶解和重构
-           - 抗浸出性和耐久性：评估催化剂在长期使用过程中的金属离子浸出行为和结构耐久性
-           - 长期性能维持机制：探讨催化剂长期稳定性的维持机制
-           - 抗中毒机制：分析催化剂对有机物、无机离子等毒化物质的抗性机制
-           - 机械稳定性：评估材料在机械应力作用下的结构稳定性和抗磨损性能
-           
-        7. 优化机理分析：
-           - 基于结构的优化策略：基于材料的成键方式，键能，成键形成材料稳定性对材料进行结构上的更稳定优化
-           - 性能增强机制：分析通过掺杂、复合、缺陷工程等手段增强催化性能的机制
-           - 合理设计原理：基于对催化机理的深入理解，提出材料合理设计的基本原理和指导原则
-           
-        8. 多尺度建模：
-           - 量子、分子和介观尺度模型的整合：整合量子化学计算（DFT）、分子动力学模拟和介观尺度模拟，建立多尺度模型
-           - 跨尺度机制分析方法：采用跨尺度分析方法，从原子尺度的电子结构到介观尺度的传输现象，全面理解催化机制
-           - 模型验证与实验对比：将计算模型预测结果与实验数据进行对比验证，确保模型的准确性
-           - 动力学模拟：进行反应动力学模拟，预测反应路径和速率常数
-           
-        9. 关键影响因素：
-           - pH、温度和离子强度的影响：系统分析pH值对催化剂表面电荷、活性位点和反应路径的影响；分析温度对反应动力学和热力学的影响；分析离子强度对离子传质和表面反应的影响
-           - 竞争离子和有机物的影响：评估常见无机离子（如Cl⁻、SO₄²⁻、NO₃⁻、HCO₃⁻等）和有机物对催化性能的影响机制
-           - 反应介质的影响：分析不同反应介质（水相、有机相、气相）对催化机制和反应路径的影响
-           - 光照条件影响：探讨光照条件对光催化材料性能的影响机制
-           - 氧化剂种类影响：分析不同类型氧化剂对催化机制的影响
-           
-        10. 机理验证方案：
-            - 计算验证方法：采用密度泛函理论（DFT）计算、分子动力学模拟等计算方法验证反应路径和能垒
-            - 实验验证方法
-            - 与数据库信息的交叉验证：与Materials Project、PubChem等数据库中的材料和化合物信息进行交叉验证
-            - **使用Structure Validator工具验证材料结构的真实性**
-            - 中间体检测：通过原位表征技术检测反应中间体，验证反应路径
-            - 动力学同位素效应：通过动力学同位素效应实验验证反应机理
-
-        并提供性能预测和基于工具数据的验证结果。
-        
-        工具数据要求（必须包含）：
-        - Materials Project数据：包含材料的带隙、密度、形成能等关键属性，必须提供具体的查询结果和材料ID
-        - PubChem数据：包含有机污染物的分子结构、键合性质等信息，必须提供具体的化合物CID和属性数据
-        - material_search_tool数据：包含相似材料的性能对比数据，必须提供具体的搜索结果和对比分析
-        - structure_validator_tool数据：包含材料结构验证结果，必须提供具体的验证结果和材料化学式
-        - 所有工具数据必须在报告中明确引用，并说明如何支持机理分析结论
-        - 每个工具的查询结果都需要以JSON格式展示关键数据
-        - 每个分析维度都必须有相应的工具数据支持
-        """
-        
-        # 创建新的任务实例而不是调用父类方法
+        # 创建任务实例 / Create task instance
         from crewai import Task
         task = Task(
             agent=agent,
@@ -254,7 +47,7 @@ Tool Data Requirements (mandatory):
             description=description
         )
         
-        # 如果有上下文任务，添加依赖关系
+        # 如果有上下文任务，添加依赖关系 / Add context dependency
         if context_task:
             if isinstance(context_task, list):
                 task.context = context_task

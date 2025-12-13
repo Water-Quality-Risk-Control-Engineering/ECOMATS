@@ -147,6 +147,9 @@ class EvaluationTask(BaseTask):
         
         # 如果有上下文任务，添加依赖关系
         if context_task:
-            task.context = [context_task]
+            if isinstance(context_task, list):
+                task.context = context_task
+            else:
+                task.context = [context_task]
             
         return task

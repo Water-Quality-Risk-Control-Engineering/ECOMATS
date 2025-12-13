@@ -9,6 +9,7 @@ import os
 import json
 import asyncio
 import logging
+from datetime import datetime
 from dotenv import load_dotenv
 
 # 关键:在导入CrewAI之前设置环境变量!
@@ -111,27 +112,59 @@ def create_dashscope_embedder():
     return DashScopeEmbeddingFunction  # 返回类而不是实例!
 
 
+def get_ui_text(key):
+    """获取UI文本 / Get UI text"""
+    try:
+        from src.locales.texts import TEXTS
+        lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+        return TEXTS.get(lang, TEXTS['zh'])['ui'].get(key, key)
+    except Exception:
+        return key
+
+
 def get_user_input():
-    """获取用户材料设计需求"""
+    """获取用户材料设计需求 / Get user material design requirements"""
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    
     print("\n" + "="*70)
-    print("ECOMATS - 水处理材料设计多智能体系统 (异步增强版)")
-    print("="*70)
-    print("\n请输入您的材料设计需求:")
-    print("例如: 设计一种用于处理含重金属镉废水的高效催化剂")
-    user_input = input("\n材料设计需求: ")
+    if lang == 'en':
+        print("ECOMATS - Multi-Agent System for Water Treatment Material Design (Async)")
+        print("="*70)
+        print("\nPlease enter your material design requirements:")
+        print("Example: Design an efficient catalyst for treating wastewater containing heavy metal cadmium")
+        user_input = input("\nMaterial design requirement: ")
+    else:
+        print("ECOMATS - 水处理材料设计多智能体系统 (异步增强版)")
+        print("="*70)
+        print("\n请输入您的材料设计需求:")
+        print("例如: 设计一种用于处理含重金属镉废水的高效催化剂")
+        user_input = input("\n材料设计需求: ")
     return user_input
 
 
 def get_workflow_mode():
-    """获取工作模式"""
-    print("\n请选择工作模式:")
-    print("1. 预设工作流 (同步)")
-    print("2. 预设工作流 (异步) ⚡ 推荐!")
-    print("3. 智能体自主调度 (同步)")
-    print("4. 智能体自主调度 (异步) ⚡ 推荐!")
+    """获取工作模式 / Get workflow mode"""
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    
+    if lang == 'en':
+        print("\nPlease select workflow mode:")
+        print("1. Preset Workflow (Sync)")
+        print("2. Preset Workflow (Async) ⚡ Recommended!")
+        print("3. Autonomous Agent Scheduling (Sync)")
+        print("4. Autonomous Agent Scheduling (Async) ⚡ Recommended!")
+        prompt = "\nEnter option (1-4): "
+        invalid_msg = "Invalid option, please enter 1-4"
+    else:
+        print("\n请选择工作模式:")
+        print("1. 预设工作流 (同步)")
+        print("2. 预设工作流 (异步) ⚡ 推荐!")
+        print("3. 智能体自主调度 (同步)")
+        print("4. 智能体自主调度 (异步) ⚡ 推荐!")
+        prompt = "\n请输入选项 (1-4): "
+        invalid_msg = "无效选项,请输入1-4"
     
     while True:
-        choice = input("\n请输入选项 (1-4): ").strip()
+        choice = input(prompt).strip()
         if choice in ["1", "2", "3", "4"]:
             return {
                 "1": ("preset", False),
@@ -139,7 +172,7 @@ def get_workflow_mode():
                 "3": ("autonomous", False),
                 "4": ("autonomous", True)
             }[choice]
-        print("无效选项,请输入1-4")
+        print(invalid_msg)
 
 
 def create_all_agents(llm):
@@ -273,15 +306,28 @@ async def run_preset_workflow_async(user_requirement, llm):
         }
     )
     
-    print("⚡ 使用异步执行模式...")
-    print("  - 3个评估任务将并行执行")
-    print("  - 机制分析和合成方法将并行执行")
-    print("  - 预计性能提升2-3倍")
-    print("\n🧠 记忆系统已启用 (使用DashScope text-embedding-v2)")
-    print("  - 短期记忆: 存储当前对话上下文")
-    print("  - 长期记忆: 学习历史任务经验")
-    print("  - 实体记忆: 提取关键实体信息")
-    print("  - 存储位置: ./.crewai/memory/\n")
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    
+    if lang == 'en':
+        print("⚡ Using async execution mode...")
+        print("  - 3 evaluation tasks will run in parallel")
+        print("  - Mechanism analysis and synthesis will run in parallel")
+        print("  - Expected 2-3x performance improvement")
+        print("\n🧠 Memory system enabled (using DashScope text-embedding-v2)")
+        print("  - Short-term memory: Store current conversation context")
+        print("  - Long-term memory: Learn from historical tasks")
+        print("  - Entity memory: Extract key entity information")
+        print("  - Storage location: ./.crewai/memory/\n")
+    else:
+        print("⚡ 使用异步执行模式...")
+        print("  - 3个评估任务将并行执行")
+        print("  - 机制分析和合成方法将并行执行")
+        print("  - 预计性能提升2-3倍")
+        print("\n🧠 记忆系统已启用 (使用DashScope text-embedding-v2)")
+        print("  - 短期记忆: 存储当前对话上下文")
+        print("  - 长期记忆: 学习历史任务经验")
+        print("  - 实体记忆: 提取关键实体信息")
+        print("  - 存储位置: ./.crewai/memory/\n")
     
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})
@@ -335,13 +381,57 @@ async def main_async():
         from main import run_autonomous_workflow
         result = run_autonomous_workflow(user_requirement, llm)
     
-    # 输出结果
+    # 输出结果 / Output result
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     print("\n" + "="*70)
-    print("执行完成!")
+    if lang == 'en':
+        print("Execution Complete!")
+    else:
+        print("执行完成!")
     print("="*70)
     print(result)
     
+    # 保存结果到outputs目录
+    save_result(result, user_requirement, mode, use_async)
+    
     return result
+
+
+def save_result(result, user_requirement, mode, use_async):
+    """保存执行结果到outputs目录 / Save execution result to outputs directory"""
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    
+    # 确保outputs目录存在 / Ensure outputs directory exists
+    outputs_dir = os.path.join(project_root, 'outputs')
+    os.makedirs(outputs_dir, exist_ok=True)
+    
+    # 生成文件名 / Generate filename
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    mode_str = f"{mode}_{'async' if use_async else 'sync'}"
+    filename = f"workflow_result_{timestamp}_{mode_str}.txt"
+    filepath = os.path.join(outputs_dir, filename)
+    
+    # 写入结果 / Write result
+    with open(filepath, 'w', encoding='utf-8') as f:
+        if lang == 'en':
+            f.write(f"ECOMATS Execution Result\n")
+            f.write(f"{'='*70}\n")
+            f.write(f"Execution Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Execution Mode: {mode_str}\n")
+            f.write(f"User Requirement: {user_requirement}\n")
+        else:
+            f.write(f"ECOMATS 执行结果\n")
+            f.write(f"{'='*70}\n")
+            f.write(f"执行时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"执行模式: {mode_str}\n")
+            f.write(f"用户需求: {user_requirement}\n")
+        f.write(f"{'='*70}\n\n")
+        f.write(str(result))
+    
+    if lang == 'en':
+        print(f"\n📁 Result saved to: {filepath}")
+    else:
+        print(f"\n📁 结果已保存到: {filepath}")
 
 
 if __name__ == "__main__":

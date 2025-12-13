@@ -55,6 +55,10 @@ class Config:
     HIGH_CONSISTENCY_THRESHOLD = float(os.getenv("HIGH_CONSISTENCY_THRESHOLD", "1.0"))
     MEDIUM_CONSISTENCY_THRESHOLD = float(os.getenv("MEDIUM_CONSISTENCY_THRESHOLD", "2.0"))
     
+    # 语言配置 / Language configuration
+    # 可选值: "zh" (中文), "en" (English)
+    LANGUAGE = os.getenv("LANGUAGE", "zh")
+    
     # 其他配置 / Other configurations
     VERBOSE = os.getenv("VERBOSE", "True").lower() == "true"
     

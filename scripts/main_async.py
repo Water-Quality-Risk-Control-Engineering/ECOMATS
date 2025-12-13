@@ -239,8 +239,8 @@ async def run_preset_workflow_async(user_requirement, llm):
         embedder={
             "provider": "openai",
             "config": {
-                "model": "text-embedding-v3",  # DashScope模型
-                "dimensions": 1024  # v3支持自定义维度
+                "model": "text-embedding-v2",  # DashScope支持的模型名称
+                # v2: 维度固定1536, v3/v4支持自定义dimensions参数
             }
         }
     )

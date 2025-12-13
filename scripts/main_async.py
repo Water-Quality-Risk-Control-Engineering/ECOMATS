@@ -226,6 +226,252 @@ def create_all_agents(llm):
     }
 
 
+async def run_autonomous_workflow_async(user_requirement, llm):
+    """异步自主调度工作流 - 基于 TOA 意图驱动架构
+    Async autonomous workflow - based on TOA intent-driven architecture
+    """
+    from src.agents.task_organizing_agent import TaskOrganizingAgent
+    from src.agents.task_allocator import TaskAllocator
+    from src.tasks.design_task import DesignTask
+    from src.tasks.evaluation_task import EvaluationTask
+    from src.tasks.final_validation_task import FinalValidationTask
+    from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
+    from src.tasks.synthesis_method_task import SynthesisMethodTask
+    from src.tasks.operation_suggesting_task import OperationSuggestingTask
+    from crewai import Task
+    
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    
+    if lang == 'en':
+        print("\n🚀 Starting async autonomous scheduling workflow...")
+    else:
+        print("\n🚀 启动异步自主调度工作流...")
+    print("-" * 70)
+    
+    agents = create_all_agents(llm)
+    
+    # 创建 TOA 实例 / Create TOA instance
+    coordinator = TaskOrganizingAgent(llm)
+    coordinator_agent = coordinator.create_agent()
+    
+    # 创建任务分配器 / Create task allocator
+    task_allocator = TaskAllocator(llm)
+    task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
+    task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
+    task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
+    task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
+    task_allocator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
+    task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
+    task_allocator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
+    
+    # ============================================================
+    # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
+    # ============================================================
+    if lang == 'en':
+        print("\n🧠 TOA analyzing user intent...")
+    else:
+        print("\n🧠 TOA 正在分析用户意图...")
+    
+    intent = coordinator.analyze_user_intent(user_requirement)
+    
+    if lang == 'en':
+        print(f"✅ Intent analysis complete: {intent['reasoning']}")
+        print(f"\n📊 Intent Details:")
+        print(f"   • Needs Design: {intent.get('needs_design', False)}")
+        print(f"   • Needs Evaluation: {intent.get('needs_evaluation', False)}")
+        print(f"   • Evaluation Mode: {intent.get('evaluation_mode', None)}")
+        print(f"   • Needs Mechanism: {intent.get('needs_mechanism', False)}")
+        print(f"   • Needs Synthesis: {intent.get('needs_synthesis', False)}")
+        print(f"   • Needs Operation: {intent.get('needs_operation', False)}")
+    else:
+        print(f"✅ 意图分析完成: {intent['reasoning']}")
+        print(f"\n📊 意图详情:")
+        print(f"   • 需要设计: {intent.get('needs_design', False)}")
+        print(f"   • 需要评估: {intent.get('needs_evaluation', False)}")
+        print(f"   • 评估模式: {intent.get('evaluation_mode', None)}")
+        print(f"   • 需要机理分析: {intent.get('needs_mechanism', False)}")
+        print(f"   • 需要合成方法: {intent.get('needs_synthesis', False)}")
+        print(f"   • 需要操作指导: {intent.get('needs_operation', False)}")
+    
+    # 初始化任务和智能体列表 / Initialize task and agent lists
+    required_tasks = []
+    required_agents = []
+    seen_roles = set()
+    design_task = None
+    final_validation_task = None
+    
+    # Step 1: 处理材料设计 / Handle Material Design
+    if intent.get('needs_design', False):
+        if lang == 'en':
+            print("\n🛠️ Creating material design task...")
+        else:
+            print("\n🛠️ 创建材料设计任务...")
+        design_agent = task_allocator.get_agent_for_task("material_design")
+        if design_agent and design_agent.role not in seen_roles:
+            required_agents.append(design_agent)
+            seen_roles.add(design_agent.role)
+        design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
+        required_tasks.append(design_task)
+    elif intent.get('needs_evaluation', False) or intent.get('needs_mechanism', False) or intent.get('needs_synthesis', False) or intent.get('needs_operation', False):
+        # 创建虚拟上下文任务 / Create virtual context task
+        material_info = intent.get('material_provided') or user_requirement
+        if lang == 'en':
+            print(f"\n📝 Using user-provided material: {material_info[:50]}...")
+        else:
+            print(f"\n📝 使用用户提供的材料: {material_info[:50]}...")
+        design_task = Task(
+            description=f"Existing material provided by user:\n{user_requirement}",
+            expected_output="Material information for downstream tasks",
+            agent=coordinator_agent
+        )
+    
+    # Step 2: 处理评估任务 / Handle Evaluation Tasks
+    if intent.get('needs_evaluation', False):
+        evaluation_mode = intent.get('evaluation_mode', 'with_summary')
+        evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
+        evaluation_tasks = []
+        
+        for agent in evaluation_agents:
+            if agent.role not in seen_roles:
+                required_agents.append(agent)
+                seen_roles.add(agent.role)
+            task = EvaluationTask(llm).create_task(agent, design_task, user_requirement)
+            task.async_execution = True  # 启用异步并行! / Enable async parallel!
+            evaluation_tasks.append(task)
+        
+        required_tasks.extend(evaluation_tasks)
+        
+        if evaluation_mode == 'experts_only':
+            if lang == 'en':
+                print(f"\n✅ Experts-only mode: 3 ASA experts, no final summary")
+            else:
+                print(f"\n✅ 仅评估模式：三个 ASA 专家评分，不进行最终总结")
+        else:
+            if lang == 'en':
+                print(f"\n📊 Full evaluation mode: 3 ASA experts + final summary")
+            else:
+                print(f"\n📊 完整评估模式：三个 ASA 专家评分 + 最终总结")
+            
+            final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+            if final_validation_agent and final_validation_agent.role not in seen_roles:
+                required_agents.append(final_validation_agent)
+                seen_roles.add(final_validation_agent.role)
+            final_validation_task = FinalValidationTask(llm).create_task(
+                final_validation_agent,
+                [design_task] + evaluation_tasks if design_task else evaluation_tasks,
+                user_requirement=user_requirement
+            )
+            required_tasks.append(final_validation_task)
+    
+    # Step 3: 处理机理分析任务 / Handle Mechanism Analysis Task
+    if intent.get('needs_mechanism', False):
+        if lang == 'en':
+            print(f"\n🔬 Creating mechanism analysis task...")
+        else:
+            print(f"\n🔬 创建机理分析任务...")
+        mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+        if mechanism_agent and mechanism_agent.role not in seen_roles:
+            required_agents.append(mechanism_agent)
+            seen_roles.add(mechanism_agent.role)
+        context_task = final_validation_task or design_task
+        mechanism_task = MechanismAnalysisTask(llm).create_task(
+            mechanism_agent, context_task, user_requirement=user_requirement
+        )
+        mechanism_task.async_execution = True  # 启用异步! / Enable async!
+        required_tasks.append(mechanism_task)
+    
+    # Step 4: 处理合成方法任务 / Handle Synthesis Method Task
+    if intent.get('needs_synthesis', False):
+        if lang == 'en':
+            print(f"\n🧪 Creating synthesis method task...")
+        else:
+            print(f"\n🧪 创建合成方法任务...")
+        synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
+        if synthesis_agent and synthesis_agent.role not in seen_roles:
+            required_agents.append(synthesis_agent)
+            seen_roles.add(synthesis_agent.role)
+        context_task = final_validation_task or design_task
+        synthesis_task = SynthesisMethodTask(llm).create_task(
+            synthesis_agent, context_task, user_requirement=user_requirement
+        )
+        synthesis_task.async_execution = True  # 启用异步! / Enable async!
+        required_tasks.append(synthesis_task)
+    
+    # Step 5: 处理操作指导任务 / Handle Operation Guidance Task
+    if intent.get('needs_operation', False):
+        if lang == 'en':
+            print(f"\n📖 Creating operation guidance task...")
+        else:
+            print(f"\n📖 创建操作指导任务...")
+        operation_agent = task_allocator.get_agent_for_task("operation_suggestion")
+        if operation_agent and operation_agent.role not in seen_roles:
+            required_agents.append(operation_agent)
+            seen_roles.add(operation_agent.role)
+        context_task = final_validation_task or design_task
+        operation_task = OperationSuggestingTask(llm).create_task(
+            operation_agent, context_task, user_requirement=user_requirement
+        )
+        required_tasks.append(operation_task)
+    
+    # 检查是否有任务 / Check if there are any tasks
+    if not required_tasks:
+        if lang == 'en':
+            print("\n⚠️ No tasks identified, defaulting to material design")
+        else:
+            print("\n⚠️ 未识别出任何任务，默认执行材料设计")
+        design_agent = task_allocator.get_agent_for_task("material_design")
+        if design_agent and design_agent.role not in seen_roles:
+            required_agents.append(design_agent)
+            seen_roles.add(design_agent.role)
+        design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
+        required_tasks.append(design_task)
+    
+    # 打印任务摘要 / Print task summary
+    print(f"\n{'='*60}")
+    if lang == 'en':
+        print(f"📝 Task Summary")
+        print(f"{'='*60}")
+        print(f"   Total tasks: {len(required_tasks)}")
+        print(f"   Total agents: {len(required_agents)}")
+    else:
+        print(f"📝 任务摘要")
+        print(f"{'='*60}")
+        print(f"   总任务数: {len(required_tasks)}")
+        print(f"   总智能体数: {len(required_agents)}")
+    for i, task in enumerate(required_tasks, 1):
+        agent_role = getattr(task.agent, 'role', 'Unknown') if task.agent else 'None'
+        async_flag = "⚡" if getattr(task, 'async_execution', False) else ""
+        print(f"   {i}. {agent_role} {async_flag}")
+    print(f"{'='*60}\n")
+    
+    # 创建 Crew 并异步执行 / Create Crew and execute async
+    DashScopeEmbedder = create_dashscope_embedder()
+    
+    crew = Crew(
+        agents=required_agents,
+        tasks=required_tasks,
+        process=Process.sequential,
+        verbose=True,
+        memory=True,
+        embedder={
+            "provider": "custom",
+            "config": {
+                "embedding_callable": DashScopeEmbedder
+            }
+        }
+    )
+    
+    if lang == 'en':
+        print("⚡ Using async execution mode...")
+    else:
+        print("⚡ 使用异步执行模式...")
+    
+    # 异步执行 Crew! / Execute Crew async!
+    result = await crew.akickoff(inputs={'requirement': user_requirement})
+    
+    return result
+
+
 async def run_preset_workflow_async(user_requirement, llm):
     """异步预设工作流 - 使用CrewAI 1.7.0异步功能"""
     print("\n🚀 启动异步预设工作流...")
@@ -405,10 +651,14 @@ async def main_async():
             # 同步预设工作流
             result = run_preset_workflow_sync(user_requirement, llm)
     else:
-        # 自主调度模式(暂时使用同步)
-        print("\n⚠️ 自主调度模式暂时使用同步执行")
-        from main import run_autonomous_workflow
-        result = run_autonomous_workflow(user_requirement, llm)
+        # 自主调度模式 / Autonomous scheduling mode
+        if use_async:
+            # 异步自主调度 / Async autonomous
+            result = await run_autonomous_workflow_async(user_requirement, llm)
+        else:
+            # 同步自主调度 / Sync autonomous
+            from main import run_autonomous_workflow
+            result = run_autonomous_workflow(user_requirement, llm)
     
     # 输出结果 / Output result
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'

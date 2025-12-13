@@ -46,14 +46,14 @@ class AssessmentScreeningAgentC(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 在 DashScope 兼容端点默认禁用工具调用；否则启用评估工具集
+        # 使用环境友好性评估专用工具集 (Expert C: 环境影响和安全性)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_material_assessment_tools()
+                agent.tools = ToolFactory.create_environmental_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_material_assessment_tools()
+            agent.tools = ToolFactory.create_environmental_assessment_tools()
         
         return agent

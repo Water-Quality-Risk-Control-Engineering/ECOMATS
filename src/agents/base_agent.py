@@ -6,6 +6,25 @@ from src.utils.prompt_loader import load_prompt
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# Memory优先使用指导 / Memory-first usage guidance
+MEMORY_GUIDANCE_ZH = """
+
+## 工具使用优化策略 ##
+1. **Memory优先**: 在调用外部工具前，先检查是否已有相关信息在上下文或记忆中
+2. **避免重复查询**: 如果某材料/化学品信息已被之前的任务查询过，直接复用结果
+3. **最小化工具调用**: 只查询必要的信息，避免过度使用工具
+4. **结果复用**: 将查询结果整理后传递给下游任务，供其复用
+"""
+
+MEMORY_GUIDANCE_EN = """
+
+## Tool Usage Optimization Strategy ##
+1. **Memory First**: Check context or memory for existing information before calling external tools
+2. **Avoid Duplicate Queries**: Reuse results if material/chemical info was queried by previous tasks
+3. **Minimize Tool Calls**: Only query necessary information, avoid overusing tools
+4. **Result Reuse**: Pass organized query results to downstream tasks for reuse
+"""
+
 
 class BaseAgent:
     """基础智能体类，提供通用的智能体创建功能 / Base agent class that provides general agent creation functionality"""
@@ -33,10 +52,21 @@ class BaseAgent:
         except Exception as e:
             logger.debug(f"Failed to create custom LLM with temperature {self.temperature}: {e}")
 
+        # 加载提示词并添加Memory优先指导 / Load prompt and add Memory-first guidance
+        backstory = load_prompt(self.prompt_file)
+        try:
+            from src.config.config import Config
+            if Config.LANGUAGE == 'en':
+                backstory += MEMORY_GUIDANCE_EN
+            else:
+                backstory += MEMORY_GUIDANCE_ZH
+        except Exception:
+            backstory += MEMORY_GUIDANCE_ZH
+
         return Agent(
             role=self.role,
             goal=self.goal,
-            backstory=load_prompt(self.prompt_file),
+            backstory=backstory,
             verbose=False,
             allow_delegation=False,
             llm=agent_llm

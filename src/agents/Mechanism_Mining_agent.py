@@ -33,13 +33,13 @@ class MechanismMiningAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 在 DashScope 兼容端点默认禁用工具调用；否则启用全工具集
+        # 使用机理分析专用工具集，聚焦于材料结构和化学性质
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_all_tools()
+                agent.tools = ToolFactory.create_mechanism_analysis_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_all_tools()
+            agent.tools = ToolFactory.create_mechanism_analysis_tools()
         return agent

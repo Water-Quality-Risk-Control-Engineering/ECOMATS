@@ -52,15 +52,15 @@ class AssessmentScreeningAgentA(BaseAgent):
             # 保持self.llm不变
         
         agent = super().create_agent()
-        # 在 DashScope 兼容端点默认禁用工具调用；否则启用评估工具集
+        # 使用催化性能评估专用工具集 (Expert A: 催化性能和结构合理性)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_material_assessment_tools()
+                agent.tools = ToolFactory.create_catalytic_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            # 如果工具启用检测失败，回退到启用评估工具集
-            agent.tools = ToolFactory.create_material_assessment_tools()
+            # 如果工具启用检测失败，回退到启用催化评估工具集
+            agent.tools = ToolFactory.create_catalytic_assessment_tools()
         
         return agent

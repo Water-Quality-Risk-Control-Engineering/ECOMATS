@@ -161,6 +161,75 @@ class ToolFactory:
         return tools
     
     @staticmethod
+    def create_mechanism_analysis_tools():
+        """
+        创建机理分析专用工具实例
+        用于 MechanismMiningAgent，聚焦于材料结构和化学性质查询
+        
+        Returns:
+            list: 机理分析工具实例的列表
+        """
+        tools = [
+            materials_project_tool,         # 查询材料结构和电子结构
+            pubchem_tool,                   # 查询化学品反应活性
+            CrewAIName2PropertiesTool(),    # 查询化学品性质
+            CrewAIFormula2PropertiesTool(), # 通过分子式查询性质
+            CrewAIStructureValidatorTool()  # 验证材料结构
+        ]
+        return tools
+    
+    @staticmethod
+    def create_catalytic_assessment_tools():
+        """
+        创建催化性能评估专用工具实例 (Expert A)
+        聚焦于材料结构、电子结构和催化活性
+        
+        Returns:
+            list: 催化性能评估工具实例的列表
+        """
+        tools = [
+            materials_project_tool,          # 材料结构和电子结构
+            CrewAIMaterialIdentifierTool(),  # 材料识别
+            CrewAIStructureValidatorTool(),  # 结构验证
+            CrewAIDataValidatorTool()        # 数据验证
+        ]
+        return tools
+    
+    @staticmethod
+    def create_economic_assessment_tools():
+        """
+        创建经济可行性评估专用工具实例 (Expert B)
+        聚焦于材料成本、商业可获得性和合成可行性
+        
+        Returns:
+            list: 经济可行性评估工具实例的列表
+        """
+        tools = [
+            pubchem_tool,                    # 查询化学品信息
+            CrewAIMaterialIdentifierTool(),  # 材料识别
+            molport_availability_tool,       # 商业可获得性和价格
+            CrewAIDataValidatorTool()        # 数据验证
+        ]
+        return tools
+    
+    @staticmethod
+    def create_environmental_assessment_tools():
+        """
+        创建环境友好性评估专用工具实例 (Expert C)
+        聚焦于环境影响、毒性和安全性
+        
+        Returns:
+            list: 环境友好性评估工具实例的列表
+        """
+        tools = [
+            pubchem_tool,                    # 查询化学品毒性和安全信息
+            CrewAIPNECTool(),                # 环境影响评估 (PNEC)
+            CrewAIStructureValidatorTool(),  # 结构验证
+            CrewAIDataValidatorTool()        # 数据验证
+        ]
+        return tools
+    
+    @staticmethod
     def create_materials_project_tool():
         """创建Materials Project工具实例"""
         return materials_project_tool

@@ -219,12 +219,8 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (配置DashScope Embedding用于记忆系统)
-    from crewai.memory.storage.rag_storage import RAGStorage
-    
-    # 创建自定义Embedding函数
-    embedder = create_dashscope_embedder()
-    
+    # 创建Crew (暂时禁用记忆系统,等待CrewAI更好的自定义Embedding支持)
+    # TODO: 未来版本启用DashScope Embedding
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -236,25 +232,14 @@ async def run_preset_workflow_async(user_requirement, llm):
         ],
         process=Process.sequential,
         verbose=True,
-        memory=True,  # 启用记忆
-        embedder={
-            "provider": "custom",
-            "config": {
-                "model": "dashscope-text-embedding-v2",
-                "embedding_callable": embedder  # 修正: embedding_callable而非embedding_function
-            }
-        }
+        memory=False  # 暂时禁用记忆系统
     )
     
     print("⚡ 使用异步执行模式...")
     print("  - 3个评估任务将并行执行")
     print("  - 机制分析和合成方法将并行执行")
     print("  - 预计性能提升2-3倍")
-    print("\n🧠 记忆系统已启用 (使用DashScope Embedding)")
-    print("  - 短期记忆: 存储当前对话上下文")
-    print("  - 长期记忆: 学习历史任务经验")
-    print("  - 实体记忆: 提取关键实体信息")
-    print("  - 存储位置: ./.crewai/memory/\n")
+    print("\n⚠️  记忆系统暂时禁用 (等待CrewAI更好的自定义Embedding支持)\n")
     
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})

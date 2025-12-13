@@ -40,14 +40,25 @@ from src.utils.llm_config import create_llm
 
 
 def create_dashscope_embedder():
-    """创建DashScope Embedding类 - 用于CrewAI记忆系统"""
-    # 导入ChromaDB的EmbeddingFunction基类 (不是CrewAI的!)
-    from chromadb.api.types import EmbeddingFunction
+    """创建DashScope Embedding类 - 用于CrewAI记忆系统
+    
+    关键点:
+    1. 必须同时继承ChromaDB和CrewAI的EmbeddingFunction
+    2. 返回类型必须是list[np.ndarray]
+    """
+    # 导入两个基类
+    from chromadb.api.types import EmbeddingFunction as ChromaEmbeddingFunction
+    from crewai.rag.embeddings.providers.custom.embedding_callable import CustomEmbeddingFunction
+    from crewai.rag.core.types import Documents, Embeddings
     from openai import OpenAI
+    import numpy as np
     import os
     
-    class DashScopeEmbeddingFunction(EmbeddingFunction):
-        """使用OpenAI SDK调用DashScope Embedding API"""
+    class DashScopeEmbeddingFunction(CustomEmbeddingFunction, ChromaEmbeddingFunction):
+        """使用OpenAI SDK调用DashScope Embedding API
+        
+        同时继承ChromaDB和CrewAI的基类以满足Pydantic验证
+        """
         
         def __init__(self):
             self.client = OpenAI(
@@ -56,28 +67,31 @@ def create_dashscope_embedder():
             )
             self.model = "text-embedding-v2"
             
-        def __call__(self, input):
+        def __call__(self, input: Documents) -> Embeddings:
             """
             将文本转换为嵌入向量
             
             Args:
-                input: 字符串列表
+                input: 字符串列表 (Documents = list[str])
                 
             Returns:
-                List[List[float]]: 嵌入向量列表
+                Embeddings: numpy数组列表 (list[np.ndarray])
             """
             try:
                 response = self.client.embeddings.create(
                     model=self.model,
                     input=input
                 )
-                # 返回嵌入向量
-                embeddings = [item.embedding for item in response.data]
+                # 关键: 返回numpy数组列表!
+                embeddings = [
+                    np.array(item.embedding, dtype=np.float32) 
+                    for item in response.data
+                ]
                 return embeddings
             except Exception as e:
                 print(f"⚠️ DashScope Embedding错误: {e}")
                 # 返回空向量作为默认值(维度1536,与v2一致)
-                return [[0.0] * 1536 for _ in range(len(input))]
+                return [np.zeros(1536, dtype=np.float32) for _ in range(len(input))]
     
     return DashScopeEmbeddingFunction  # 返回类而不是实例!
 

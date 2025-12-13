@@ -220,7 +220,10 @@ async def run_preset_workflow_async(user_requirement, llm):
     )
     
     # 创建Crew (使用OpenAI兼容的DashScope Embedding)
-    # DashScope完全兼容OpenAI Embedding API!
+    # 设置环境变量让openai provider使用DashScope
+    os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY')
+    os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+    
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -237,8 +240,6 @@ async def run_preset_workflow_async(user_requirement, llm):
             "provider": "openai",
             "config": {
                 "model": "text-embedding-v3",  # DashScope模型
-                "api_key": os.getenv('QWEN_API_KEY'),
-                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
                 "dimensions": 1024  # v3支持自定义维度
             }
         }

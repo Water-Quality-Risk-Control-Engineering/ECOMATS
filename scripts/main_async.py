@@ -16,6 +16,27 @@ load_dotenv()  # 先加载.env
 os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY') or 'dummy'
 os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 
+# Monkey patch: 修复CrewAI异步memory的bug
+# CrewAI 1.7.0的memory在异步模式下会调用asearch(),但ChromaDB客户端是同步的
+# 这个patch让异步搜索fallback到同步搜索
+import crewai.memory.storage.rag_storage as rag_storage_module
+original_RAGStorage = rag_storage_module.RAGStorage
+
+class PatchedRAGStorage(original_RAGStorage):
+    """修复异步搜索的RAGStorage"""
+    async def asearch(self, query: str, limit: int = 5, filter = None, score_threshold: float = 0.6):
+        """异步搜索fallback到同步搜索"""
+        try:
+            # 尝试异步搜索
+            return await super().asearch(query, limit, filter, score_threshold)
+        except TypeError as e:
+            if "AsyncClientAPI" in str(e):
+                # Fallback到同步搜索
+                return self.search(query, limit, filter, score_threshold)
+            raise
+
+rag_storage_module.RAGStorage = PatchedRAGStorage
+
 from crewai import Crew, Process
 
 # 配置日志,抑制EAS相关的ERROR提示

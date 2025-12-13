@@ -41,18 +41,12 @@ from src.utils.llm_config import create_llm
 
 def create_dashscope_embedder():
     """创建DashScope Embedding类 - 用于CrewAI记忆系统"""
-    try:
-        from chromadb.api.types import EmbeddingFunction
-    except ImportError:
-        # 如果chromadb不可用,创建一个基础类
-        class EmbeddingFunction:
-            def __call__(self, input):
-                pass
-    
+    # 导入CrewAI的CustomEmbeddingFunction基类
+    from crewai.rag.embeddings.providers.custom.embedding_callable import CustomEmbeddingFunction
     from openai import OpenAI
     import os
     
-    class DashScopeEmbeddingFunction(EmbeddingFunction):
+    class DashScopeEmbeddingFunction(CustomEmbeddingFunction):
         """使用OpenAI SDK调用DashScope Embedding API"""
         
         def __init__(self):
@@ -82,7 +76,7 @@ def create_dashscope_embedder():
                 return embeddings
             except Exception as e:
                 print(f"⚠️ DashScope Embedding错误: {e}")
-                # 返回空向量作为默认值（维度1536，与v2一致）
+                # 返回空向量作为默认值(维度1536,与v2一致)
                 return [[0.0] * 1536 for _ in range(len(input))]
     
     return DashScopeEmbeddingFunction  # 返回类而不是实例!

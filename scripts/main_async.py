@@ -18,22 +18,16 @@ os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/
 
 # Monkey patch: 修复CrewAI异步memory的bug
 # CrewAI 1.7.0的memory在异步模式下会调用asearch(),但ChromaDB客户端是同步的
-# 这个patch让异步搜索fallback到同步搜索
+# 这个patch直接使用同步搜索,避免异步错误
 import crewai.memory.storage.rag_storage as rag_storage_module
 original_RAGStorage = rag_storage_module.RAGStorage
 
 class PatchedRAGStorage(original_RAGStorage):
-    """修复异步搜索的RAGStorage"""
+    """修复异步搜索的RAGStorage - 直接使用同步方法"""
     async def asearch(self, query: str, limit: int = 5, filter = None, score_threshold: float = 0.6):
-        """异步搜索fallback到同步搜索"""
-        try:
-            # 尝试异步搜索
-            return await super().asearch(query, limit, filter, score_threshold)
-        except TypeError as e:
-            if "AsyncClientAPI" in str(e):
-                # Fallback到同步搜索
-                return self.search(query, limit, filter, score_threshold)
-            raise
+        """异步搜索直接使用同步search()"""
+        # 直接调用同步方法,跳过异步调用
+        return self.search(query, limit, filter, score_threshold)
 
 rag_storage_module.RAGStorage = PatchedRAGStorage
 

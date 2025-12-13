@@ -2,38 +2,42 @@
 
 **配置时间**: 2025-12-13  
 **CrewAI版本**: 1.7.0  
-**状态**: ⚠️ 暂时禁用 (等待CrewAI官方支持)
+**状态**: ✅ 已启用 (使用DashScope text-embedding-v3)
 
 ---
 
-## ⚠️ 重要更新
+## ✅ 成功配置 - OpenAI兼容模式
 
-**当前状态**: 记忆系统已**暂时禁用**
+**关键发现**: DashScope完全兼容OpenAI Embedding API规范!
 
-**原因**: CrewAI 1.7.0不支持`custom` provider的embedder配置
+### 配置方案
 
-**错误信息**:
+```python
+crew = Crew(
+    agents=[...],
+    tasks=[...],
+    memory=True,
+    embedder={
+        "provider": "openai",  # 使用openai provider!
+        "config": {
+            "model": "text-embedding-v3",  # DashScope模型
+            "api_key": os.getenv('QWEN_API_KEY'),
+            "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "dimensions": 1024  # v3支持自定义维度
+        }
+    }
+)
 ```
-ValidationError: 21 validation errors for Crew
-embedder.CustomProviderSpec.config.embedding_callable
-  Input should be a subclass of EmbeddingFunction
-```
 
-**尝试的方案**:
-1. ✗ 使用 `provider: "custom"` + `embedding_callable` - 不被支持
-2. ✗ 使用 `provider: "custom"` + `embedding_function` - 参数名错误
-3. ✓ **暂时禁用记忆系统** - 现行方案
+### 为什么可以工作?
 
-**影响**:
-- ✗ 无法使用短期/长期/实体记忆
-- ✓ 核心功能（异步执行/工具调用）正常
-- ✓ Agent协作正常
-- ✓ 任务执行正常
+1. **DashScope官方支持**: 阿里云百炼的Embedding模型完全兼容OpenAI接口规范
+2. **只需3个参数**: `base_url` + `api_key` + `model`
+3. **CrewAI原生openai provider**: 无需自定义类
 
-**未来计划**:
-1. 等待CrewAI官方支持自定义Embedding
-2. 研究OpenAI兼容接口方案
-3. 或使用HuggingFace provider
+### 参考文档
+
+- [阿里云: 使用OpenAI兼容模式调用百炼Embedding模型](https://help.aliyun.com/zh/model-studio/embedding-interfaces-compatible-with-openai)
 
 ---
 

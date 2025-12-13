@@ -1,6 +1,7 @@
 import logging
 import json
 import re
+from typing import List, Union, Dict, Any
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
 from src.agents.base_agent import BaseAgent
@@ -11,15 +12,31 @@ logger = logging.getLogger(__name__)
 
 # 任务组织代理类 / Task organizing agent class
 class TaskOrganizingAgent(BaseAgent):
-    """任务组织代理智能体 / Task organizing agent"""
+    """任务组织代理智能体 - 负责意图识别和智能体调度
+    Task organizing agent - responsible for intent recognition and agent scheduling
+    """
+    
+    # 任务类型到智能体的映射 / Task type to agent mapping
+    TASK_AGENT_MAPPING = {
+        "material_design": "CreativeDesigningAgent",
+        "evaluation": "AssessmentScreeningAgent",
+        "final_validation": "AssessmentScreeningAgentOverall",
+        "mechanism_analysis": "MechanismMiningAgent",
+        "synthesis_method": "SynthesisGuidingAgent",
+        "operation_suggestion": "OperationSuggestingAgent",
+        "literature_processing": "ExtractingAgent",
+        "coordinator": "TaskOrganizingAgent"
+    }
     
     def __init__(self, llm):
         super().__init__(
             llm=llm,
-            role="Task_Organizing_agent",  # 任务组织代理 / Task organizing agent
-            goal="组织和协调各个专家智能体的工作，确保任务按计划完成",  # 组织和协调各个专家智能体的工作，确保任务按计划完成 / Organize and coordinate the work of various expert agents to ensure tasks are completed according to plan
+            role="Task_Organizing_agent",
+            goal="组织和协调各个专家智能体的工作，确保任务按计划完成",
             prompt_file="coordinator_prompt.md"
         )
+        # 智能体注册表 / Agent registry
+        self._agent_registry: Dict[str, Union[Agent, List[Agent]]] = {}
     
     def create_agent(self):
         return Agent(
@@ -31,32 +48,85 @@ class TaskOrganizingAgent(BaseAgent):
             llm=self.llm
         )
     
-    def delegate_task(self, task_type, task_allocator, task_description):
+    # ============================================================
+    # 智能体注册表功能 / Agent Registry Functions
+    # ============================================================
+    
+    def register_agent(self, agent_type: str, agent: Union[Agent, List[Agent]]):
         """
-        根据任务类型委派任务给合适的智能体
+        注册智能体到注册表 / Register agent to registry
         
         Args:
-            task_type: 任务类型
-            task_allocator: 任务分配器实例
-            task_description: 任务描述
+            agent_type: 智能体类型名称 / Agent type name
+            agent: 智能体实例或智能体列表 / Agent instance or list of agents
+        """
+        self._agent_registry[agent_type] = agent
+        logger.debug(f"Registered agent: {agent_type}")
+    
+    def register_agents(self, agents_dict: Dict[str, Any]):
+        """
+        批量注册智能体 / Batch register agents
+        
+        Args:
+            agents_dict: 智能体字典，格式为 {type: agent} / Agent dict in format {type: agent}
+        """
+        for agent_type, agent in agents_dict.items():
+            self.register_agent(agent_type, agent)
+    
+    def get_agent_for_task(self, task_type: str) -> Union[Agent, None]:
+        """
+        根据任务类型获取对应的智能体 / Get agent for task type
+        
+        Args:
+            task_type: 任务类型 / Task type
             
         Returns:
-            合适的智能体实例
+            智能体实例或 None / Agent instance or None
         """
-        # 获取适合任务类型的智能体
-        agent = task_allocator.get_agent_for_task(task_type)
-        if agent:
-            logger.info(f"委派任务类型 '{task_type}' 给智能体: {agent.role}")
-            return agent
-        else:
-            logger.warning(f"未找到适合任务类型 '{task_type}' 的智能体")
-            # 如果没有找到合适的智能体，则返回第一个可用的智能体
-            all_agents = []
-            for agents in task_allocator.available_agents.values():
-                all_agents.extend(agents)
-            if all_agents:
-                return all_agents[0]
+        # 查找任务类型对应的智能体类型 / Find agent type for task type
+        agent_type = self.TASK_AGENT_MAPPING.get(task_type)
+        if not agent_type:
+            logger.warning(f"No agent mapping for task type: {task_type}")
             return None
+        
+        # 从注册表获取智能体 / Get agent from registry
+        agent = self._agent_registry.get(agent_type)
+        if agent is None:
+            logger.warning(f"Agent type '{agent_type}' not registered")
+            return None
+        
+        # 如果是列表，返回第一个 / If list, return first one
+        if isinstance(agent, list):
+            return agent[0] if agent else None
+        return agent
+    
+    def get_all_agents_for_task(self, task_type: str) -> List[Agent]:
+        """
+        获取任务类型对应的所有智能体 / Get all agents for task type
+        
+        Args:
+            task_type: 任务类型 / Task type
+            
+        Returns:
+            智能体列表 / List of agents
+        """
+        agent_type = self.TASK_AGENT_MAPPING.get(task_type)
+        if not agent_type:
+            logger.warning(f"No agent mapping for task type: {task_type}")
+            return []
+        
+        agent = self._agent_registry.get(agent_type)
+        if agent is None:
+            logger.warning(f"Agent type '{agent_type}' not registered")
+            return []
+        
+        if isinstance(agent, list):
+            return agent
+        return [agent]
+    
+    # ============================================================
+    # 意图识别功能 / Intent Recognition Functions
+    # ============================================================
     
     def analyze_user_intent(self, user_requirement: str) -> dict:
         """
@@ -172,37 +242,26 @@ class TaskOrganizingAgent(BaseAgent):
         
         return result
     
-    def delegate_tasks_dynamically(self, task_allocator, task_description):
+    # ============================================================
+    # 任务委派功能 / Task Delegation Functions
+    # ============================================================
+    
+    def delegate_task(self, task_type: str, task_description: str = None) -> Union[Agent, None]:
         """
-        根据任务描述动态委派任务给合适的智能体，并建立上下文传递链
+        根据任务类型委派任务给合适的智能体
+        Delegate task to appropriate agent based on task type
         
         Args:
-            task_allocator: 任务分配器实例
-            task_description: 任务描述
+            task_type: 任务类型 / Task type
+            task_description: 任务描述（可选）/ Task description (optional)
             
         Returns:
-            需要参与任务的智能体列表及其依赖关系
+            合适的智能体实例 / Appropriate agent instance
         """
-        required_task_types = task_allocator.determine_required_task_types(task_description)
-        
-        required_agents = []
-        design_result = None  # 存储设计阶段的结果
-        
-        for task_type in required_task_types:
-            agent = task_allocator.get_agent_for_task(task_type)
-            if not agent:
-                continue
-                
-            # 特殊处理评估任务，注入设计结果作为上下文
-            if task_type in ["evaluation", "final_validation"] and design_result:
-                # 修改代理的backstory或goal，注入设计结果
-                agent.backstory += f"\n\n## 上游设计结果 ##\n{design_result}"
-            
-            required_agents.append((task_type, agent))
-            
-            # 如果是设计任务，保存其预期输出供后续使用
-            if task_type == "material_design":
-                # 这里可以设置一个回调或监听器来捕获实际输出
-                pass
-                
-        return required_agents
+        agent = self.get_agent_for_task(task_type)
+        if agent:
+            logger.info(f"委派任务类型 '{task_type}' 给智能体: {agent.role}")
+            return agent
+        else:
+            logger.warning(f"未找到适合任务类型 '{task_type}' 的智能体")
+            return None

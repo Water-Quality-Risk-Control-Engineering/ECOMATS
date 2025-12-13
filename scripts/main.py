@@ -337,7 +337,6 @@ def run_autonomous_workflow(user_requirement, llm):
     sys.path.insert(0, os.path.abspath(project_root))
     from src.config.config import Config
     from src.agents.task_organizing_agent import TaskOrganizingAgent
-    from src.agents.task_allocator import TaskAllocator
     from src.tasks.design_task import DesignTask
     from src.tasks.evaluation_task import EvaluationTask
     from src.tasks.final_validation_task import FinalValidationTask
@@ -352,16 +351,15 @@ def run_autonomous_workflow(user_requirement, llm):
     coordinator = TaskOrganizingAgent(llm)
     coordinator_agent = coordinator.create_agent()
     
-    # 创建任务分配器并注册所有智能体 / Create task allocator and register all agents
-    task_allocator = TaskAllocator(llm)
-    task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
-    task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
-    task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
-    task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
-    task_allocator.register_agent("ExtractingAgent", agents['literature_processor'])
-    task_allocator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
-    task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
-    task_allocator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
+    # 注册所有智能体到 TOA / Register all agents to TOA
+    coordinator.register_agent("TaskOrganizingAgent", coordinator_agent)
+    coordinator.register_agent("CreativeDesigningAgent", agents['material_designer'])
+    coordinator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
+    coordinator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
+    coordinator.register_agent("ExtractingAgent", agents['literature_processor'])
+    coordinator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
+    coordinator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
+    coordinator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
     
     # ============================================================
     # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
@@ -392,7 +390,7 @@ def run_autonomous_workflow(user_requirement, llm):
     # ============================================================
     if intent.get('needs_design', False):
         print("\n🛠️ 创建材料设计任务 / Creating material design task...")
-        design_agent = task_allocator.get_agent_for_task("material_design")
+        design_agent = coordinator.get_agent_for_task("material_design")
         if design_agent and design_agent.role not in seen_roles:
             required_agents.append(design_agent)
             seen_roles.add(design_agent.role)
@@ -427,7 +425,7 @@ def run_autonomous_workflow(user_requirement, llm):
         evaluation_mode = intent.get('evaluation_mode', 'with_summary')
         
         # 获取评估智能体 / Get evaluation agents
-        evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
+        evaluation_agents = coordinator.get_all_agents_for_task("evaluation")
         evaluation_tasks = []
         
         for agent in evaluation_agents:
@@ -448,7 +446,7 @@ def run_autonomous_workflow(user_requirement, llm):
             print(f"\n📊 完整评估模式：三个 ASA 专家评分 + 最终总结")
             print(f"   Full evaluation mode: 3 ASA experts + final summary")
             
-            final_validation_agent = task_allocator.get_agent_for_task("final_validation")
+            final_validation_agent = coordinator.get_agent_for_task("final_validation")
             if final_validation_agent and final_validation_agent.role not in seen_roles:
                 required_agents.append(final_validation_agent)
                 seen_roles.add(final_validation_agent.role)
@@ -465,7 +463,7 @@ def run_autonomous_workflow(user_requirement, llm):
     # ============================================================
     if intent.get('needs_mechanism', False):
         print(f"\n🔬 创建机理分析任务 / Creating mechanism analysis task...")
-        mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
+        mechanism_agent = coordinator.get_agent_for_task("mechanism_analysis")
         if mechanism_agent and mechanism_agent.role not in seen_roles:
             required_agents.append(mechanism_agent)
             seen_roles.add(mechanism_agent.role)
@@ -481,7 +479,7 @@ def run_autonomous_workflow(user_requirement, llm):
     # ============================================================
     if intent.get('needs_synthesis', False):
         print(f"\n🧪 创建合成方法任务 / Creating synthesis method task...")
-        synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
+        synthesis_agent = coordinator.get_agent_for_task("synthesis_method")
         if synthesis_agent and synthesis_agent.role not in seen_roles:
             required_agents.append(synthesis_agent)
             seen_roles.add(synthesis_agent.role)
@@ -497,7 +495,7 @@ def run_autonomous_workflow(user_requirement, llm):
     # ============================================================
     if intent.get('needs_operation', False):
         print(f"\n📖 创建操作指导任务 / Creating operation guidance task...")
-        operation_agent = task_allocator.get_agent_for_task("operation_suggestion")
+        operation_agent = coordinator.get_agent_for_task("operation_suggestion")
         if operation_agent and operation_agent.role not in seen_roles:
             required_agents.append(operation_agent)
             seen_roles.add(operation_agent.role)
@@ -513,7 +511,7 @@ def run_autonomous_workflow(user_requirement, llm):
     # ============================================================
     if not required_tasks:
         print("\n⚠️ 未识别出任何任务，默认执行材料设计 / No tasks identified, defaulting to material design")
-        design_agent = task_allocator.get_agent_for_task("material_design")
+        design_agent = coordinator.get_agent_for_task("material_design")
         if design_agent and design_agent.role not in seen_roles:
             required_agents.append(design_agent)
             seen_roles.add(design_agent.role)

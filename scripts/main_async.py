@@ -244,7 +244,7 @@ async def run_preset_workflow_async(user_requirement, llm):
         embedder={
             "provider": "custom",  # 使用自定义provider!
             "config": {
-                "embedder": embedder_function  # 传入自定义embedder实例
+                "embedding_callable": embedder_function  # 注意参数名是embedding_callable
             }
         }
     )

@@ -418,9 +418,9 @@ async def main_async():
     else:
         print("执行完成!")
     print("="*70)
-    print(result)
     
-    # 保存结果到outputs目录
+    # 保存结果到outputs目录（不在终端打印完整结果）
+    # Save result to outputs directory (without printing full result to terminal)
     save_result(result, user_requirement, mode, use_async)
     
     return result

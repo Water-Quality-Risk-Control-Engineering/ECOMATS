@@ -72,21 +72,17 @@ description: |
   - If tool calls fail, clearly state the failure reason and impact on suggestions
 
 expected_output: |
-  Provide a complete operational suggestions plan, organized as follows:
+  Provide a concise operational suggestions summary (avoid overly detailed JSON format):
   
-  1. Laboratory Pilot Operation Suggestions
-  1.1 Experimental Safety Assessment (equipment hazards, material toxicity, environmental hazards)
-  1.2 Experimental Parameter Determination (reactor volume, active substance dosage, pH, temperature, stirring environment, catalyst application method, etc.)
-  1.3 Pollutant Detection Plan (detection method recommendations, degradation experiment time estimation)
-  
-  2. Pilot-Scale Operation Suggestions
-  2.1 Application Economic Analysis (material cost, reaction economics, energy consumption assessment)
-  2.2 Environmental Impact Assessment and Reduction Suggestions
-  2.3 Matrix Effect Considerations
+  1. Safety Notes (briefly describe main risks and protective measures)
+  2. Key Experimental Parameters (reactor, dosage, pH, temperature, and other core parameters)
+  3. Detection Method Recommendations (briefly describe recommended methods and expected time)
+  4. Economic Assessment (cost estimation and feasibility conclusion)
+  5. Environmental Impact & Suggestions (briefly describe impact and key mitigation measures)
   
   Requirements:
-  - Use tools to verify all chemical information
-  - Provide specific data support and parameter ranges
-  - Give clear operational guidance and precautions
+  - Use concise text format, avoid lengthy JSON structures
+  - Keep each section under 100 words
+  - Highlight key information, omit secondary details
 
 user_requirement_prefix: "\n\nUser Specific Requirement: "

@@ -2,7 +2,38 @@
 
 **配置时间**: 2025-12-13  
 **CrewAI版本**: 1.7.0  
-**Embedding**: DashScope Text Embedding v2
+**状态**: ⚠️ 暂时禁用 (等待CrewAI官方支持)
+
+---
+
+## ⚠️ 重要更新
+
+**当前状态**: 记忆系统已**暂时禁用**
+
+**原因**: CrewAI 1.7.0不支持`custom` provider的embedder配置
+
+**错误信息**:
+```
+ValidationError: 21 validation errors for Crew
+embedder.CustomProviderSpec.config.embedding_callable
+  Input should be a subclass of EmbeddingFunction
+```
+
+**尝试的方案**:
+1. ✗ 使用 `provider: "custom"` + `embedding_callable` - 不被支持
+2. ✗ 使用 `provider: "custom"` + `embedding_function` - 参数名错误
+3. ✓ **暂时禁用记忆系统** - 现行方案
+
+**影响**:
+- ✗ 无法使用短期/长期/实体记忆
+- ✓ 核心功能（异步执行/工具调用）正常
+- ✓ Agent协作正常
+- ✓ 任务执行正常
+
+**未来计划**:
+1. 等待CrewAI官方支持自定义Embedding
+2. 研究OpenAI兼容接口方案
+3. 或使用HuggingFace provider
 
 ---
 

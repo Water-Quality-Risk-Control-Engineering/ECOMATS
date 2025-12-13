@@ -219,8 +219,8 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (暂时禁用记忆系统,等待CrewAI更好的自定义Embedding支持)
-    # TODO: 未来版本启用DashScope Embedding
+    # 创建Crew (使用OpenAI兼容的DashScope Embedding)
+    # DashScope完全兼容OpenAI Embedding API!
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -232,14 +232,27 @@ async def run_preset_workflow_async(user_requirement, llm):
         ],
         process=Process.sequential,
         verbose=True,
-        memory=False  # 暂时禁用记忆系统
+        memory=True,  # 启用记忆系统
+        embedder={
+            "provider": "openai",
+            "config": {
+                "model": "text-embedding-v3",  # DashScope模型
+                "api_key": os.getenv('QWEN_API_KEY'),
+                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                "dimensions": 1024  # v3支持自定义维度
+            }
+        }
     )
     
     print("⚡ 使用异步执行模式...")
     print("  - 3个评估任务将并行执行")
     print("  - 机制分析和合成方法将并行执行")
     print("  - 预计性能提升2-3倍")
-    print("\n⚠️  记忆系统暂时禁用 (等待CrewAI更好的自定义Embedding支持)\n")
+    print("\n🧠 记忆系统已启用 (使用DashScope text-embedding-v3)")
+    print("  - 短期记忆: 存储当前对话上下文")
+    print("  - 长期记忆: 学习历史任务经验")
+    print("  - 实体记忆: 提取关键实体信息")
+    print("  - 存储位置: ./.crewai/memory/\n")
     
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})

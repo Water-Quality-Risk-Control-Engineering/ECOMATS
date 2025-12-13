@@ -21,11 +21,17 @@ class BaseAgent:
         agent_llm = self.llm
         try:
             from src.config.config import Config
-            if self.temperature is not None and Config.EAS_ENDPOINT and Config.EAS_TOKEN and Config.EAS_MODEL_NAME:
-                from src.utils.llm_config import create_eas_llm
-                agent_llm = create_eas_llm(temperature=self.temperature)
-        except Exception:
-            pass
+            # 优先使用EAS模式 / Prefer EAS mode
+            if Config.EAS_ENDPOINT and Config.EAS_TOKEN and Config.EAS_MODEL_NAME:
+                if self.temperature is not None:
+                    from src.utils.llm_config import create_eas_llm
+                    agent_llm = create_eas_llm(temperature=self.temperature)
+            # 标准模式：如果指定了温度，创建独立的LLM实例 / Standard mode: create independent LLM if temperature specified
+            elif self.temperature is not None:
+                from src.utils.llm_config import create_llm
+                agent_llm = create_llm(temperature=self.temperature)
+        except Exception as e:
+            logger.debug(f"Failed to create custom LLM with temperature {self.temperature}: {e}")
 
         return Agent(
             role=self.role,

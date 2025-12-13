@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
 任务分配示例脚本
-展示如何使用任务分配器进行智能体的自主选择
+展示如何使用 TOA 进行意图识别和智能体调度
+
+Task allocation example script
+Demonstrates how to use TOA for intent recognition and agent scheduling
 """
 
 import sys
 import os
 
-# 添加项目根目录到Python路径，使src模块可以被正确导入
+# 添加项目根目录到Python路径
 project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, os.path.abspath(project_root))
 
@@ -29,7 +32,6 @@ def _imports():
     from src.agents.Mechanism_Mining_agent import MechanismMiningAgent
     from src.agents.Synthesis_Guiding_agent import SynthesisGuidingAgent
     from src.agents.Operation_Suggesting_agent import OperationSuggestingAgent
-    from src.agents.task_allocator import TaskAllocator
     return {
         'create_llm': create_llm,
         'create_eas_llm': create_eas_llm,
@@ -45,7 +47,6 @@ def _imports():
         'MechanismMiningAgent': MechanismMiningAgent,
         'SynthesisGuidingAgent': SynthesisGuidingAgent,
         'OperationSuggestingAgent': OperationSuggestingAgent,
-        'TaskAllocator': TaskAllocator,
     }
 
 # 任务导入
@@ -97,54 +98,72 @@ def main():
         # 如果EAS配置失败，回退到默认配置（CrewAI原生LLM）
         llm = _i['create_llm']()
     
-    print("基于CrewAI的ecomats多智能体系统任务分配示例")
+    print("基于CrewAI的ecomats多智能体系统 TOA 意图驱动示例")
     print("=" * 50)
     
     # 创建所有智能体
     agents = create_all_agents(llm)
     
-    # 创建任务组织代理实例
+    # 创建 TOA 并注册所有智能体 / Create TOA and register all agents
     coordinator = _i['TaskOrganizingAgent'](llm)
     coordinator_agent = coordinator.create_agent()
     
-    # 创建任务分配器并注册所有智能体
-    task_allocator = _i['TaskAllocator']()
-    task_allocator.register_agent("TaskOrganizingAgent", coordinator_agent)
-    task_allocator.register_agent("CreativeDesigningAgent", agents['material_designer'])
-    task_allocator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
-    task_allocator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
-    task_allocator.register_agent("ExtractingAgent", agents['literature_processor'])
-    task_allocator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
-    task_allocator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
-    task_allocator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
+    coordinator.register_agent("TaskOrganizingAgent", coordinator_agent)
+    coordinator.register_agent("CreativeDesigningAgent", agents['material_designer'])
+    coordinator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
+    coordinator.register_agent("AssessmentScreeningAgentOverall", agents['final_validator'])
+    coordinator.register_agent("ExtractingAgent", agents['literature_processor'])
+    coordinator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
+    coordinator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
+    coordinator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
     
-    # 任务组织代理根据任务需求自主委派任务
-    print("\n任务委派示例:")
+    # 示例 1: 意图识别 / Example 1: Intent Recognition
+    print("\n🧠 意图识别示例:")
     print("-" * 30)
     
-    # 委派材料设计任务
-    design_agent = coordinator.delegate_task("material_design", task_allocator, "设计一种新型催化剂")
-    print(f"材料设计任务委派给: {design_agent.role}")
+    test_queries = [
+        "Design a catalyst for PMS activation and evaluate it",
+        "Please evaluate CuNi-C2N2 only",
+        "Explain the mechanism of TiO2 photocatalysis"
+    ]
     
-    # 委派评估任务
-    evaluation_agents = task_allocator.get_all_agents_for_task("evaluation")
-    print(f"评估任务委派给: {[agent.role for agent in evaluation_agents]}")
+    for query in test_queries:
+        intent = coordinator.analyze_user_intent(query)
+        print(f"\n问句: {query[:40]}...")
+        print(f"  → needs_design: {intent.get('needs_design')}")
+        print(f"  → needs_evaluation: {intent.get('needs_evaluation')}")
+        print(f"  → evaluation_mode: {intent.get('evaluation_mode')}")
+        print(f"  → needs_mechanism: {intent.get('needs_mechanism')}")
     
-    # 委派最终验证任务
-    final_validation_agent = task_allocator.get_agent_for_task("final_validation")
-    print(f"最终验证任务委派给: {final_validation_agent.role}")
+    # 示例 2: 智能体获取 / Example 2: Agent Retrieval
+    print("\n👥 智能体获取示例:")
+    print("-" * 30)
     
-    # 委派机理分析任务
-    mechanism_agent = task_allocator.get_agent_for_task("mechanism_analysis")
-    print(f"机理分析任务委派给: {mechanism_agent.role}")
+    # 获取设计智能体
+    design_agent = coordinator.get_agent_for_task("material_design")
+    print(f"材料设计智能体: {design_agent.role}")
     
-    # 委派合成方法任务
-    synthesis_agent = task_allocator.get_agent_for_task("synthesis_method")
-    print(f"合成方法任务委派给: {synthesis_agent.role}")
+    # 获取评估智能体
+    evaluation_agents = coordinator.get_all_agents_for_task("evaluation")
+    print(f"评估智能体: {[agent.role for agent in evaluation_agents]}")
     
-    # 委派操作建议任务
-    operation_suggesting_agent = task_allocator.get_agent_for_task("operation_suggestion")
-    print(f"操作建议任务委派给: {operation_suggesting_agent.role}")
+    # 获取最终验证智能体
+    final_validation_agent = coordinator.get_agent_for_task("final_validation")
+    print(f"最终验证智能体: {final_validation_agent.role}")
+    
+    # 获取机理分析智能体
+    mechanism_agent = coordinator.get_agent_for_task("mechanism_analysis")
+    print(f"机理分析智能体: {mechanism_agent.role}")
+    
+    # 获取合成方法智能体
+    synthesis_agent = coordinator.get_agent_for_task("synthesis_method")
+    print(f"合成方法智能体: {synthesis_agent.role}")
+    
+    # 获取操作建议智能体
+    operation_agent = coordinator.get_agent_for_task("operation_suggestion")
+    print(f"操作建议智能体: {operation_agent.role}")
+    
+    print("\n✅ 示例完成!")
 
 if __name__ == "__main__":
     main()

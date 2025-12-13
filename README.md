@@ -52,7 +52,7 @@ ECOMATS/
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
 │   │   ├── task_organizing_agent.py
-│   │   └── task_allocator.py         # Enhanced task allocation with evaluation-only mode
+│   │   └── task_organizing_agent.py   # Task organizing agent with intent recognition & agent registry
 │   ├── config/                # Configuration files
 │   │   └── config.py
 │   ├── prompts/               # Prompt files

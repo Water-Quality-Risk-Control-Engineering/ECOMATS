@@ -13,8 +13,8 @@ The ECOMATS system adopts a **TOA (Task Organizing Agent)-driven intent recognit
 ### Before (Old) / 之前（旧）
 
 ```
-用户输入 → TaskAllocator.determine_required_task_types() 
-          ↓ (70+ 硬编码关键词匹配)
+用户输入 → 硬编码关键词匹配
+          ↓ (70+ 硬编码关键词)
           ↓
          任务类型列表 → main.py 创建任务
 ```

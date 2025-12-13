@@ -51,8 +51,7 @@ ECOMATS/
 │   │   ├── Operation_Suggesting_agent.py
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
-│   │   ├── task_organizing_agent.py
-│   │   └── task_allocator.py         # 增强的任务分配器，支持仅评估模式
+│   │   └── task_organizing_agent.py   # 任务协调器，支持意图识别和智能体调度
 │   ├── config/                # 配置文件
 │   │   └── config.py
 │   ├── prompts/               # Prompt文件

@@ -219,10 +219,11 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (使用OpenAI兼容的DashScope Embedding)
-    # 设置环境变量让openai provider使用DashScope
+    # 创建Crew (通过环境变量强制使用DashScope Embedding)
+    # 设置所有OpenAI相关环境变量指向DashScope
     os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY')
     os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+    os.environ['OPENAI_EMBEDDING_MODEL'] = 'text-embedding-v2'  # 关键:指定embedding模型
     
     crew = Crew(
         agents=list(agents.values()),
@@ -239,8 +240,7 @@ async def run_preset_workflow_async(user_requirement, llm):
         embedder={
             "provider": "openai",
             "config": {
-                "model": "text-embedding-v2",  # DashScope支持的模型名称
-                # v2: 维度固定1536, v3/v4支持自定义dimensions参数
+                "model": "text-embedding-v2"  # DashScope支持的模型
             }
         }
     )
@@ -249,7 +249,7 @@ async def run_preset_workflow_async(user_requirement, llm):
     print("  - 3个评估任务将并行执行")
     print("  - 机制分析和合成方法将并行执行")
     print("  - 预计性能提升2-3倍")
-    print("\n🧠 记忆系统已启用 (使用DashScope text-embedding-v3)")
+    print("\n🧠 记忆系统已启用 (使用DashScope text-embedding-v2)")
     print("  - 短期记忆: 存储当前对话上下文")
     print("  - 长期记忆: 学习历史任务经验")
     print("  - 实体记忆: 提取关键实体信息")

@@ -114,51 +114,62 @@ async def run_preset_workflow_async(user_requirement, llm):
     
     # 2. 三个评估任务(可并行)
     eval_a_task = EvaluationTask(
+        agent=agents['expert_a']
+    ).create_task(
         agent=agents['expert_a'],
-        context=[design_task],
-        evaluator_type="A"
-    ).create_task()
+        context_task=design_task
+    )
     eval_a_task.async_execution = True  # 启用异步!
     
     eval_b_task = EvaluationTask(
+        agent=agents['expert_b']
+    ).create_task(
         agent=agents['expert_b'],
-        context=[design_task],
-        evaluator_type="B"
-    ).create_task()
+        context_task=design_task
+    )
     eval_b_task.async_execution = True  # 启用异步!
     
     eval_c_task = EvaluationTask(
+        agent=agents['expert_c']
+    ).create_task(
         agent=agents['expert_c'],
-        context=[design_task],
-        evaluator_type="C"
-    ).create_task()
+        context_task=design_task
+    )
     eval_c_task.async_execution = True  # 启用异步!
     
     # 3. 最终验证
     final_validation_task = FinalValidationTask(
+        agent=agents['final_validator']
+    ).create_task(
         agent=agents['final_validator'],
-        context=[eval_a_task, eval_b_task, eval_c_task]
-    ).create_task()
+        context_task=[eval_a_task, eval_b_task, eval_c_task]
+    )
     
     # 4. 机制分析(可与合成并行)
     mechanism_task = MechanismAnalysisTask(
+        agent=agents['mechanism_expert']
+    ).create_task(
         agent=agents['mechanism_expert'],
-        context=[final_validation_task]
-    ).create_task()
+        context_task=final_validation_task
+    )
     mechanism_task.async_execution = True  # 启用异步!
     
     # 5. 合成方法
     synthesis_task = SynthesisMethodTask(
+        agent=agents['synthesis_expert']
+    ).create_task(
         agent=agents['synthesis_expert'],
-        context=[final_validation_task]
-    ).create_task()
+        context_task=final_validation_task
+    )
     synthesis_task.async_execution = True  # 启用异步!
     
     # 6. 操作建议
     operation_task = OperationSuggestingTask(
+        agent=agents['operation_suggesting']
+    ).create_task(
         agent=agents['operation_suggesting'],
-        context=[mechanism_task, synthesis_task]
-    ).create_task()
+        context_task=[mechanism_task, synthesis_task]
+    )
     
     # 创建Crew
     crew = Crew(

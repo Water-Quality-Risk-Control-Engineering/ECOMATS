@@ -1,4 +1,6 @@
 import logging
+import json
+import re
 from crewai import Agent
 from src.utils.prompt_loader import load_prompt
 from src.agents.base_agent import BaseAgent
@@ -55,6 +57,120 @@ class TaskOrganizingAgent(BaseAgent):
             if all_agents:
                 return all_agents[0]
             return None
+    
+    def analyze_user_intent(self, user_requirement: str) -> dict:
+        """
+        使用 LLM 分析用户意图，确定需要执行的任务
+        Use LLM to analyze user intent and determine tasks to execute
+        
+        Args:
+            user_requirement: 用户需求描述 / User requirement description
+            
+        Returns:
+            意图分析结果 (dict) / Intent analysis result
+            {
+                "needs_design": bool,
+                "needs_evaluation": bool,
+                "evaluation_mode": "experts_only" | "with_summary" | null,
+                "needs_mechanism": bool,
+                "needs_synthesis": bool,
+                "needs_operation": bool,
+                "material_provided": str | null,
+                "reasoning": str
+            }
+        """
+        try:
+            # 加载意图识别 Prompt
+            intent_prompt = load_prompt("intent_recognition_prompt.md")
+            
+            # 构建完整的 Prompt
+            full_prompt = f"{intent_prompt}\n\nUser requirement:\n{user_requirement}"
+            
+            # 调用 LLM 分析意图
+            response = self.llm.call([{"role": "user", "content": full_prompt}])
+            response_text = response.strip()
+            
+            # 移除可能的 Markdown 代码块标记
+            response_text = re.sub(r'^```json\s*', '', response_text)
+            response_text = re.sub(r'\s*```$', '', response_text)
+            response_text = response_text.strip()
+            
+            # 解析 JSON
+            intent = json.loads(response_text)
+            
+            logger.info(f"TOA Intent Analysis: {intent['reasoning']}")
+            return intent
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse intent JSON: {e}")
+            logger.error(f"Response text: {response_text}")
+            # 回退到默认意图
+            return {
+                "needs_design": True,
+                "needs_evaluation": True,
+                "evaluation_mode": "with_summary",
+                "needs_mechanism": False,
+                "needs_synthesis": False,
+                "needs_operation": False,
+                "material_provided": None,
+                "reasoning": "Fallback to default due to JSON parse error"
+            }
+        except Exception as e:
+            logger.error(f"Intent analysis failed: {e}")
+            # 回退到默认意图
+            return {
+                "needs_design": True,
+                "needs_evaluation": True,
+                "evaluation_mode": "with_summary",
+                "needs_mechanism": False,
+                "needs_synthesis": False,
+                "needs_operation": False,
+                "material_provided": None,
+                "reasoning": "Fallback to default due to error"
+            }
+    
+    def intent_to_task_types(self, intent: dict) -> list:
+        """
+        将意图分析结果转换为任务类型列表
+        Convert intent analysis result to task type list
+        
+        Args:
+            intent: 意图分析结果 / Intent analysis result
+            
+        Returns:
+            任务类型列表 / Task type list
+        """
+        result = []
+        
+        # 材料设计
+        if intent.get("needs_design", False):
+            result.append("material_design")
+        
+        # 评估任务
+        if intent.get("needs_evaluation", False):
+            evaluation_mode = intent.get("evaluation_mode", "with_summary")
+            if evaluation_mode == "experts_only":
+                result.append("evaluation_only")
+            else:
+                result.extend(["evaluation", "final_validation"])
+        
+        # 机理分析
+        if intent.get("needs_mechanism", False):
+            result.append("mechanism_analysis")
+        
+        # 合成方法
+        if intent.get("needs_synthesis", False):
+            result.append("synthesis_method")
+        
+        # 操作指导
+        if intent.get("needs_operation", False):
+            result.append("operation_suggestion")
+        
+        # 如果没有任何任务，默认返回材料设计
+        if not result:
+            result.append("material_design")
+        
+        return result
     
     def delegate_tasks_dynamically(self, task_allocator, task_description):
         """

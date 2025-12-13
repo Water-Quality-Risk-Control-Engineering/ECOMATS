@@ -241,7 +241,7 @@ async def run_preset_workflow_async(user_requirement, llm):
             "provider": "custom",
             "config": {
                 "model": "dashscope-text-embedding-v2",
-                "embedding_function": embedder
+                "embedding_callable": embedder  # 修正: embedding_callable而非embedding_function
             }
         }
     )

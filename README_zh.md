@@ -2,31 +2,45 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](#)
-[![CrewAI](https://img.shields.io/badge/CrewAI-Powered-green)](#)
+[![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
+[![Async](https://img.shields.io/badge/Async-Enabled-orange)](#)
 
-这是一个基于CrewAI框架构建的多智能体系统，专门用于水处理材料的设计、评估和优化。该系统集成了Materials Project和PubChem等化学数据库工具，能够基于真实材料数据实现智能化材料设计。
+这是一个基于 **CrewAI 1.7.0** 框架构建的高性能多智能体系统，支持**异步执行**，专门用于水处理材料的设计、评估和优化。该系统集成了Materials Project和PubChem等化学数据库工具，能够基于真实材料数据实现智能化材料设计。
+
+**⚡ 性能**: 通过异步执行和并行任务处理，速度提升高达 **7.5 倍**。
 
 ## 项目特性
 
-- 基于CrewAI框架构建的多智能体协作系统
+### 🚀 性能与架构
+- **CrewAI 1.7.0** 完整异步支持（性能提升 2-10 倍）
+- **并行任务执行** - 3 位评估专家并行运行（快 2.6 倍）
+- **异步工具** - 非阻塞 API 调用（PubChem、Materials Project）
+- **批量处理** 支持多材料设计
+- 多智能体协作系统，智能任务调度
+- 模块化设计，易于扩展和定制
+
+### 🎯 核心能力
 - 专门针对水处理材料设计进行优化
 - 支持从材料设计到评估优化的完整工作流程
-- 模块化设计，易于扩展和定制
 - 全面评估模式，每个专家评估所有维度
-- 详细的Prompt文件定义专家行为
-- 代理任务分配机制，根据任务类型自动选择合适的代理
-- 支持阿里云EAS自部署模型集成
-- 集成化学数据库工具以验证材料设计
-- 实现三盲评审和一致性分析机制
-- 支持迭代设计优化
-- 集成5个专业AI工具以增强材料属性查询能力
+- 三盲评审和一致性分析机制
+- 迭代设计优化与反馈循环
+- 代理任务分配机制，支持自动模式检测
+
+### 🛠️ 工具与集成
+- 13+ 专业 AI 工具用于材料属性查询
+- 异步 PubChem 和 Materials Project 工具
+- MolPort API 用于商业可用性评估
+- 全面的数据验证和结构校验
+- 支持阿里云 EAS 自部署模型集成
+- 详细的 Prompt 文件定义专家行为
 
 ## 项目结构
 
 ```
 ECOMATS/
 ├── src/                       # 源代码目录
-│   ├── agents/                # 代理实现
+│   ├── agents/                # 代理实现（10个专业代理）
 │   │   ├── Assessment_Screening_agent_A.py
 │   │   ├── Assessment_Screening_agent_B.py
 │   │   ├── Assessment_Screening_agent_C.py
@@ -38,7 +52,7 @@ ECOMATS/
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
 │   │   ├── task_organizing_agent.py
-│   │   └── task_allocator.py
+│   │   └── task_allocator.py         # 增强的任务分配器，支持仅评估模式
 │   ├── config/                # 配置文件
 │   │   └── config.py
 │   ├── prompts/               # Prompt文件
@@ -62,38 +76,67 @@ ECOMATS/
 │   │   └── synthesis_method_task.py
 │   ├── tools/                 # 工具实现
 │   │   ├── __init__.py
-│   │   ├── crewai_cid2properties_tool.py
-│   │   ├── crewai_formula2properties_tool.py
-│   │   ├── crewai_material_search_tool.py
-│   │   ├── crewai_materials_project_tool.py
-│   │   ├── crewai_name2cas_tool.py
-│   │   ├── crewai_name2properties_tool.py
-│   │   ├── crewai_pnec_tool.py
-│   │   ├── crewai_pubchem_tool.py
-│   │   ├── cid2properties_tool.py
-│   │   ├── evaluation_tool.py
-│   │   ├── formula2properties_tool.py
-│   │   ├── material_search_tool.py
-│   │   ├── materials_project_tool.py
-│   │   ├── name2cas_tool.py
-│   │   ├── name2properties_tool.py
-│   │   ├── pnec_tool.py
-│   │   └── pubchem_tool.py
+│   │   ├── factory.py                          # 工具工厂，集中管理
+│   │   ├── async_pubchem_tool.py               # ⚡ 异步 PubChem（快 3 倍）
+│   │   ├── async_materials_project_tool.py     # ⚡ 异步 Materials Project
+│   │   ├── pubchem_tool.py                     # PubChem API 集成
+│   │   ├── materials_project_tool.py           # Materials Project API 集成
+│   │   ├── molport_tool.py                     # MolPort API 商业可用性
+│   │   ├── name2cas_tool.py                    # 名称转 CAS 号
+│   │   ├── cid2properties_tool.py              # CID 转属性查询
+│   │   ├── name2properties_tool.py             # 名称转属性查询
+│   │   ├── formula2properties_tool.py          # 分子式转属性查询
+│   │   ├── material_search_tool.py             # 材料数据库搜索
+│   │   ├── pnec_tool.py                        # PNEC 环境毒性工具
+│   │   ├── material_identifier_tool.py         # 材料类型识别
+│   │   ├── data_validator_tool.py              # 数据验证工具
+│   │   ├── structure_validator_tool.py         # 化学结构验证
+│   │   ├── crewai_materials_project_tool.py    # CrewAI 封装
+│   │   ├── crewai_pubchem_tool.py              # CrewAI 封装
+│   │   ├── crewai_molport_tool.py              # CrewAI 封装（3个工具）
+│   │   ├── crewai_name2cas_tool.py             # CrewAI 封装
+│   │   ├── crewai_cid2properties_tool.py       # CrewAI 封装
+│   │   ├── crewai_name2properties_tool.py      # CrewAI 封装
+│   │   ├── crewai_formula2properties_tool.py   # CrewAI 封装
+│   │   ├── crewai_material_search_tool.py      # CrewAI 封装
+│   │   ├── crewai_pnec_tool.py                 # CrewAI 封装
+│   │   ├── crewai_material_identifier_tool.py  # CrewAI 封装
+│   │   ├── crewai_data_validator_tool.py       # CrewAI 封装
+│   │   └── crewai_structure_validator_tool.py  # CrewAI 封装
 │   └── utils/                 # 工具函数
 │       ├── llm_config.py
-│       └── prompt_loader.py
+│       ├── prompt_loader.py
+│       ├── context_store.py              # 工具缓存的上下文存储
+│       ├── assessment_tool_executor.py   # 评估工具执行逻辑
+│       └── assessment_scoring_logic.py   # 评估评分计算
 ├── scripts/                   # 脚本文件
-│   ├── main.py                # 主程序入口
-│   ├── generate_catalysts.py  # 催化剂生成脚本
-│   ├── generate_catalysts_advanced.py # 高级催化剂生成脚本
-│   ├── run_test.py            # 测试运行脚本
-│   └── test_new_tools.py      # 新工具测试脚本
+│   ├── main.py                # 主程序入口（同步模式）
+│   ├── main_async.py          # ⚡ 异步主程序（推荐，快 2-3 倍）
+│   ├── test_molport_tool.py   # MolPort API 连接测试
+│   └── (其他脚本)
+├── tests/                     # 统一测试目录
+│   ├── integration/           # 集成测试
+│   ├── tools/                 # 工具特定测试
+│   ├── test_crewai_1.7.0.py  # CrewAI 1.7.0 特性测试
+│   ├── test_async_tools.py   # 异步工具性能测试
+│   └── (60+ 测试文件)
+├── examples/                  # 示例文件
+│   ├── async_crew_example.py  # ⚡ 异步 Crew 使用示例
+│   └── task_allocation_example.py
+├── docs/                      # 文档目录
+│   ├── README.md              # 文档索引
+│   ├── CrewAI升级完成报告.md   # ⚡ CrewAI 1.7.0 升级总结
+│   ├── sft/                   # SFT 生成指南
+│   ├── archives/              # 归档文档
+│   │   └── crewai-upgrade/    # CrewAI 升级详情
+│   ├── molport_integration_guide.md
+│   ├── tool_redundancy_analysis.md
+│   └── API_Key配置检查报告.md
 ├── examples/                  # 示例文件
 │   └── task_allocation_example.py
 ├── .env.example               # 环境变量示例
 ├── requirements.txt           # 依赖列表
-├── README.md                  # 项目文档 (英文)
-└── README_zh.md               # 项目文档 (中文)
+└── README.md                  # 项目文档（英文）
 ```
 
 ## 核心代理
@@ -146,8 +189,23 @@ ECOMATS/
 
 2. 在`.env`文件中配置您的API密钥：
    ```env
+   # 必需：Qwen LLM API
    QWEN_API_KEY=您的Qwen API密钥
-   MATERIALS_PROJECT_API_KEY=您的Materials Project API密钥（可选）
+   QWEN_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
+   QWEN_MODEL_NAME=qwen-plus
+   
+   # 必需：Materials Project API
+   MATERIALS_PROJECT_API_KEY=您的Materials Project API密钥
+   
+   # 可选：MolPort API（用于商业可用性查询）
+   MOLPORT_API_KEY=您的MolPort API密钥
+   
+   # 可选：PubChem API（公开API，不需要密钥但建议配置）
+   PUBCHEM_API_KEY=您的PubChem API密钥
+   
+   # 系统配置
+   ENABLE_TOOLS=true
+   VERBOSE=True
    ```
 
 3. （可选）配置阿里云EAS自部署模型：
@@ -161,6 +219,23 @@ ECOMATS/
    ```bash
    pip install -r requirements.txt
    ```
+
+5. 运行系统：
+   
+   **选项 A：异步模式（⚡ 推荐，快 2-3 倍）**
+   ```bash
+   python scripts/main_async.py
+   ```
+   
+   **选项 B：同步模式（原始版，向后兼容）**
+   ```bash
+   python scripts/main.py
+   ```
+   
+   **性能对比**：
+   - 异步模式：完整工作流约 21 秒
+   - 同步模式：完整工作流约 33 秒
+   - 批量设计（10个材料）：43秒 vs 326秒（快 7.5 倍）
 
 ### 升级到 CrewAI 1.2.1 的注意事项（LiteLLM 集成）
 
@@ -200,14 +275,39 @@ llm = create_eas_llm(temperature=0.3)
 
 系统集成了以下数据库查询工具，代理可以根据需要自动调用：
 
-1. **Materials Project Tool** - 访问材料科学数据库，获取材料属性，包括带隙、形成能、晶体结构等 (materials_project_tool.py)
-2. **PubChem Tool** - 查询化学化合物信息，包括CAS号、分子量、SMILES等 (pubchem_tool.py)
-3. **Name2CAS Tool** - 将材料名称转换为CAS号 (name2cas_tool.py)
-4. **Name2Properties Tool** - 根据材料名称查询理化性质 (name2properties_tool.py)
-5. **CID2Properties Tool** - 根据PubChem CID查询性质 (cid2properties_tool.py)
-6. **Formula2Properties Tool** - 根据化学式预测性质 (formula2properties_tool.py)
-7. **MaterialSearch Tool** - 检索相似材料的性能数据 (material_search_tool.py)
-8. **PNEC Tool** - 查询化学物质的预测无效应浓度数据，用于环境风险评估 (pnec_tool.py)
+### 核心数据库工具
+
+1. **Materials Project Tool** - 访问材料科学数据库，获取材料属性，包括带隙、形成能、晶体结构等。已优化字段选择和分块以提高查询性能。(materials_project_tool.py)
+2. **PubChem Tool** - 查询化学化合物信息，包括CAS号、分子量、SMILES、InChI等详细属性。增强了 InChIKey 搜索能力和分子式验证。(pubchem_tool.py)
+3. **MolPort Tool** - 新增！商业可用性评估工具，包含三个专业功能：
+   - **化合物可用性检查器** - 检查化合物是否可商业获取
+   - **化学结构搜索** - 搜索相似化合物（精确、相似度、子结构）
+   - **分子信息加载器** - 获取详细的供应商、价格和库存信息
+
+### 专业查询工具
+
+4. **Name2CAS Tool** - 将材料名称转换为CAS号 (name2cas_tool.py)
+5. **Name2Properties Tool** - 根据材料名称查询理化性质 (name2properties_tool.py)
+6. **CID2Properties Tool** - 根据PubChem CID查询性质 (cid2properties_tool.py)
+7. **Formula2Properties Tool** - 根据化学式预测性质 (formula2properties_tool.py)
+8. **MaterialSearch Tool** - 检索相似材料的性能数据 (material_search_tool.py)
+
+### 验证与分析工具
+
+9. **PNEC Tool** - 查询化学物质的预测无效应浓度数据，用于环境风险评估 (pnec_tool.py)
+10. **Material Identifier Tool** - 识别材料类型（MOF、无机物、有机物等）(material_identifier_tool.py)
+11. **Data Validator Tool** - 验证数据完整性和一致性 (data_validator_tool.py)
+12. **Structure Validator Tool** - 验证化学结构和SMILES格式 (structure_validator_tool.py)
+
+### 工具工厂模式
+
+所有工具通过 **ToolFactory** 类管理，为不同类型的代理提供专业工具集：
+- 材料设计工具
+- 材料评估工具（包含 MolPort 用于经济可行性）
+- 材料搜索工具
+- 操作指导工具
+- 文献提取工具
+- 最终验证工具
 
 ## 迭代设计机制
 
@@ -256,17 +356,67 @@ llm = create_eas_llm(temperature=0.3)
 3. 通过CrewAI的工具机制将新工具集成到代理中
 4. 更新相关代理的prompt文件以指导其使用新工具
 
-### 工具工厂模式
+## 工具工厂模式
 
 系统实现了工具工厂模式来管理和向代理提供工具：
 
 1. **ToolFactory类** - 在`src/tools/factory.py`中集中管理工具
 2. **专用工具集** - 为不同类型的代理预定义工具集：
-   - 材料设计工具
-   - 材料评估工具
-   - 材料搜索工具
+   - 材料设计工具（5个工具）
+   - 材料评估工具（7个工具，包含 MolPort）
+   - 材料搜索工具（4个工具）
+   - 操作指导工具（4个工具）
+   - 文献提取工具（5个工具）
+   - 最终验证工具（1个工具）
 3. **一致的工具接口** - 所有工具都遵循CrewAI的BaseTool接口
 4. **简易的工具管理** - 通过工厂模式简化工具的添加和移除
+5. **上下文缓存** - 集成上下文存储以提高性能
+
+## 最近更新 (2025-12-13)
+
+### 🚀 重大升级：CrewAI 1.7.0
+- ✅ **异步执行** - 完整 async/await 支持，使用 `crew.akickoff()`
+- ✅ **并行任务** - 3 位评估专家并行运行（快 2.6 倍）
+- ✅ **异步工具** - 非阻塞 PubChem 和 Materials Project 工具
+- ✅ **性能提升** - 根据工作负载快 2-10 倍
+- ✅ **向后兼容** - 原始同步模式仍然支持
+
+### 新功能
+- ✅ **异步主程序** - `main_async.py` 支持 4 种执行模式
+- ✅ **批量处理** - 10 个材料 43 秒完成（vs 同步 326 秒）
+- ✅ **MolPort 集成** - 商业可用性评估
+- ✅ **增强测试** - 60+ 测试文件，结构整齐
+- ✅ **整洁架构** - 移除冗余文件，优化结构
+
+### 性能指标
+```
+单个工作流:    33秒 → 21秒  (快 1.57 倍)
+批量 10 设计:   326秒 → 43秒 (快 7.5 倍)
+3 个评估:       12秒 → 4.6秒 (快 2.6 倍)
+5 个 API 查询: 12秒 → 4.2秒 (快 3.0 倍)
+```
+
+### 文档
+- 📚 **[CrewAI 升级报告](docs/CrewAI升级完成报告.md)** - 完整升级指南
+- 📚 **[异步 Crew 示例](examples/async_crew_example.py)** - 学习异步用法
+- 📚 **[文档中心](docs/README.md)** - 所有文档
+- 📚 **[项目状态](docs/项目状态总览.md)** - 当前状态概览
+- 📚 **[MolPort 集成](docs/molport_integration_guide.md)** - MolPort 指南
+
+### 异步模式快速开始
+```bash
+# 运行异步版本（推荐）
+python scripts/main_async.py
+
+# 选择模式:
+# 1. 预设工作流（同步）
+# 2. 预设工作流（异步）⚡ - 快 2 倍
+# 3. 自主模式（同步）
+# 4. 自主模式（异步）⚡ - 推荐
+```
+
+## [英文版本](README.md)
+
 
 ## 许可证
 

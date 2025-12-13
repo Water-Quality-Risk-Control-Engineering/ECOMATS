@@ -16,6 +16,13 @@ crewai-tools==1.7.0
 openai>=1.83.0          # OpenAI SDK (CrewAI dependency)
 dashscope>=1.25.0       # Alibaba Cloud Qwen API
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Vector Database & Memory
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+chromadb>=1.1.0         # Vector database for memory system
+numpy>=2.0.0            # Numerical computing (for embeddings)
+pydantic>=2.0.0         # Data validation
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Async HTTP Client (for async tools)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -41,48 +41,49 @@ from src.utils.llm_config import create_llm
 
 def create_dashscope_embedder():
     """创建DashScope Embedding函数 - 用于CrewAI记忆系统"""
-    from dashscope import TextEmbedding
+    try:
+        from chromadb.api.types import EmbeddingFunction
+    except ImportError:
+        # 如果chromadb不可用,创建一个基础类
+        class EmbeddingFunction:
+            def __call__(self, input):
+                pass
+    
+    from openai import OpenAI
     import os
     
-    class DashScopeEmbeddingFunction:
-        """DashScope Embedding函数包装类"""
+    class DashScopeEmbeddingFunction(EmbeddingFunction):
+        """使用OpenAI SDK调用DashScope Embedding API"""
         
-        def __init__(self, api_key=None, model="text-embedding-v2"):
-            self.api_key = api_key or os.getenv('QWEN_API_KEY')
-            self.model = model
+        def __init__(self):
+            self.client = OpenAI(
+                api_key=os.getenv('QWEN_API_KEY'),
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+            )
+            self.model = "text-embedding-v2"
             
-        def __call__(self, texts):
+        def __call__(self, input):
             """
             将文本转换为嵌入向量
             
             Args:
-                texts: 字符串或字符串列表
+                input: 字符串列表
                 
             Returns:
                 List[List[float]]: 嵌入向量列表
             """
-            # 处理输入
-            if isinstance(texts, str):
-                texts = [texts]
-            
             try:
-                response = TextEmbedding.call(
+                response = self.client.embeddings.create(
                     model=self.model,
-                    input=texts,
-                    api_key=self.api_key
+                    input=input
                 )
-                
-                if response.status_code == 200:
-                    # 返回嵌入向量
-                    embeddings = [item['embedding'] for item in response.output['embeddings']]
-                    return embeddings
-                else:
-                    raise Exception(f"DashScope Embedding failed: {response.message}")
-                    
+                # 返回嵌入向量
+                embeddings = [item.embedding for item in response.data]
+                return embeddings
             except Exception as e:
                 print(f"⚠️ DashScope Embedding错误: {e}")
-                # 返回空向量作为默认值（维度为1536，与DashScope一致）
-                return [[0.0] * 1536 for _ in range(len(texts))]
+                # 返回空向量作为默认值（维度1536，与v2一致）
+                return [[0.0] * 1536 for _ in range(len(input))]
     
     return DashScopeEmbeddingFunction()
 
@@ -225,8 +226,9 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (使用DashScope Embedding)
-    # 环境变量已在文件开头设置
+    # 创建Crew (使用自定义DashScope Embedding)
+    embedder_function = create_dashscope_embedder()
+    
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -240,9 +242,9 @@ async def run_preset_workflow_async(user_requirement, llm):
         verbose=True,
         memory=True,  # 启用记忆系统
         embedder={
-            "provider": "openai",
+            "provider": "custom",  # 使用自定义provider!
             "config": {
-                "model": "text-embedding-v2"  # DashScope支持的模型
+                "embedder": embedder_function  # 传入自定义embedder实例
             }
         }
     )

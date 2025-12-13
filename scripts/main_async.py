@@ -10,6 +10,12 @@ import json
 import asyncio
 import logging
 from dotenv import load_dotenv
+
+# 关键:在导入CrewAI之前设置环境变量!
+load_dotenv()  # 先加载.env
+os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY') or 'dummy'
+os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+
 from crewai import Crew, Process
 
 # 配置日志,抑制EAS相关的ERROR提示
@@ -219,12 +225,8 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (通过环境变量强制使用DashScope Embedding)
-    # 设置所有OpenAI相关环境变量指向DashScope
-    os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY')
-    os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-    os.environ['OPENAI_EMBEDDING_MODEL'] = 'text-embedding-v2'  # 关键:指定embedding模型
-    
+    # 创建Crew (使用DashScope Embedding)
+    # 环境变量已在文件开头设置
     crew = Crew(
         agents=list(agents.values()),
         tasks=[

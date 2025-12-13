@@ -63,13 +63,29 @@ class TaskAllocator:
         # 检查是否只要评估不要总结（优先级最高）
         only_evaluation_keywords = ["仅评估", "只评估", "不总结", "不要总结", "不需要总结", 
                                    "只要评分", "仅评分", "三个ASA", "3个ASA", "三个评分",
+                                   "三位专家", "三位评估专家", "ABC评估", "ABC专家", "ABC评价",
+                                   "给出ABC", "只需要ABC", "仅ABC", "分别打分",
                                    "only evaluation", "no summary", 
-                                   "evaluation only", "without summary"]
+                                   "evaluation only", "without summary",
+                                   "three experts", "ABC experts", "separately score"]
         if any(k in d or k in desc for k in only_evaluation_keywords):
             # 仅返回评估任务，不包含final_validation
-            if "material_design" not in result:
+            # 检查是否明确说不需要设计
+            no_design_keywords = ["不需要设计", "不要设计", "不设计", 
+                                 "已有材料", "现有材料", 
+                                 "no design", "existing material", "given material"]
+            
+            # 如果明确说不需要设计，且指定了具体材料(包含化学式)或明确说已有材料
+            has_material_formula = any(c.isupper() and (i+1 < len(desc) and (desc[i+1].islower() or desc[i+1].isdigit())) 
+                                      for i, c in enumerate(desc) if c.isalpha())
+            
+            if any(k in d or k in desc for k in no_design_keywords) or has_material_formula:
+                # 不需要设计，只评估
+                result.append("evaluation_only")
+            else:
+                # 需要设计后评估
                 result.append("material_design")
-            result.append("evaluation_only")
+                result.append("evaluation_only")
             return result
         
         if any(k in desc for k in ["设计", "设计出", "方案"]):

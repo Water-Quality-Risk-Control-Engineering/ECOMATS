@@ -33,6 +33,54 @@ from src.config.config import Config
 from src.utils.llm_config import create_llm
 
 
+def create_dashscope_embedder():
+    """创建DashScope Embedding函数 - 用于CrewAI记忆系统"""
+    from dashscope import TextEmbedding
+    import os
+    
+    class DashScopeEmbeddingFunction:
+        """DashScope Embedding函数包装类"""
+        
+        def __init__(self, api_key=None, model="text-embedding-v2"):
+            self.api_key = api_key or os.getenv('QWEN_API_KEY')
+            self.model = model
+            
+        def __call__(self, texts):
+            """
+            将文本转换为嵌入向量
+            
+            Args:
+                texts: 字符串或字符串列表
+                
+            Returns:
+                List[List[float]]: 嵌入向量列表
+            """
+            # 处理输入
+            if isinstance(texts, str):
+                texts = [texts]
+            
+            try:
+                response = TextEmbedding.call(
+                    model=self.model,
+                    input=texts,
+                    api_key=self.api_key
+                )
+                
+                if response.status_code == 200:
+                    # 返回嵌入向量
+                    embeddings = [item['embedding'] for item in response.output['embeddings']]
+                    return embeddings
+                else:
+                    raise Exception(f"DashScope Embedding failed: {response.message}")
+                    
+            except Exception as e:
+                print(f"⚠️ DashScope Embedding错误: {e}")
+                # 返回空向量作为默认值（维度为1536，与DashScope一致）
+                return [[0.0] * 1536 for _ in range(len(texts))]
+    
+    return DashScopeEmbeddingFunction()
+
+
 def get_user_input():
     """获取用户材料设计需求"""
     print("\n" + "="*70)
@@ -171,7 +219,12 @@ async def run_preset_workflow_async(user_requirement, llm):
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew
+    # 创建Crew (配置DashScope Embedding用于记忆系统)
+    from crewai.memory.storage.rag_storage import RAGStorage
+    
+    # 创建自定义Embedding函数
+    embedder = create_dashscope_embedder()
+    
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -183,13 +236,25 @@ async def run_preset_workflow_async(user_requirement, llm):
         ],
         process=Process.sequential,
         verbose=True,
-        memory=True  # 启用记忆
+        memory=True,  # 启用记忆
+        embedder={
+            "provider": "custom",
+            "config": {
+                "model": "dashscope-text-embedding-v2",
+                "embedding_function": embedder
+            }
+        }
     )
     
     print("⚡ 使用异步执行模式...")
     print("  - 3个评估任务将并行执行")
     print("  - 机制分析和合成方法将并行执行")
-    print("  - 预计性能提升2-3倍\n")
+    print("  - 预计性能提升2-3倍")
+    print("\n🧠 记忆系统已启用 (使用DashScope Embedding)")
+    print("  - 短期记忆: 存储当前对话上下文")
+    print("  - 长期记忆: 学习历史任务经验")
+    print("  - 实体记忆: 提取关键实体信息")
+    print("  - 存储位置: ./.crewai/memory/\n")
     
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})

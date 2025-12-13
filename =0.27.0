@@ -1,0 +1,333 @@
+Defaulting to user installation because normal site-packages is not writeable
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Collecting crewai==1.7.0
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/6f/de/89e5a13976c08f8b78c7a1d45d603601c6e713471d2c261ba364e6bcd316/crewai-1.7.0-py3-none-any.whl (665 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 665.2/665.2 kB 2.2 MB/s  0:00:00
+Collecting crewai-tools==1.7.0
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/0e/05/d9ac249b0d1168d200aa379a696b8b125daab790e01fb4892eb4980085af/crewai_tools-1.7.0-py3-none-any.whl (766 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 766.7/766.7 kB 1.4 MB/s  0:00:00
+Requirement already satisfied: httpx in /home/axlhuang/.local/lib/python3.10/site-packages (0.28.1)
+Collecting aiosqlite~=0.21.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/f5/10/6c25ed6de94c49f88a91fa5018cb4c0f3625f31d5be9f771ebe5cc7cd506/aiosqlite-0.21.0-py3-none-any.whl (15 kB)
+Requirement already satisfied: appdirs~=1.4.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (1.4.4)
+Requirement already satisfied: chromadb~=1.1.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (1.1.1)
+Collecting click~=8.1.7 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/7e/d4/7ebdbd03970677812aac39c869717059dbb71a4cfc033ca6e5221787892c/click-8.1.8-py3-none-any.whl (98 kB)
+Requirement already satisfied: instructor>=1.3.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (1.10.0)
+Requirement already satisfied: json-repair~=0.25.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (0.25.2)
+Collecting json5~=0.10.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/aa/42/797895b952b682c3dafe23b1834507ee7f02f4d6299b65aaa61425763278/json5-0.10.0-py3-none-any.whl (34 kB)
+Requirement already satisfied: jsonref~=1.1.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (1.1.0)
+Collecting mcp~=1.16.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/c9/0e/7cebc88e17daf94ebe28c95633af595ccb2864dc2ee7abd75542d98495cc/mcp-1.16.0-py3-none-any.whl (167 kB)
+Collecting openai~=1.83.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/67/f5/dd04dec85c5c711e4d402dd05c8a2aee759e43067f52d12a3aaab3ed4523/openai-1.83.0-py3-none-any.whl (723 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 723.4/723.4 kB 1.4 MB/s  0:00:00
+Requirement already satisfied: openpyxl~=3.1.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (3.1.5)
+Collecting opentelemetry-api~=1.34.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/a5/3a/2ba85557e8dc024c0842ad22c570418dc02c36cbd1ab4b832a93edf071b8/opentelemetry_api-1.34.1-py3-none-any.whl (65 kB)
+Collecting opentelemetry-exporter-otlp-proto-http~=1.34.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/79/54/b05251c04e30c1ac70cf4a7c5653c085dfcf2c8b98af71661d6a252adc39/opentelemetry_exporter_otlp_proto_http-1.34.1-py3-none-any.whl (17 kB)
+Collecting opentelemetry-sdk~=1.34.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/07/1b/def4fe6aa73f483cabf4c748f4c25070d5f7604dcc8b52e962983491b29e/opentelemetry_sdk-1.34.1-py3-none-any.whl (118 kB)
+Requirement already satisfied: pdfplumber~=0.11.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (0.11.6)
+Requirement already satisfied: portalocker~=2.7.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai==1.7.0) (2.7.0)
+Collecting pydantic-settings~=2.10.1 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/58/f0/427018098906416f580e3cf1366d3b1abfb408a0652e9f31600c24a1903c/pydantic_settings-2.10.1-py3-none-any.whl (45 kB)
+Collecting pydantic~=2.11.9 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/bd/1f/73c53fcbfb0b5a78f91176df41945ca466e71e9d9d836e5c522abda39ee7/pydantic-2.11.10-py3-none-any.whl (444 kB)
+Collecting pyjwt~=2.9.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/79/84/0fdf9b18ba31d69877bd39c9cd6052b47f3761e9910c15de788e519f079f/PyJWT-2.9.0-py3-none-any.whl (22 kB)
+Collecting python-dotenv~=1.1.1 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/5f/ed/539768cf28c661b5b068d66d96a2f155c4971a5d55684a514c1a0e0dec2f/python_dotenv-1.1.1-py3-none-any.whl (20 kB)
+Collecting regex~=2024.9.11 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/cb/19/556638aa11c2ec9968a1da998f07f27ec0abb9bf3c647d7c7985ca0b8eea/regex-2024.9.11-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (782 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 782.7/782.7 kB 1.5 MB/s  0:00:00
+Collecting tokenizers~=0.20.3 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/aa/49/15fae66ac62e49255eeedbb7f4127564b2c3f3aef2009913f525732d1a08/tokenizers-0.20.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 1.5 MB/s  0:00:01
+Collecting tomli-w~=1.1.0 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/c4/ac/ce90573ba446a9bbe65838ded066a805234d159b4446ae9f8ec5bbd36cbd/tomli_w-1.1.0-py3-none-any.whl (6.4 kB)
+Collecting tomli~=2.0.2 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/cf/db/ce8eda256fa131af12e0a76d481711abe4681b6923c27efb9a255c9e4594/tomli-2.0.2-py3-none-any.whl (13 kB)
+Collecting uv~=0.9.13 (from crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/32/2e/76ba33c7d9efe9f17480db1b94d3393025062005e346bb8b3660554526da/uv-0.9.17-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (22.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 22.1/22.1 MB 1.4 MB/s  0:00:15
+Collecting beautifulsoup4~=4.13.4 (from crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/04/eb/f4151e0c7377a6e08a38108609ba5cede57986802757848688aeedd1b9e8/beautifulsoup4-4.13.5-py3-none-any.whl (105 kB)
+Requirement already satisfied: docker~=7.1.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai-tools==1.7.0) (7.1.0)
+Collecting lancedb~=0.5.4 (from crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/01/21/ecb191feff512640a59e17fe1737bd9c33970bc857c59a77fa61d5e314d9/lancedb-0.5.7-py3-none-any.whl (115 kB)
+Collecting pymupdf~=1.26.6 (from crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/2a/6b/3de1714d734ff949be1e90a22375d0598d3540b22ae73eb85c2d7d1f36a9/pymupdf-1.26.7-cp310-abi3-manylinux_2_28_x86_64.whl (24.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.1/24.1 MB 1.6 MB/s  0:00:15
+Requirement already satisfied: python-docx~=1.2.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai-tools==1.7.0) (1.2.0)
+Requirement already satisfied: pytube~=15.0.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai-tools==1.7.0) (15.0.0)
+Requirement already satisfied: requests~=2.32.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai-tools==1.7.0) (2.32.5)
+Collecting tiktoken~=0.8.0 (from crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/2e/28/cf3633018cbcc6deb7805b700ccd6085c9a5a7f72b38974ee0bffd56d311/tiktoken-0.8.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 2.0 MB/s  0:00:00
+Requirement already satisfied: youtube-transcript-api~=1.2.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from crewai-tools==1.7.0) (1.2.3)
+Requirement already satisfied: typing_extensions>=4.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiosqlite~=0.21.0->crewai==1.7.0) (4.15.0)
+Requirement already satisfied: soupsieve>1.2 in /usr/lib/python3/dist-packages (from beautifulsoup4~=4.13.4->crewai-tools==1.7.0) (2.3.1)
+Requirement already satisfied: build>=1.0.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (1.3.0)
+Requirement already satisfied: pybase64>=1.4.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (1.4.2)
+Requirement already satisfied: uvicorn>=0.18.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai==1.7.0) (0.38.0)
+Requirement already satisfied: numpy>=1.22.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (2.2.6)
+Requirement already satisfied: posthog<6.0.0,>=2.4.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (3.25.0)
+Requirement already satisfied: onnxruntime>=1.14.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (1.23.2)
+Requirement already satisfied: opentelemetry-exporter-otlp-proto-grpc>=1.2.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (1.36.0)
+Requirement already satisfied: pypika>=0.48.9 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (0.48.9)
+Requirement already satisfied: tqdm>=4.65.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (4.67.1)
+Requirement already satisfied: overrides>=7.3.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (7.7.0)
+Requirement already satisfied: importlib-resources in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (6.5.2)
+Requirement already satisfied: grpcio>=1.58.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (1.74.0)
+Requirement already satisfied: bcrypt>=4.0.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (4.3.0)
+Requirement already satisfied: typer>=0.9.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (0.16.0)
+Requirement already satisfied: kubernetes>=28.1.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (33.1.0)
+Requirement already satisfied: tenacity>=8.2.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (9.1.2)
+Requirement already satisfied: pyyaml>=6.0.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (6.0.1)
+Requirement already satisfied: mmh3>=4.0.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (5.2.0)
+Requirement already satisfied: orjson>=3.9.12 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (3.11.2)
+Requirement already satisfied: rich>=10.11.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (13.7.1)
+Requirement already satisfied: jsonschema>=4.19.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from chromadb~=1.1.0->crewai==1.7.0) (4.23.0)
+Requirement already satisfied: urllib3>=1.26.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from docker~=7.1.0->crewai-tools==1.7.0) (2.5.0)
+Requirement already satisfied: deprecation in /home/axlhuang/.local/lib/python3.10/site-packages (from lancedb~=0.5.4->crewai-tools==1.7.0) (2.1.0)
+Collecting pylance==0.9.18 (from lancedb~=0.5.4->crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/a1/b8/991e4544cfa21de2c7de5dd6bd8410df454fec5b374680fa96cd8698763b/pylance-0.9.18-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (21.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.6/21.6 MB 1.7 MB/s  0:00:12
+Collecting ratelimiter~=1.0 (from lancedb~=0.5.4->crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/51/80/2164fa1e863ad52cc8d870855fba0fbb51edd943edffd516d54b5f6f8ff8/ratelimiter-1.2.0.post0-py3-none-any.whl (6.6 kB)
+Collecting retry>=0.9.2 (from lancedb~=0.5.4->crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/4b/0d/53aea75710af4528a25ed6837d71d117602b01946b307a3912cb3cfcbcba/retry-0.9.2-py2.py3-none-any.whl (8.0 kB)
+Requirement already satisfied: attrs>=21.3.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from lancedb~=0.5.4->crewai-tools==1.7.0) (25.3.0)
+Collecting semver>=3.0 (from lancedb~=0.5.4->crewai-tools==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/a6/24/4d91e05817e92e3a61c8a21e08fd0f390f5301f1c448b137c57c4bc6e543/semver-3.0.4-py3-none-any.whl (17 kB)
+Requirement already satisfied: cachetools in /home/axlhuang/.local/lib/python3.10/site-packages (from lancedb~=0.5.4->crewai-tools==1.7.0) (5.5.2)
+Requirement already satisfied: pyarrow>=12 in /home/axlhuang/.local/lib/python3.10/site-packages (from pylance==0.9.18->lancedb~=0.5.4->crewai-tools==1.7.0) (18.1.0)
+Requirement already satisfied: anyio>=4.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from mcp~=1.16.0->crewai==1.7.0) (4.11.0)
+Requirement already satisfied: httpx-sse>=0.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from mcp~=1.16.0->crewai==1.7.0) (0.4.0)
+Requirement already satisfied: python-multipart>=0.0.9 in /home/axlhuang/.local/lib/python3.10/site-packages (from mcp~=1.16.0->crewai==1.7.0) (0.0.12)
+Requirement already satisfied: sse-starlette>=1.6.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from mcp~=1.16.0->crewai==1.7.0) (3.0.3)
+Requirement already satisfied: starlette>=0.27 in /home/axlhuang/.local/lib/python3.10/site-packages (from mcp~=1.16.0->crewai==1.7.0) (0.41.3)
+Requirement already satisfied: distro<2,>=1.7.0 in /usr/lib/python3/dist-packages (from openai~=1.83.0->crewai==1.7.0) (1.7.0)
+Requirement already satisfied: jiter<1,>=0.4.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from openai~=1.83.0->crewai==1.7.0) (0.10.0)
+Requirement already satisfied: sniffio in /usr/lib/python3/dist-packages (from openai~=1.83.0->crewai==1.7.0) (1.2.0)
+Requirement already satisfied: certifi in /home/axlhuang/.local/lib/python3.10/site-packages (from httpx) (2025.10.5)
+Requirement already satisfied: httpcore==1.* in /home/axlhuang/.local/lib/python3.10/site-packages (from httpx) (1.0.9)
+Requirement already satisfied: idna in /home/axlhuang/.local/lib/python3.10/site-packages (from httpx) (3.11)
+Requirement already satisfied: exceptiongroup>=1.0.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from anyio>=4.5->mcp~=1.16.0->crewai==1.7.0) (1.3.0)
+Requirement already satisfied: h11>=0.16 in /home/axlhuang/.local/lib/python3.10/site-packages (from httpcore==1.*->httpx) (0.16.0)
+Requirement already satisfied: et-xmlfile in /home/axlhuang/.local/lib/python3.10/site-packages (from openpyxl~=3.1.5->crewai==1.7.0) (2.0.0)
+Requirement already satisfied: importlib-metadata<8.8.0,>=6.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from opentelemetry-api~=1.34.0->crewai==1.7.0) (8.7.0)
+Requirement already satisfied: zipp>=3.20 in /home/axlhuang/.local/lib/python3.10/site-packages (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api~=1.34.0->crewai==1.7.0) (3.23.0)
+Requirement already satisfied: googleapis-common-protos~=1.52 in /home/axlhuang/.local/lib/python3.10/site-packages (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai==1.7.0) (1.70.0)
+Collecting opentelemetry-exporter-otlp-proto-common==1.34.1 (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/72/e8/8b292a11cc8d8d87ec0c4089ae21b6a58af49ca2e51fa916435bc922fdc7/opentelemetry_exporter_otlp_proto_common-1.34.1-py3-none-any.whl (18 kB)
+Collecting opentelemetry-proto==1.34.1 (from opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/28/ab/4591bfa54e946350ce8b3f28e5c658fe9785e7cd11e9c11b1671a867822b/opentelemetry_proto-1.34.1-py3-none-any.whl (55 kB)
+Collecting protobuf<6.0,>=5.0 (from opentelemetry-proto==1.34.1->opentelemetry-exporter-otlp-proto-http~=1.34.0->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/85/e4/07c80521879c2d15f321465ac24c70efe2381378c00bf5e56a0f4fbac8cd/protobuf-5.29.5-cp38-abi3-manylinux2014_x86_64.whl (319 kB)
+Collecting opentelemetry-semantic-conventions==0.55b1 (from opentelemetry-sdk~=1.34.0->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/1a/89/267b0af1b1d0ba828f0e60642b6a5116ac1fd917cde7fc02821627029bd1/opentelemetry_semantic_conventions-0.55b1-py3-none-any.whl (196 kB)
+Requirement already satisfied: pdfminer.six==20250327 in /home/axlhuang/.local/lib/python3.10/site-packages (from pdfplumber~=0.11.4->crewai==1.7.0) (20250327)
+Requirement already satisfied: Pillow>=9.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from pdfplumber~=0.11.4->crewai==1.7.0) (12.0.0)
+Requirement already satisfied: pypdfium2>=4.18.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from pdfplumber~=0.11.4->crewai==1.7.0) (4.30.0)
+Requirement already satisfied: charset-normalizer>=2.0.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from pdfminer.six==20250327->pdfplumber~=0.11.4->crewai==1.7.0) (3.4.4)
+Requirement already satisfied: cryptography>=36.0.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from pdfminer.six==20250327->pdfplumber~=0.11.4->crewai==1.7.0) (46.0.3)
+Requirement already satisfied: six>=1.5 in /usr/lib/python3/dist-packages (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai==1.7.0) (1.16.0)
+Requirement already satisfied: monotonic>=1.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai==1.7.0) (1.6)
+Requirement already satisfied: backoff>=1.10.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai==1.7.0) (2.2.1)
+Requirement already satisfied: python-dateutil>2.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from posthog<6.0.0,>=2.4.0->chromadb~=1.1.0->crewai==1.7.0) (2.9.0.post0)
+Requirement already satisfied: annotated-types>=0.6.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from pydantic~=2.11.9->crewai==1.7.0) (0.7.0)
+Collecting pydantic-core==2.33.2 (from pydantic~=2.11.9->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/31/0d/c8f7593e6bc7066289bbc366f2235701dcbebcd1ff0ef8e64f6f239fb47d/pydantic_core-2.33.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 2.1 MB/s  0:00:00
+Requirement already satisfied: typing-inspection>=0.4.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from pydantic~=2.11.9->crewai==1.7.0) (0.4.2)
+Requirement already satisfied: lxml>=3.1.0 in /usr/lib/python3/dist-packages (from python-docx~=1.2.0->crewai-tools==1.7.0) (4.8.0)
+Requirement already satisfied: huggingface-hub<1.0,>=0.16.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from tokenizers~=0.20.3->crewai==1.7.0) (0.34.0)
+Requirement already satisfied: filelock in /home/axlhuang/.local/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.16.4->tokenizers~=0.20.3->crewai==1.7.0) (3.20.0)
+Requirement already satisfied: fsspec>=2023.5.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.16.4->tokenizers~=0.20.3->crewai==1.7.0) (2025.10.0)
+Requirement already satisfied: packaging>=20.9 in /home/axlhuang/.local/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.16.4->tokenizers~=0.20.3->crewai==1.7.0) (25.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.1.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from huggingface-hub<1.0,>=0.16.4->tokenizers~=0.20.3->crewai==1.7.0) (1.2.0)
+Requirement already satisfied: defusedxml<0.8.0,>=0.7.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from youtube-transcript-api~=1.2.2->crewai-tools==1.7.0) (0.7.1)
+Requirement already satisfied: pyproject_hooks in /home/axlhuang/.local/lib/python3.10/site-packages (from build>=1.0.3->chromadb~=1.1.0->crewai==1.7.0) (1.2.0)
+Requirement already satisfied: cffi>=2.0.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from cryptography>=36.0.0->pdfminer.six==20250327->pdfplumber~=0.11.4->crewai==1.7.0) (2.0.0)
+Requirement already satisfied: pycparser in /home/axlhuang/.local/lib/python3.10/site-packages (from cffi>=2.0.0->cryptography>=36.0.0->pdfminer.six==20250327->pdfplumber~=0.11.4->crewai==1.7.0) (2.23)
+Requirement already satisfied: aiohttp<4.0.0,>=3.9.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from instructor>=1.3.3->crewai==1.7.0) (3.11.18)
+Requirement already satisfied: diskcache>=5.6.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from instructor>=1.3.3->crewai==1.7.0) (5.6.3)
+Requirement already satisfied: docstring-parser<1.0,>=0.16 in /home/axlhuang/.local/lib/python3.10/site-packages (from instructor>=1.3.3->crewai==1.7.0) (0.17.0)
+Requirement already satisfied: jinja2<4.0.0,>=3.1.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from instructor>=1.3.3->crewai==1.7.0) (3.1.6)
+Requirement already satisfied: aiohappyeyeballs>=2.3.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (2.6.1)
+Requirement already satisfied: aiosignal>=1.1.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (1.3.2)
+Requirement already satisfied: async-timeout<6.0,>=4.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (4.0.3)
+Requirement already satisfied: frozenlist>=1.1.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (1.6.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (6.4.3)
+Requirement already satisfied: propcache>=0.2.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (0.3.1)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from aiohttp<4.0.0,>=3.9.1->instructor>=1.3.3->crewai==1.7.0) (1.20.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from jinja2<4.0.0,>=3.1.4->instructor>=1.3.3->crewai==1.7.0) (2.1.5)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from rich>=10.11.0->chromadb~=1.1.0->crewai==1.7.0) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from rich>=10.11.0->chromadb~=1.1.0->crewai==1.7.0) (2.19.1)
+Requirement already satisfied: shellingham>=1.3.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from typer>=0.9.0->chromadb~=1.1.0->crewai==1.7.0) (1.5.4)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in /home/axlhuang/.local/lib/python3.10/site-packages (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai==1.7.0) (2025.4.1)
+Requirement already satisfied: referencing>=0.28.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai==1.7.0) (0.36.2)
+Requirement already satisfied: rpds-py>=0.7.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from jsonschema>=4.19.0->chromadb~=1.1.0->crewai==1.7.0) (0.24.0)
+Requirement already satisfied: google-auth>=1.0.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (2.40.3)
+Requirement already satisfied: websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 in /home/axlhuang/.local/lib/python3.10/site-packages (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (1.8.0)
+Requirement already satisfied: requests-oauthlib in /home/axlhuang/.local/lib/python3.10/site-packages (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (2.0.0)
+Requirement already satisfied: oauthlib>=3.2.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (3.3.1)
+Requirement already satisfied: durationpy>=0.7 in /home/axlhuang/.local/lib/python3.10/site-packages (from kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (0.10)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /usr/lib/python3/dist-packages (from google-auth>=1.0.1->kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (0.2.1)
+Requirement already satisfied: rsa<5,>=3.1.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from google-auth>=1.0.1->kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (4.9.1)
+Requirement already satisfied: pyasn1>=0.1.3 in /usr/lib/python3/dist-packages (from rsa<5,>=3.1.4->google-auth>=1.0.1->kubernetes>=28.1.0->chromadb~=1.1.0->crewai==1.7.0) (0.4.8)
+Requirement already satisfied: mdurl~=0.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->chromadb~=1.1.0->crewai==1.7.0) (0.1.2)
+Requirement already satisfied: coloredlogs in /home/axlhuang/.local/lib/python3.10/site-packages (from onnxruntime>=1.14.1->chromadb~=1.1.0->crewai==1.7.0) (15.0.1)
+Requirement already satisfied: flatbuffers in /home/axlhuang/.local/lib/python3.10/site-packages (from onnxruntime>=1.14.1->chromadb~=1.1.0->crewai==1.7.0) (25.9.23)
+Requirement already satisfied: sympy in /usr/lib/python3/dist-packages (from onnxruntime>=1.14.1->chromadb~=1.1.0->crewai==1.7.0) (1.9)
+INFO: pip is looking at multiple versions of opentelemetry-exporter-otlp-proto-grpc to determine which version is compatible with other requirements. This could take a while.
+Collecting opentelemetry-exporter-otlp-proto-grpc>=1.2.0 (from chromadb~=1.1.0->crewai==1.7.0)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/81/a3/cc9b66575bd6597b98b886a2067eea2693408d2d5f39dad9ab7fc264f5f3/opentelemetry_exporter_otlp_proto_grpc-1.39.1-py3-none-any.whl (19 kB)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/56/e8/d420b94ffddfd8cff85bb4aa5d98da26ce7935dc3cf3eca6b83cd39ab436/opentelemetry_exporter_otlp_proto_grpc-1.39.0-py3-none-any.whl (19 kB)
+  Using cached https://pypi.tuna.tsinghua.edu.cn/packages/28/f0/bd831afbdba74ca2ce3982142a2fad707f8c487e8a3b6fef01f1d5945d1b/opentelemetry_exporter_otlp_proto_grpc-1.38.0-py3-none-any.whl (19 kB)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/39/17/46630b74751031a658706bef23ac99cdc2953cd3b2d28ec90590a0766b3e/opentelemetry_exporter_otlp_proto_grpc-1.37.0-py3-none-any.whl (19 kB)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/f4/a6/3f60a77279e6a3dc21fc076dcb51be159a633b0bba5cba9fb804062a9332/opentelemetry_exporter_otlp_proto_grpc-1.35.0-py3-none-any.whl (18 kB)
+  Downloading https://pypi.tuna.tsinghua.edu.cn/packages/b4/42/0a4dd47e7ef54edf670c81fc06a83d68ea42727b82126a1df9dd0477695d/opentelemetry_exporter_otlp_proto_grpc-1.34.1-py3-none-any.whl (18 kB)
+Requirement already satisfied: decorator>=3.4.2 in /home/axlhuang/.local/lib/python3.10/site-packages (from retry>=0.9.2->lancedb~=0.5.4->crewai-tools==1.7.0) (5.2.1)
+Requirement already satisfied: py<2.0.0,>=1.4.26 in /usr/lib/python3/dist-packages (from retry>=0.9.2->lancedb~=0.5.4->crewai-tools==1.7.0) (1.10.0)
+Requirement already satisfied: httptools>=0.6.3 in /home/axlhuang/.local/lib/python3.10/site-packages (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai==1.7.0) (0.6.4)
+Requirement already satisfied: uvloop>=0.15.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai==1.7.0) (0.21.0)
+Requirement already satisfied: watchfiles>=0.13 in /home/axlhuang/.local/lib/python3.10/site-packages (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai==1.7.0) (1.1.0)
+Requirement already satisfied: websockets>=10.4 in /home/axlhuang/.local/lib/python3.10/site-packages (from uvicorn[standard]>=0.18.3->chromadb~=1.1.0->crewai==1.7.0) (12.0)
+Requirement already satisfied: humanfriendly>=9.1 in /home/axlhuang/.local/lib/python3.10/site-packages (from coloredlogs->onnxruntime>=1.14.1->chromadb~=1.1.0->crewai==1.7.0) (10.0)
+Installing collected packages: ratelimiter, uv, tomli-w, tomli, semver, retry, regex, python-dotenv, pymupdf, pylance, pyjwt, pydantic-core, protobuf, json5, click, beautifulsoup4, aiosqlite, tiktoken, pydantic, opentelemetry-proto, opentelemetry-api, tokenizers, pydantic-settings, opentelemetry-semantic-conventions, opentelemetry-exporter-otlp-proto-common, lancedb, opentelemetry-sdk, openai, mcp, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, crewai, crewai-tools
+  Attempting uninstall: uv
+    Found existing installation: uv 0.8.9
+    Uninstalling uv-0.8.9:
+      Successfully uninstalled uv-0.8.9
+  Attempting uninstall: tomli-w
+    Found existing installation: tomli_w 1.2.0
+    Uninstalling tomli_w-1.2.0:
+      Successfully uninstalled tomli_w-1.2.0
+  Attempting uninstall: tomli
+    Found existing installation: tomli 2.2.1
+    Uninstalling tomli-2.2.1:
+      Successfully uninstalled tomli-2.2.1
+  Attempting uninstall: regex
+    Found existing installation: regex 2024.11.6
+    Uninstalling regex-2024.11.6:
+      Successfully uninstalled regex-2024.11.6
+  Attempting uninstall: python-dotenv
+    Found existing installation: python-dotenv 1.2.1
+    Uninstalling python-dotenv-1.2.1:
+      Successfully uninstalled python-dotenv-1.2.1
+  Attempting uninstall: pymupdf
+    Found existing installation: PyMuPDF 1.26.4
+    Uninstalling PyMuPDF-1.26.4:
+      Successfully uninstalled PyMuPDF-1.26.4
+  Attempting uninstall: pyjwt
+    Found existing installation: PyJWT 2.10.1
+    Uninstalling PyJWT-2.10.1:
+      Successfully uninstalled PyJWT-2.10.1
+  Attempting uninstall: pydantic-core
+    Found existing installation: pydantic_core 2.41.4
+    Uninstalling pydantic_core-2.41.4:
+      Successfully uninstalled pydantic_core-2.41.4
+  Attempting uninstall: protobuf
+    Found existing installation: protobuf 6.33.0
+    Uninstalling protobuf-6.33.0:
+      Successfully uninstalled protobuf-6.33.0
+  Attempting uninstall: json5
+    Found existing installation: json5 0.12.0
+    Uninstalling json5-0.12.0:
+      Successfully uninstalled json5-0.12.0
+  Attempting uninstall: click
+    Found existing installation: click 8.3.0
+    Uninstalling click-8.3.0:
+      Successfully uninstalled click-8.3.0
+  Attempting uninstall: beautifulsoup4
+    Found existing installation: beautifulsoup4 4.14.2
+    Uninstalling beautifulsoup4-4.14.2:
+      Successfully uninstalled beautifulsoup4-4.14.2
+  Attempting uninstall: tiktoken
+    Found existing installation: tiktoken 0.11.0
+    Uninstalling tiktoken-0.11.0:
+      Successfully uninstalled tiktoken-0.11.0
+  Attempting uninstall: pydantic
+    Found existing installation: pydantic 2.12.3
+    Uninstalling pydantic-2.12.3:
+      Successfully uninstalled pydantic-2.12.3
+  Attempting uninstall: opentelemetry-proto
+    Found existing installation: opentelemetry-proto 1.36.0
+    Uninstalling opentelemetry-proto-1.36.0:
+      Successfully uninstalled opentelemetry-proto-1.36.0
+  Attempting uninstall: opentelemetry-api
+    Found existing installation: opentelemetry-api 1.36.0
+    Uninstalling opentelemetry-api-1.36.0:
+      Successfully uninstalled opentelemetry-api-1.36.0
+  Attempting uninstall: tokenizers
+    Found existing installation: tokenizers 0.22.1
+    Uninstalling tokenizers-0.22.1:
+      Successfully uninstalled tokenizers-0.22.1
+  Attempting uninstall: pydantic-settings
+    Found existing installation: pydantic-settings 2.11.0
+    Uninstalling pydantic-settings-2.11.0:
+      Successfully uninstalled pydantic-settings-2.11.0
+  Attempting uninstall: opentelemetry-semantic-conventions
+    Found existing installation: opentelemetry-semantic-conventions 0.57b0
+    Uninstalling opentelemetry-semantic-conventions-0.57b0:
+      Successfully uninstalled opentelemetry-semantic-conventions-0.57b0
+  Attempting uninstall: opentelemetry-exporter-otlp-proto-common
+    Found existing installation: opentelemetry-exporter-otlp-proto-common 1.36.0
+    Uninstalling opentelemetry-exporter-otlp-proto-common-1.36.0:
+      Successfully uninstalled opentelemetry-exporter-otlp-proto-common-1.36.0
+  Attempting uninstall: lancedb
+    Found existing installation: lancedb 0.24.3
+    Uninstalling lancedb-0.24.3:
+      Successfully uninstalled lancedb-0.24.3
+  Attempting uninstall: opentelemetry-sdk
+    Found existing installation: opentelemetry-sdk 1.36.0
+    Uninstalling opentelemetry-sdk-1.36.0:
+      Successfully uninstalled opentelemetry-sdk-1.36.0
+  Attempting uninstall: openai
+    Found existing installation: openai 1.109.1
+    Uninstalling openai-1.109.1:
+      Successfully uninstalled openai-1.109.1
+  Attempting uninstall: mcp
+    Found existing installation: mcp 1.19.0
+    Uninstalling mcp-1.19.0:
+      Successfully uninstalled mcp-1.19.0
+  Attempting uninstall: opentelemetry-exporter-otlp-proto-http
+    Found existing installation: opentelemetry-exporter-otlp-proto-http 1.36.0
+    Uninstalling opentelemetry-exporter-otlp-proto-http-1.36.0:
+      Successfully uninstalled opentelemetry-exporter-otlp-proto-http-1.36.0
+  Attempting uninstall: opentelemetry-exporter-otlp-proto-grpc
+    Found existing installation: opentelemetry-exporter-otlp-proto-grpc 1.36.0
+    Uninstalling opentelemetry-exporter-otlp-proto-grpc-1.36.0:
+      Successfully uninstalled opentelemetry-exporter-otlp-proto-grpc-1.36.0
+  Attempting uninstall: crewai
+    Found existing installation: crewai 1.2.1
+    Uninstalling crewai-1.2.1:
+      Successfully uninstalled crewai-1.2.1
+  Attempting uninstall: crewai-tools
+    Found existing installation: crewai-tools 1.2.1
+    Uninstalling crewai-tools-1.2.1:
+      Successfully uninstalled crewai-tools-1.2.1
+
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+deepspeed 0.15.1 requires torch, which is not installed.
+openai-whisper 20231117 requires torch, which is not installed.
+openai-whisper 20231117 requires triton<3,>=2.0.0, which is not installed.
+embedchain 0.1.128 requires chromadb<0.6.0,>=0.5.10, but you have chromadb 1.1.1 which is incompatible.
+embedchain 0.1.128 requires pypdf<6.0.0,>=5.0.0, but you have pypdf 6.1.3 which is incompatible.
+gradio 5.4.0 requires aiofiles<24.0,>=22.0, but you have aiofiles 25.1.0 which is incompatible.
+gradio 5.4.0 requires pillow<12.0,>=8.0, but you have pillow 12.0.0 which is incompatible.
+grpcio-tools 1.57.0 requires protobuf<5.0dev,>=4.21.6, but you have protobuf 5.29.5 which is incompatible.
+mineru 2.6.4 requires json-repair>=0.46.2, but you have json-repair 0.25.2 which is incompatible.
+mineru 2.6.4 requires pdfminer.six==20250506, but you have pdfminer-six 20250327 which is incompatible.
+opentelemetry-instrumentation 0.57b0 requires opentelemetry-semantic-conventions==0.57b0, but you have opentelemetry-semantic-conventions 0.55b1 which is incompatible.
+opentelemetry-instrumentation-asgi 0.57b0 requires opentelemetry-semantic-conventions==0.57b0, but you have opentelemetry-semantic-conventions 0.55b1 which is incompatible.
+opentelemetry-instrumentation-fastapi 0.57b0 requires opentelemetry-semantic-conventions==0.57b0, but you have opentelemetry-semantic-conventions 0.55b1 which is incompatible.
+Successfully installed aiosqlite-0.21.0 beautifulsoup4-4.13.5 click-8.1.8 crewai-1.7.0 crewai-tools-1.7.0 json5-0.10.0 lancedb-0.5.7 mcp-1.16.0 openai-1.83.0 opentelemetry-api-1.34.1 opentelemetry-exporter-otlp-proto-common-1.34.1 opentelemetry-exporter-otlp-proto-grpc-1.34.1 opentelemetry-exporter-otlp-proto-http-1.34.1 opentelemetry-proto-1.34.1 opentelemetry-sdk-1.34.1 opentelemetry-semantic-conventions-0.55b1 protobuf-5.29.5 pydantic-2.11.10 pydantic-core-2.33.2 pydantic-settings-2.10.1 pyjwt-2.9.0 pylance-0.9.18 pymupdf-1.26.7 python-dotenv-1.1.1 ratelimiter-1.2.0.post0 regex-2024.9.11 retry-0.9.2 semver-3.0.4 tiktoken-0.8.0 tokenizers-0.20.3 tomli-2.0.2 tomli-w-1.1.0 uv-0.9.17
+
+[notice] A new release of pip is available: 25.2 -> 25.3
+[notice] To update, run: /usr/bin/python3 -m pip install --upgrade pip

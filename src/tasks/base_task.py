@@ -1,10 +1,24 @@
 #!/usr/bin/env python3
 """
-基础任务类
+基础任务类 / Base Task Class
 提供任务创建的通用功能
 """
 
 from crewai import Task
+
+
+def get_language():
+    """获取当前语言设置 / Get current language setting"""
+    try:
+        from src.config.config import Config
+        return getattr(Config, 'LANGUAGE', 'zh')
+    except Exception:
+        return 'zh'
+
+
+def is_english():
+    """检查是否为英文模式 / Check if English mode"""
+    return get_language() == 'en'
 
 class BaseTask:
     """基础任务类 / Base task class"""

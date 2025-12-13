@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-材料设计任务
+材料设计任务 / Material Design Task
 负责设计和优化水处理材料方案
 """
 
-from .base_task import BaseTask
+from .base_task import BaseTask, get_language, is_english
 
 class DesignTask(BaseTask):
     """材料设计任务类 / Material design task class"""
@@ -44,7 +44,90 @@ class DesignTask(BaseTask):
         )
     
     def create_task(self, agent, context_task=None, feedback=None, user_requirement=None):
-        description = """
+        # 获取多语言文本 / Get multilingual text
+        lang = get_language()
+        
+        if lang == 'en':
+            description = """
+Design water treatment material solutions based on user requirements.
+
+Design Steps:
+1. Analyze target pollutant characteristics and treatment requirements
+2. Select appropriate material types (e.g., single-atom catalysts, dual-atom catalysts, MOF materials)
+3. Prioritize reusing previously obtained structure validation or identifier results; only call Materials Project minimal field search when necessary
+4. **Mandatory: Use PubChem tool to verify target pollutant chemical information**
+5. Design material structure based on tool data
+6. **Mandatory: Use Structure Validator tool to verify if designed material structures actually exist**
+7. Redesign if validation fails
+8. Optimize material structure parameters to ensure catalytic performance and stability
+9. Balance material diversity, structural stability, and catalytic performance
+
+Tool Usage Strategy:
+1. **Target Analysis Phase**:
+   - Call PubChem tool to query target pollutant chemical information (formula, molecular weight, CAS number, SMILES, etc.)
+   - Analyze pollutant chemical structure and degradation challenges
+   - Record tool call parameters and results
+
+2. **Material Design Phase (Rate Limiting & Reuse)**:
+   - Call Material Identifier Tool to determine material type
+   - Based on material type, call appropriate design tools:
+     * For metal materials: Prioritize using identifier's material_id for details
+     * For organic materials: Call PubChem tool to verify molecular structure
+   - Call Structure Validator Tool to verify designed material structures
+   - If validation fails, record failure reason and redesign
+
+3. **Performance Optimization Phase**:
+   - Call Name2Properties Tool or Formula2Properties Tool to get material property parameters
+   - Call Material Search Tool to query similar material catalytic performance data
+   - Optimize active sites and reaction pathways based on tool data
+
+4. **Final Validation Phase**:
+   - Comprehensive validation ensuring all tool call results are consistent
+   - Record all tool call details including parameters, results, and validation status
+   - Ensure designed material structures exist in reality or have synthesis feasibility
+
+Material Type Classification:
+1. **Pure Metals**: Elemental metals, alloys, nanoparticles
+2. **Metal Oxides**: Single oxides, composite oxides, layered double hydroxides
+3. **Metal Sulfides**: Transition metal sulfides and composites
+4. **Metal Nitrides/Carbides**: Various metal nitrides and carbides
+5. **MOF/COF Materials**: Traditional and functionalized framework materials
+6. **Carbon-based Materials**: Graphene, carbon nanotubes, porous carbon, etc.
+7. **Single-atom Catalysts**: Single-atom, dual-atom, multi-atom cluster catalysts
+8. **Composite Materials**: Multi-material composite systems
+9. **Bio-based Materials**: Enzyme catalysts and biopolymer-based materials
+
+Structure Description Requirements:
+1. **Basic Structure Info**: Chemical formula, molecular weight, crystal structure, electronic structure
+2. **Active Site Description**: Central atom, coordination environment, coordination structure, geometry
+3. **Substrate Structure**: Structural form, chemical bonding, topological structure
+4. **Ligand Info**: Ligand type, structure, coordination mode
+5. **Structural Parameters**: Atomic positions, space group, coordination number, geometric parameters
+
+Design Key Points:
+- Ensure materials have good catalytic performance and structural stability
+- Optimize active sites and reaction pathways
+- Meet target pollutant degradation requirements
+- **Must verify designed material structures exist in reality**
+- **Must use Materials Project and PubChem tools for data support**
+- **If Materials Project returns no valid material_id, do not fabricate MP-IDs**
+- Follow material type classification and structure description requirements
+- Record specific parameters and results for each tool call
+- If tool call fails, clearly explain failure reason and impact on design
+"""
+            user_req_prefix = "\n\nUser Specific Requirement: "
+            feedback_prefix = "\n\nOptimize design based on evaluation feedback:\n"
+            expected_output = """
+Provide complete material design solution including:
+1. Material composition (material type and key structural parameters)
+2. Design principle explanation
+3. Stability assurance measures
+4. Expected catalytic performance
+5. Detailed structure description (following material type and structure requirements)
+6. Synthesis feasibility assessment
+"""
+        else:
+            description = """
         根据用户需求设计水处理材料方案。
         
         设计步骤：
@@ -112,15 +195,9 @@ class DesignTask(BaseTask):
         - 每个工具调用都必须记录具体的参数和返回结果
         - 如果工具调用失败，必须明确说明失败原因和对设计的影响
         """
-        
-        # 添加用户自定义需求到描述中
-        if user_requirement:
-            description += f"\n\n用户具体需求：{user_requirement}"
-        
-        if feedback:
-            description += f"\n\n根据评估反馈进行优化设计：\n{feedback}"
-        
-        expected_output = """
+            user_req_prefix = "\n\n用户具体需求："
+            feedback_prefix = "\n\n根据评估反馈进行优化设计：\n"
+            expected_output = """
         提供完整的材料设计方案，包括：
         1. 材料组成（材料类型和关键结构参数）
         2. 设计原理说明
@@ -129,6 +206,13 @@ class DesignTask(BaseTask):
         5. 详细的结构描述（按照材料类型分类和结构描述要求）
         6. 合成可行性评估
         """
+        
+        # 添加用户自定义需求到描述中 / Add user requirement to description
+        if user_requirement:
+            description += f"{user_req_prefix}{user_requirement}"
+        
+        if feedback:
+            description += f"{feedback_prefix}{feedback}"
         
         # 创建新的任务实例而不是调用父类方法
         from crewai import Task

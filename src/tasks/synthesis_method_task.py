@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-合成方法任务
+合成方法任务 / Synthesis Method Task
 负责设计材料的合成方法和工艺流程
 """
 
-from .base_task import BaseTask
+from .base_task import BaseTask, get_language, is_english
 
 class SynthesisMethodTask(BaseTask):
     """合成方法任务类 / Synthesis method task class"""
@@ -29,7 +29,75 @@ class SynthesisMethodTask(BaseTask):
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):
-        description = """
+        # 获取多语言文本 / Get multilingual text
+        lang = get_language()
+        
+        if lang == 'en':
+            description = """
+Based on the finally validated material scheme, design detailed synthesis methods and process flows:
+
+**Important**: Before designing synthesis methods, you must identify the specific materials ranked highest in the final validation report as synthesis targets.
+Carefully analyze the material rankings and comprehensive scores, selecting top 1-2 materials as primary synthesis targets.
+
+Design Steps:
+1. Identify Synthesis Target: Specify the highest-ranked material from final validation (formula, structure parameters)
+2. Synthesis Strategy Design: Design synthesis route based on material structure parameters
+3. Synthesis Step Refinement: Specify concrete operations for each step
+4. Process Parameter Optimization: Determine key parameter value ranges
+5. Equipment and Safety Requirements: List required equipment and safety measures
+6. Quality Control Indicators: Determine key quality control points and characterization methods
+
+Tool Usage Strategy:
+1. **Synthesis Target Confirmation**:
+   - Call Material Identifier Tool to confirm material type and properties
+   - Call Structure Validator Tool to verify material structure authenticity
+   - Record formula, structure parameters and key information
+
+2. **Raw Material Information Collection**:
+   - Call PubChem tool for chemical/physical properties and safety data
+   - Call Name2CAS Tool for CAS numbers and standard names
+   - Call Materials Project tool for metal material properties
+
+3. **Synthesis Route Design**:
+   - Call Material Search Tool for similar material synthesis methods and yields
+   - Analyze pros/cons of different synthesis routes
+   - Select optimal synthesis strategy based on tool data
+
+4. **Process Parameter Optimization**:
+   - Optimize key parameters (temperature, time, pH, concentration) based on tool data
+   - Call Formula2Properties Tool for product property predictions
+   - Determine optimal reaction conditions and parameter ranges
+
+5. **Safety Risk Assessment**:
+   - Call PubChem tool for safety data sheets (SDS)
+   - Evaluate synthesis safety risks (toxicity, flammability, corrosivity)
+   - Develop detailed safety measures and emergency plans
+
+6. **Feasibility Verification**:
+   - Cross-validate all tool query results
+   - Confirm synthesis method feasibility and reproducibility
+   - Evaluate potential industrialization challenges
+
+Design Key Points:
+- Ensure synthesis method feasibility and reproducibility
+- Optimize process parameters for best material performance
+- Consider industrialization feasibility and cost control
+- **Must specify the exact material name and formula at design start**
+- Record all tool call parameters and results
+- If tool call fails, explain failure reason and design impact
+"""
+            user_req_prefix = "\n\nUser Specific Requirement: "
+            expected_output = """
+Provide complete synthesis method scheme including:
+1. Clear synthesis target: Specific material name, formula, and selection rationale
+2. Detailed synthesis strategy and route design
+3. Specific synthesis steps and operating conditions
+4. Key process parameters and control ranges
+5. Required equipment and safety requirements
+6. Quality control indicators and characterization methods
+"""
+        else:
+            description = """
         请基于最终验证通过的材料方案，设计详细的合成方法和工艺流程：
         
         **重要说明**：在开始设计合成方法之前，必须明确最终验证报告中排名最前的具体材料作为合成目标。
@@ -90,12 +158,8 @@ class SynthesisMethodTask(BaseTask):
         - 每个工具调用都必须记录具体的参数和返回结果
         - 如果工具调用失败，必须明确说明失败原因和对设计的影响
         """
-        
-        # 添加用户需求到描述中
-        if user_requirement:
-            description += f"\n\n用户具体需求：{user_requirement}"
-        
-        expected_output = """
+            user_req_prefix = "\n\n用户具体需求："
+            expected_output = """
         提供完整的合成方法方案，包括：
         1. 明确的合成目标：具体材料名称、化学式和选择理由
         2. 详细的合成策略和路线设计
@@ -104,6 +168,10 @@ class SynthesisMethodTask(BaseTask):
         5. 所需设备和安全要求
         6. 质量控制指标和表征方法
         """
+        
+        # 添加用户需求到描述中 / Add user requirement to description
+        if user_requirement:
+            description += f"{user_req_prefix}{user_requirement}"
         
         # 创建新的任务实例而不是调用父类方法
         from crewai import Task

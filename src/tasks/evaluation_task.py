@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-材料评价任务
+材料评价任务 / Material Evaluation Task
 基于催化性能、经济可行性、环境友好性、技术可行性和结构合理性五个维度进行评价
 """
 
-from .base_task import BaseTask
+from .base_task import BaseTask, get_language, is_english
 
 class EvaluationTask(BaseTask):
     """材料评估任务类 / Material evaluation task class"""
@@ -24,7 +24,96 @@ class EvaluationTask(BaseTask):
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):
-        description = """
+        # 获取多语言文本 / Get multilingual text
+        lang = get_language()
+        
+        if lang == 'en':
+            description = """
+Please evaluate the material scheme based on the following five dimensions:
+1. Catalytic Performance (Weight 50%)
+2. Economic Feasibility (Weight 10%)
+3. Environmental Friendliness (Weight 10%)
+4. Technical Feasibility (Weight 10%)
+5. Structural Rationality (Weight 20%)
+
+Catalytic performance is the core criterion.
+
+Evaluation Steps:
+1. Analyze material performance across all five dimensions
+2. Focus on whether catalytic performance meets standards
+3. If catalytic performance fails, clearly identify issues and recommend redesign
+4. If catalytic performance passes, comprehensively evaluate other dimensions
+
+Tool Usage Strategy:
+1. **Data Collection Phase**:
+   - Call Material Identifier Tool to determine material type
+   - Call Structure Validator Tool to verify material structure existence
+   - Record all tool call parameters and initial results
+
+2. **Structural Rationality Verification**:
+   - For all materials: Call Structure Validator Tool
+   - For metal materials: Call Materials Project tool for crystal structure and stability data
+   - For organic materials: Call PubChem tool for molecular structure verification
+   - **Must record Materials Project material_id; if not returned, mark as "unverified"**
+   - **Do not use any MP-ID not verified by Materials Project tool**
+
+3. **Catalytic Performance Evaluation**:
+   - Call Material Search Tool for similar material catalytic data (TOC removal, k values)
+   - Call Name2Properties Tool for material property parameters
+   - Quantitatively evaluate PMS activation efficiency, reaction rates
+
+4. **Economic Feasibility Evaluation**:
+   - Call Materials Project for cost-related data
+   - Call PubChem for raw material availability and pricing
+
+5. **Environmental Friendliness Evaluation**:
+   - Call PNEC Tool for environmental safety thresholds
+   - Call PubChem for toxicity data and environmental hazards
+
+6. **Technical Feasibility Evaluation**:
+   - Call Material Search Tool for synthesis methods and process maturity
+   - Evaluate industrial production and practical application feasibility
+
+7. **Data Validation Phase**:
+   - Cross-validate all tool query results
+   - Identify and flag any inconsistent or suspicious data
+   - **If critical tools fail, structural rationality score must not exceed 2**
+
+Evaluation Output Format:
+1. Dimension Scores (max 10):
+   - Catalytic Performance: [score] (core criterion)
+   - Economic Feasibility: [score]
+   - Environmental Friendliness: [score]
+   - Technical Feasibility: [score]
+   - Structural Rationality: [score]
+
+2. Core Criterion Assessment:
+   - Catalytic Performance: [Pass/Fail]
+
+3. Comprehensive Evaluation:
+   - If core criterion fails: Return for redesign with reasons
+   - If core criterion passes: Continue evaluation and provide recommendations
+
+4. Tool Verification Results:
+   - Materials Project query results: [specific data]
+   - PubChem query results: [compound CID and key properties]
+   - Structure Validator results: [existence verification]
+   - How tool data supports scoring decisions
+"""
+            user_req_prefix = "\n\nUser-provided material information: "
+            expected_output = """
+Provide detailed material evaluation report including:
+1. Dimension scores and analysis
+2. Core criterion assessment results
+3. Clear decision recommendation (pass or return for redesign)
+4. If redesign needed, provide specific improvement suggestions
+5. Tool verification results with specific data
+6. How tool data supports scoring decisions
+7. **For unverified materials, explain verification failure and scoring impact**
+8. **For tool call failures, detail the failure and impact on evaluation**
+"""
+        else:
+            description = """
         请根据以下五个维度评估材料方案的性能：
         1. 催化性能（权重50%）
         2. 经济可行性（权重10%）
@@ -120,8 +209,8 @@ class EvaluationTask(BaseTask):
            - 其他工具查询结果：[具体数据]
            - 工具数据如何支持评分决定：[详细说明每个工具数据如何影响评分]
         """
-        
-        expected_output = """
+            user_req_prefix = "\n\n用户提供的材料信息："
+            expected_output = """
         提供详细的材料方案评价报告，包括：
         1. 各维度评分和分析
         2. 核心标准评估结果
@@ -133,9 +222,9 @@ class EvaluationTask(BaseTask):
         8. **对于工具调用失败的情况，必须详细说明失败原因和对评估结果的影响**
         """
         
-        # 如果有用户需求，添加到描述中
+        # 如果有用户需求，添加到描述中 / Add user requirement to description
         if user_requirement:
-            description += f"\n\n用户提供的材料信息：{user_requirement}"
+            description += f"{user_req_prefix}{user_requirement}"
         
         # 创建新的任务实例而不是调用父类方法
         from crewai import Task

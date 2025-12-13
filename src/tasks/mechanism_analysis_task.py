@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-机理分析任务
+机理分析任务 / Mechanism Analysis Task
 负责分析材料的催化机理和作用机制
 """
 
-from .base_task import BaseTask
+from .base_task import BaseTask, get_language, is_english
 
 class MechanismAnalysisTask(BaseTask):
     """机理分析任务类 / Mechanism analysis task class"""
@@ -29,7 +29,70 @@ class MechanismAnalysisTask(BaseTask):
         )
 
     def create_task(self, agent, context_task=None, user_requirement=None):
-        description = """
+        # 获取多语言文本 / Get multilingual text
+        lang = get_language()
+        
+        if lang == 'en':
+            description = """
+Based on the finally validated material scheme, perform in-depth mechanism analysis.
+The analysis must comprehensively cover the material's catalytic mechanism and be supported by data from database tools.
+
+Core Analysis Objectives:
+1. Comprehensively analyze the relationship between microstructure and macroscopic performance
+2. Deeply reveal molecular-level catalytic reaction mechanisms
+3. Establish quantitative description of structure-performance relationships
+4. Provide verifiable mechanism predictions and optimization suggestions
+
+Analysis Methodology Requirements:
+- Multi-scale analysis from atomic structure to macroscopic performance
+- Cross-validation combining computational simulation and experimental data
+- Use professional database tools for authoritative data support
+- Establish reproducible analysis framework
+
+Tool Usage Strategy:
+1. **Target Material Identification**: Call Material Identifier Tool
+2. **Metal Material Data Collection**: Call Materials Project for electronic structure, crystal structure
+3. **Organic Pollutant Data Collection**: Call PubChem for molecular structure, bonding properties
+4. **Similar Material Performance Data**: Call material_search_tool for catalytic activity, stability
+5. **Structure Verification**: Call Structure Validator Tool
+6. **Data Cross-Validation**: Validate all tool query results
+7. **Mechanism Analysis**: Combine all tool data for comprehensive analysis
+
+Analysis Dimensions (must include all):
+1. Microstructure mechanisms (atomic/molecular structure, active sites, ligand effects)
+2. Action mechanism analysis (catalytic activation, adsorption, electron transfer, radical pathways)
+3. Structure-activity relationships (quantitative correlations)
+4. Interface mechanism (solid-liquid interface, surface reactions)
+5. Mass/heat transfer mechanisms
+6. Stability mechanisms
+7. Optimization mechanism analysis
+8. Multi-scale modeling
+9. Key influencing factors (pH, temperature, ionic strength)
+10. Mechanism verification schemes (DFT calculations, experimental validation)
+"""
+            user_req_prefix = "\n\nUser Specific Requirement: "
+            expected_output = """
+Provide detailed mechanism analysis report including:
+1. Microstructure mechanism analysis
+2. Catalytic mechanism and reaction pathways
+3. Structure-activity relationships with quantitative data
+4. Interface reaction mechanisms
+5. Mass/heat transfer analysis
+6. Stability mechanism evaluation
+7. Optimization strategies
+8. Multi-scale modeling results
+9. Key influencing factor analysis
+10. Mechanism verification scheme
+
+Tool Data Requirements (mandatory):
+- Materials Project data: band gap, density, formation energy with material_id
+- PubChem data: molecular structure with compound CID
+- material_search_tool data: similar material performance comparison
+- structure_validator_tool data: structure verification results
+- All data must be clearly cited in the report
+"""
+        else:
+            description = """
         请基于最终验证通过的材料方案，进行深入的机理分析。分析必须覆盖材料催化机制的全貌，并结合数据库工具获取的数据支撑分析结论。
         
         核心分析目标：

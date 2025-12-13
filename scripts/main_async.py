@@ -40,7 +40,7 @@ from src.utils.llm_config import create_llm
 
 
 def create_dashscope_embedder():
-    """创建DashScope Embedding函数 - 用于CrewAI记忆系统"""
+    """创建DashScope Embedding类 - 用于CrewAI记忆系统"""
     try:
         from chromadb.api.types import EmbeddingFunction
     except ImportError:
@@ -85,7 +85,7 @@ def create_dashscope_embedder():
                 # 返回空向量作为默认值（维度1536，与v2一致）
                 return [[0.0] * 1536 for _ in range(len(input))]
     
-    return DashScopeEmbeddingFunction()
+    return DashScopeEmbeddingFunction  # 返回类而不是实例!
 
 
 def get_user_input():
@@ -227,7 +227,8 @@ async def run_preset_workflow_async(user_requirement, llm):
     )
     
     # 创建Crew (使用自定义DashScope Embedding)
-    embedder_function = create_dashscope_embedder()
+    # 注意: 传入类而不是实例!
+    DashScopeEmbedder = create_dashscope_embedder()
     
     crew = Crew(
         agents=list(agents.values()),
@@ -242,9 +243,9 @@ async def run_preset_workflow_async(user_requirement, llm):
         verbose=True,
         memory=True,  # 启用记忆系统
         embedder={
-            "provider": "custom",  # 使用自定义provider!
+            "provider": "custom",
             "config": {
-                "embedding_callable": embedder_function  # 注意参数名是embedding_callable
+                "embedding_callable": DashScopeEmbedder  # 传入类
             }
         }
     )

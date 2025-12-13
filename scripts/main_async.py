@@ -122,6 +122,32 @@ def get_ui_text(key):
         return key
 
 
+def select_language():
+    """选择语言 / Select language"""
+    from src.locales import set_language
+    
+    print("\n" + "="*70)
+    print("🌐 Select Language / 选择语言")
+    print("="*70)
+    print("1. 中文 (Chinese)")
+    print("2. English")
+    
+    while True:
+        choice = input("\n请选择/Please select (1-2): ").strip()
+        if choice == "1":
+            set_language("zh")
+            # 更新Config中的语言设置
+            Config.LANGUAGE = "zh"
+            print("✅ 已选择中文")
+            return "zh"
+        elif choice == "2":
+            set_language("en")
+            Config.LANGUAGE = "en"
+            print("✅ English selected")
+            return "en"
+        print("无效选项/Invalid option")
+
+
 def get_user_input():
     """获取用户材料设计需求 / Get user material design requirements"""
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
@@ -348,7 +374,7 @@ def run_preset_workflow_sync(user_requirement, llm):
 
 
 async def main_async():
-    """异步主函数"""
+    """异步主函数 / Async main function"""
     load_dotenv()
     
     # 再次确保EAS日志被抑制
@@ -356,8 +382,11 @@ async def main_async():
     
     # 检查环境变量
     if not Config.QWEN_API_KEY:
-        print("❌ 错误: 未设置QWEN_API_KEY")
+        print("❌ 错误: 未设置QWEN_API_KEY / Error: QWEN_API_KEY not set")
         return
+    
+    # 选择语言 / Select language
+    select_language()
     
     # 创建LLM
     llm = create_llm()

@@ -1,0 +1,234 @@
+Yao, B., Lua, S.-K., Lim, H.-S., Zhang, Q., Cui, X., White, T., Ting, V. P., & Dong, Z. (2020). Rapid ultrasound-assisted synthesis of   
+controllable Zn/Co-based zeolitic imidazolate framework nanoparticles for heterogeneous catalysis. Microporous and Mesoporous Materials, 314, Article 110777. Advance online publication.   
+https://doi.org/10.1016/j.micromeso.2020.110777
+
+# University of Bristol – Bristol Research Portal General rights
+
+This document is made available in accordance with publisher policies. Please cite only the published version using the reference above. Full terms of use are available: http://www.bristol.ac.uk/red/research-policy/pure/user-guides/brp-terms/
+
+# Rapid ultrasound-assisted synthesis of controllable Zn/Co-based Zeolitic Imidazolate Framework nanoparticles for heterogeneous catalysis
+
+Bingqing Yao1, Shun-Kuang Lua1, Hui-Shi Lim1, Qi Zhang1, Xiaoya $\mathrm { C u i } ^ { 1 }$ , Timothy J. White1, Valeska P. Ting2\*, ZhiLi Dong1\*
+
+1School of Materials Science and Engineering, Nanyang Technological University, 50 Nanyang Avenue, Singapore 639798, Singapore.
+
+2Department of Mechanical Engineering, University of Bristol, Bristol BS8 1TR, United Kingdom.
+
+\*Corresponding Email: v.ting@bristol.ac.uk; zldong@ntu.edu.sg
+
+# Abstract
+
+While metal-organic frameworks (MOFs) exhibits excellent potential in extensive catalytic reactions, predictably synthesizing MOF nanoparticles (NPs) with desired and uniform sizes remains a great challenge. Here, a mild and efficient ultrasound-assisted synthetic method has been developed to prepare ZIF-8, ZIF-67, and Co/ZIF-8 with welldesigned particle size and morphology. By adjusting the cobalt content doped into a heterometallic ZIF-8 structure, tunable particle sizes ranging from $3 5 \mathrm { n m }$ to over $3 0 0 \mathrm { n m }$ have been achieved, resulting from the differences in nucleation and growth rates of zinc and cobalt ZIFs. Impressively, this as-obtained bimetallic Zn/Co-ZIF shows modified physicochemical properties, leading to a change of nitrogen adsorption-desorption characteristics. In addition, when used as a heterogenous catalyst, the bimetallic Codoped ZIF-8 is demonstrated to have both enhanced catalytic performance for the activation of peroxymonosulfate (PMS) in organic dye degradation compared to pure ZIF-8, as well as superior structural stability, when compared to monometallic ZIF-67. This work provides a novel strategy for the predictable design and controlled fabrication of bimetallic MOF nanostructures with desired structures and compositions.
+
+Keywords: Zeolitic-imidazolate frameworks, bimetallic ZIF-8, tunable particle size, hierarchical porosity, heterogeneous catalysis.
+
+# 1. Introduction
+
+Recently, metal-organic frameworks (MOFs) have been regarded as promising materials for gas storage and separation[1-4], catalysis[5-7], drug delivery[8, 9], sensing[10] and other application areas[11] due to their high permanent porosity, ultrahigh surface area and diverse chemical functionalities. Zeolitic-imidazolate frameworks (ZIFs) are a subclass of MOFs, in which metal ions (e.g., Co, Zn, Cu) are tetrahedrally bonded to the N atoms of imidazolate linkers[12-14]. ZIF-8 $( Z \mathrm { n } ( \mathrm { M e I M } ) _ { 2 }$ , $\mathbf { M e I M } = 2$ -methylimidazole) is a prototypical ZIF material where $Z \mathrm { n } ( \mathrm { I I } )$ is linked with MeIM with sodalite (SOD) topology[15]. It has attracted huge attention owing to its remarkable performances in sorts of applications including catalysis[16, 17], clean energy[18-20], and drug delivery[21]. Interestingly, doping $\mathrm { C o ( I I ) }$ or $\operatorname { C u } ( \operatorname { I I } )$ into a ZIF-8 framework can supply an efficacious platform for integrating different functionalities into a single particle[22, 23]. Such mixed-metallic ZIFs structures can be achieved using various methods including solvothermal methods[24], microwave assisted methods[25], and coordination modulation synthesis[23, 26]. In particular, bimetallic ${ { Z } _ { \mathrm { n } } } / { { \mathrm { C } } _ { 0 } }$ -based ZIFs have been demonstrated to have enhanced performance compared to monometallic ZIF-8 and ZIF-67 $( \mathrm { C o } ( \mathrm { M e I M } ) _ { 2 }$ ). For instance, Gurpreet et al. reported the enhancement of $\mathrm { C O } _ { 2 }$ and $\mathrm { H } _ { 2 }$ uptake by $\mathrm { C o } _ { 7 5 } \mathrm { Z n } _ { 2 5 }$ -ZIF-8 over pure Zn-ZIF-8, which was attributed to its higher surface area and larger pore volume[27]. Furthermore, Roshan et al. demonstrated that Zn/Co-ZIF, as a catalyst, possesses excellent selectivity compared to ZIF-67 and greater structural stability than ZIF-8 in the $\mathrm { C O } _ { 2 }$ -epoxide cycloaddition reaction[28]. Based on the aforementioned features, bimetallic ${ { Z } _ { \mathrm { n } } } / { { \mathrm { C } } _ { 0 } }$ ZIFs have shown to be advantageous for a broad range of catalytic reactions, such as $\mathrm { C O } _ { 2 }$ conversion[29, 30], hydrogenation[31] and dye degradation[32], compared to their undoped counterparts.
+
+In addition to doping, other key factors underpinning the catalytic properties of MOFs are their crystal size and morphology[33, 34]. Notably, smaller crystals have larger external surface area and potentially larger numbers of defects or coordination sites, which would enhance catalytic activity[17, 35]. Meanwhile, the morphology is intimately correlated with the exposed crystal facets, which has implications for catalytic performance[36, 37]. Hence, rapid and predictable preparation of uniform MOF nanoparticles (NPs) with desired size and well-defined surface chemistry, while challenging, is extremely important for catalysis. Cravillon et al. reported that particle sizes of ZIF-8 can be tailored by employing the bridging bidentate ligand or modulating ligands to produce particles ${ \sim } 1 0 \ \mathrm { n m }$ , $6 5 \mathrm { n m }$ and $1 \mu \mathrm { m }$ in size[38]. Recently, Saliba et al. reported a facile reactiondiffusion framework (RDF) method to regulate the size of ZIF crystals in agar gel and verified that Co doping is significant in controlling the optical and photocatalytic activities of ZIFs[39]. To date, the control over the size has been achieved by using additives such as surfactants, modulating ligands, or other surface functionalized ligands, and requires several hours up to days of synthesis time, which is challenging for scale up.
+
+Herein, we rationally design a rapid, low-cost, and straightforward method to synthesize hierarchical porous ZIF-8, ZIF-67 and bimetallic Co/ZIF-8 via ultrasound-assisted synthesis which is a powerful tool for effectively facilitating nucleation and limiting the particle size to the nanoscale region. It is noted that a monotonic increase in particle size can be achieved with gradual cobalt doping in ZIF-8. The nucleation and growth mechanisms of ZIF-8, ZIF-6, and Co-doped ZIF-8 crystals were also investigated and characterized. Impressively, nucleation and Ostwald ripening dominate the crystal formation of ZIF-8, whereas nanoparticle growth governs the synthesis of ZIF-67, leading to the possibility of rational design of bimetallic MOFs with tailored particle size based on different nucleation and growth kinetics of metal salts. The series of hierarchical porous Zn/Co-ZIFs also process high surface areas and large pore volume. Finally, as one of the efficient routes to generate reactive sulfate radicals is the combination of peroxymonosulfate (PMS) with cobalt[40], the Co/ZIF-8 nanoparticles show both enhanced water stability compared to pure ZIF-67 and optimized catalytic activity in Rhodamine B (RhB) degradation when compared to monometallic ZIF-8.
+
+# 2. Experimental
+
+# 2.1. Materials
+
+Zinc nitrate hexahydrate $( \mathrm { Z n } ( \mathrm { N O } _ { 3 } ) _ { 2 } { \cdot } 6 \mathrm { H } _ { 2 } \mathrm { O } _ { 3 }$ $9 8 \%$ ), cobalt nitrate hexahydrate $( \mathrm { C o } ( \mathrm { N O } _ { 3 } ) _ { 2 } { \cdot } 6 \mathrm { H } _ { 2 } \mathrm { O }$ , $9 8 \%$ ), 2-methylimidazole $( 9 9 \% )$ and other chemicals used in the experiments without special mention were all supplied from Sigma-Aldrich. Methanol $( 9 9 . 9 9 \%$ , AR Grade) was purchased from Fisher UK. The Milli-Q water was obtained from a Milli-Q System. All the materials were used without further purification.
+
+# 2.2. Synthetic Method
+
+For synthesis of ZIF-8, 3.75 mmol of $\mathrm { Z n ( N O _ { 3 } ) _ { 2 } } { \cdot } 6 \mathrm { H } _ { 2 } \mathrm { O }$ and 7.5 mmol of MeIM were added into $1 5 \mathrm { m l }$ methanol, respectively. The two mixtures were directly placed in an ultrasonication bath (Branson 5510E-MT) for 5 min at room temperature for complete dissolution of precursors. Following this, a $7 . 5 ~ \mathrm { m l }$ aliquot of zinc precursor was added into the MeIM in methanol solution by syringe over 2 min and kept under ultrasound for another 2 min. Addition of a $2 ^ { \mathrm { n d } }$ aliquot of $7 . 5 ~ \mathrm { m l }$ of zinc precursor was added over 2 min and synthesized under ultrasonication for another $1 0 \mathrm { m i n }$ . The as-obtained powder was collected by centrifuge and then washed with methanol 3 times. The synthesis procedure for Co-doped ZIFs was the same as that of ZIF-8, except a fixed ratio of $\mathrm { Z n } ( \mathrm { N O } _ { 3 } ) _ { 2 } { \cdot } 6 \mathrm { H } _ { 2 } \mathrm { O }$ (i.e., $2 5 \%$ , $5 0 \%$ , $7 5 \%$ or $1 0 0 \%$ ) was substituted by $\mathrm { C o } ( \mathrm { N O } _ { 3 } ) _ { 2 } { \cdot } 6 \mathrm { H } _ { 2 } \mathrm { O }$ .
+
+# 2.3. Characterization Methods
+
+Powder X-ray diffraction (PXRD) patterns of ZIF particles were collected on a Bruker D8 Advance XRD using $\mathrm { C u - K } \mathfrak { a }$ radiation. Thermogravimetric analysis (TGA) of the powder was conducted in ${ \bf N } _ { 2 }$ gas from $3 0 ~ ^ { \circ } \mathrm { C }$ to $9 0 0 ^ { \circ } \mathrm { C }$ ( $1 0 ~ { ^ \circ } \mathrm { C } / \mathrm { m i n } \rangle$ ) using TA instruments Q500. The ${ \bf N } _ { 2 }$ uptake isotherms and specific surface area measurements were obtained using a Micromeritics ASAP 2020 analyser at $7 7 ~ \mathrm { K }$ , and the samples were degassed at $1 2 0 ~ ^ { \circ } \mathrm { C }$ for $^ { 1 2 \mathrm { h } }$ before the measurements. The morphology, size and elemental analysis of the NPs were examined using a field emission scanning electron microscope (FESEM JEOL 7600F) with an Oxford detector for energy-dispersive X-ray (EDX) analysis and with a transmission electron detector (TED) at $3 0 \mathrm { k V }$ . For size estimation, a sample size of 100 particles was considered on SEM micrographs. The particle and interior structure were studied with a transmission electron microscope (TEM JEOL 2010). The EDX mapping of ZIF particles was obtained using a scanning transmission electron microscope (STEM JEOL 2100F) with an Oxford EDX detector. The UV-Vis-NIR diffuse reflection profile was recorded on a Lambda 950 UV-Vis NIR Spectrophotometer. Fourier Transform Infrared (FT-IR) spectra were performed on a Perkin Elmer Frontier Spectrometer. For study of density of ZIF particle in synthetic solution, Dynamic Light Scattering (DLS) analysis was conducted on a Malvern Nanosizer instrument. $\cdot$ of synthetic solution was collected by $\cdot$ time interval and then added into $2 5 \ \mathrm { m l }$ of methanol to dilute for DLS analysis.
+
+# 2.4. Catalytic Testing
+
+In the degradation reaction of Rhodamine B (RhB), peroxymonosulfate (PMS) is used as an oxidizing agent and ZIF particles are treated as a heterogeneous catalyst for PMS activation to generate free sulfate radicals. First, $1 5 \mathrm { m g }$ of PMS was added to $1 0 0 \mathrm { m l }$ of a solution of RhB in deionized water with an initial RhB concentration $\left( \mathbf { C } _ { 0 } \right)$ of $5 0 \mathrm { m g / L }$ . Subsequently, $2 . 5 \mathrm { m g }$ ( $2 5 \mathrm { m g / L } )$ of ZIF particles was added to activate the PMS. To determine the residual RhB concentration, $1 ~ \mathrm { m l }$ of sample aliquot was taken from the reactor and filtered with a syringe filter (pore size: $0 . 2 2 \mu \mathrm { m } ,$ ). $1 ~ \mathrm { m l }$ of methanol was then added into the sample aliquots as a reaction inhibitor and the mixed solution was tested using a UV-Vis Spectrophotometer (Shimadzu UV-2700). All degradation reactions were repeated at least twice.
+
+# 3. Results and Discussion
+
+# 3.1. Synthesis and Characterization of ZIF-8 and ZIF-67
+
+Here, a facile, simple, and efficient method was developed to obtain ZIF NPs with controlled size. Schematic diagram of the synthetic procedure is present in Fig. 1a. ZIF-8 and ZIF-67 with SOD topology (Fig. 1b) were synthesized using an ultrasonic bath for 16 min at room temperature. Zn-ZIF and Co-ZIF are known to be isostructural, having typical reflection peaks of (110), (200), (211) and (222) planes at ca. 7.3, 10.4, 12.7 and 18.0 degrees. The XRD of as-synthesized powders matched the simulated ZIF-8 and ZIF-67 structure well (Fig. 1c). The broadening peaks of ZIF-8 are indicative of the formation of nanosized particles, which is also supported by SEM and TEM observations. From the thermogravimetric analysis (TGA) results (Fig. 1d), ZIF-8 maintains thermal stability up to $5 0 0 ^ { \circ } \mathrm { C }$ while mass loss of ZIF-67 starts c.a. $4 0 0 ^ { \circ } \mathrm { C }$ , thus, ZIF-8 has slightly higher stability than ZIF-67. From SEM and TEM images (Fig. 1e-h), ZIF-8 NPs seem to have no obvious facets, whereas ZIF-67 particles show rhombic dodecahedral shape, which is a stable equilibrium morphology of ZIF-8/67[41], with a visibly porous inner structure. Both ZIF samples have a narrow distribution of particle sizes (roughly $3 5 \mathrm { n m }$ for ZIF-8 and $3 6 0 \mathrm { n m }$ for ZIF-67, respectively). EDX spectra (Fig. S1) further demonstrate the successful formation of pure phase ZIF-8 and ZIF-67. These results show that ZIF particles with uniform particle size distribution and a high degree of crystallinity can be obtained, which makes ultrasound-assisted synthesis a very useful and effective tool for rapidly generating MOF NPs with well-defined particle size.
+
+# 3.2. Cobalt Doped ZIF-8 and Particle Size Distribution
+
+Based on the remarkable difference in size of pure ZIF-8 and ZIF-67 synthesized via ultrasound-assisted method, it was expected that by combining the ultrasound approach with doping of the ZIF-8 structure with various content of Co, the range of particle sizes of the final products could be further tuned. Therefore, the influence of cobalt ion doping on particle size was investigated through the synthesis of a systematic series of cobaltdoped ZIF-8 materials with different Co ratios, namely: ZIF-8 (Co: $0 \%$ ), Co25/ZIF-8 (Co: $2 5 \%$ ), Co50/ZIF-8 (Co: $5 0 \%$ ), Co75/ZIF-8 (Co: $7 5 \%$ ) and ZIF-67 (Co: $1 0 0 \%$ ).
+
+PXRD patterns of all samples show that the bimetallic Co-doped ZIFs are isostructural to monometallic ZIF-8 and ZIF-67, evident from well matched PXRD patterns (Fig. 2a), indicating that heterogeneous nucleation occurs during the synthesis. The broadening of PXRD signals from typical diffraction peaks for (110), (200), (211) and (222) crystal planes shows an increasing trend of grain size from ca. $2 8 \mathrm { n m }$ to $7 4 \mathrm { n m }$ with increasing cobalt ratios (Table S1), as estimated based on Scherrer equation[42]. TGA curves also reveal the high thermal stability of Co-doped ZIF-8 (Fig. S2) which is between that of pure ZIF-8 and ZIF-67. Moreover, the UV-Vis-NIR diffuse reflection spectra show characteristic bands for tetrahedrally-coordinated $\mathrm { C o ( I I ) }$ at $5 4 0 ~ \mathrm { n m }$ and $5 8 4 \mathrm { n m }$ (Fig. 2b), proving the incorporation of $\mathrm { C o ( I I ) }$ into the $Z \mathbf { n }$ -ZIF. FT-IR was also used to study the coordination relationship in ZIF structure (Fig. S3). The presence of MeIM results in one wide and strong band in the range of $2 2 0 0 { - } 3 3 0 0 \ \mathrm { c m ^ { - 1 } }$ owing to vibration of N-H···N hydrogen bond and one N-H stretching vibration at $1 8 4 6 \mathrm { c m } ^ { - 1 }$ . These two resonances fully vanish in the as-obtained ZIF NPs, suggesting that the N-H groups of the MeIM linkers are completely deprotonated upon bonding with metal ions. In addition, a new absorption band at $4 2 1 ~ \mathrm { c m ^ { - 1 } }$ is assigned to the Zn-N stretching or Co-N stretching, which is in agreement with the previous reports[43, 44]. Due to the similar ionic radii of $Z \mathrm { n } ^ { 2 + }$ and $\mathrm { C o } ^ { 2 + }$ (0.74 Å and $0 . 7 2 \mathrm { ~ \AA ~ }$ respectively) in tetrahedral coordination, substitution of $Z \mathrm { n } ^ { 2 + }$ with $\mathrm { C o } ^ { 2 + }$ has a low energy penalty[45]. Furthermore, the STEM-EDS mapping of Codoped ZIF-8 particles exemplifies the uniform elemental distribution of Zn and Co (Fig. 2c-k), which validates the incorporation of both Zn and Co within the same framework. Hence, according to the above results, it is obvious that Zn and Co are incorporated simultaneously to form bimetallic Zn/Co-ZIF NPs.
+
+To clarify the molar ratio of cobalt in ZIF NPs keeps the same level as that of cobalt nitrate in the precursor solution, EDX analysis was carried out on two separate batches of Zn/Co-ZIF samples (Table S2). It shows a nearly linear correlation by plotting the experimental Co atomic percentage from EDX analysis versus the synthetic molar percentage of cobalt precursor (Fig. S4), which confirms that the cobalt doping ratio can be closely controlled via the synthetic methods described in this work. To further illustrate the advantage of ultrasound-assisted synthesis in effectively doping Co into ZIF-8 framework, a comparison experiment was conducted, in which $2 5 \%$ Co-doped ZIF-8 was directly fabricated under the same synthetic procedure without use of an ultrasonic bath (i.e., Co25/ZIF-8-No US). Through EDX analysis, only $2 1 . 2 \pm 1 . 5 \%$ of cobalt was doped into the ZIF-8 framework (Table S2 and Fig. S5). Therefore, the above results demonstrate the ultrasound-assisted synthesis is needed to facilitate effective and efficient doping of Co ions into ZIF-8 framework to rapidly form bimetallic Co-doped ZIF-8 structures at room temperature.
+
+Furthermore, morphology, particle size and elemental distribution of as-synthesized ZIF powders were characterized in detail by SEM and TEM. Co-doped ZIF-8 NPs possess rhombic dodecahedral shape and uniform particle size with a porous inner structure (Fig. 3a-e and Fig. S6). Compared with the solid nature of Co25/ZIF-8-No US (Fig. S5a), this indicates that ultrasound can induce hierarchical porous structure within ZIF particles. Particle size analysis is based on the SEM images, and the average diameters of all samples are listed in Table S1. A statistical evaluation of ZIF particles brings in a mean diameter of $3 5 \pm 4 ~ \mathrm { n m }$ , $5 7 \pm 7 { \mathrm { n m } }$ , $1 1 9 \pm 1 5 \mathrm { { n m } }$ , $2 2 2 \pm 3 0 \mathrm { n m }$ , and $3 6 0 \pm 4 0 \mathrm { n m }$ corresponding to ZIF-8, Co25/ZIF-8, Co50/ZIF-8, $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ , and ZIF-67. The corresponding plot of mean diameter of NPs as a function of molar percentage of cobalt content is presented in Fig. 3f. By fitting a polynomial function through these points, the plot shows a purely binomial formula $y = 3 5 . 0 8 + 0 . 0 9 x + 0 . 0 3 x ^ { 2 }$ (where $y$ represents the mean diameter of NPs, while $x$ represents the molar percentage of cobalt(Ⅱ) precursor used for synthesis), which promotes us to predict the estimated average size of Co/ZIF-8 NPs for any given molar ratio of $\mathrm { C o ( I I ) }$ in precursor solution.
+
+Recently, Zaręba et al. reported the heterometallic Co/ZIF-8 of tunable particle sizes using different ratios of cobalt doped directly via room temperature synthesis over a 45 min period[46]. The plotting of particle size versus the cobalt content could be expressed using a biexponential formula. The particle size grows from $6 0 \mathrm { n m }$ to over $5 0 0 \mathrm { n m }$ with the cobalt dopant concentration only from $6 0 \%$ to $1 0 0 \%$ . In striking contrast, the particle size is gradually tunable in different levels from $0 \%$ to $1 0 0 \%$ of cobalt doping in this work. Moreover, coefficient of variations (CV) is defined as the ratio of the standard deviation to the mean diameter. The smaller value of CV in this case represents narrower particle size distribution. CV of particle sizes for ZIF-8, $5 0 \%$ Co/ZIF-8 and ZIF-67 prepared by Zareba et al. are $1 9 . 0 \%$ , $1 8 . 8 \%$ and $2 5 . 6 \%$ respectively. However, the particles obtained via ultrasound-assisted synthesis method show highly uniform particle size distribution (i.e., $\mathrm { C V } _ { \mathrm { Z I F - 8 } } = 1 1 . 4 \%$ , $\mathrm { C V } _ { \mathrm { C o s 0 / Z I F - 8 } } = 1 2 . 6 \%$ , $\mathrm { C V } _ { \mathrm { Z I F - } 6 7 } = 1 1 . 1 \% )$ in this work. Thus, it is demonstrated that combining the ultrasound approach with doping of the ZIF-8 structure shows greater fine control over the particle sizes in the range of $0 \%$ to $1 0 0 \%$ of cobalt doping.
+
+# 3.3. Growth Mechanism of Zn/Co-ZIF NPs
+
+In order to study the nucleation and growth mechanism of ZIF-8, ZIF-67 and Co-doped ZIF-8 via this ultrasound-assisted method, the crystals were extracted from the synthesis solution at various times (i.e., 30, 60, 90 and 120 s). PXRD results of ZIF-8, Co75/ZIF-8, and ZIF-67 particles at the first two minutes are consistent with the corresponding simulated structures, indicating the fast crystallization of ZIF crystals (Fig. S7). Moreover, to better understand the change of the density of particle versus time during the synthetic process, ZIF-8 as an example, nuclei concentration change versus time is plotted in Fig. S8, which follows the LaMer mechanism of burst nucleation and subsequent growth[33,
+
+47]. The SEM Transmission Electron Diffraction (TED) images (Fig. 4) reveal the formation of ZIF particles at early stage of reaction, in agreement with the PXRD results. A large number of small ZIF-8 seeds (ca. 12 nm) appear at ${ \sim } 3 0$ s (marked by red arrows in Fig. 4a), while the size of $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ seeds (Fig. 4d) is about $3 9 \mathrm { n m }$ and the size of ZIF-67 seeds $( c a . 8 2 \mathrm { n m }$ ) (Fig. ${ 4 \mathrm { g } } ,$ ) is about 7 times larger than that of ZIF-8. It is worth mentioning that distinctly fewer nuclei of ZIF-67 form at $3 0 \mathrm { s }$ . In this case, it is apparent that the small seeds diminish while the larger particles grow (Fig. 4b, e, h), which suggests an Ostwald ripening process[41, 48]. Impressively, some particles with hollow structure appear at \~90 s (Fig. 4c, f, i), suggesting that nucleation and growth may happen at the liquid-air interface due to ultrasound induced acoustic cavitation[49]. Thus, it can be proposed that nucleation dominates the crystal formation of ZIF-8, whereas in case of ZIF-67, rapid growth leads to the generation of larger ZIF-67 particles during the synthetic process, which is consistent with reported results[38, 39]. The different rates of nucleation and growth kinetics for $\mathrm { Z n ( I I ) }$ and $\mathrm { C o ( I I ) }$ in ZIF framework may result in the formation of a series of controllable and relatively monodisperse particle sizes with different levels of Co dopant.
+
+# 3.4. Gas Sorption
+
+To explore the change of surface area and pore volume of ZIF particles upon different doping levels of Co, $\Nu _ { 2 }$ adsorption/desorption experiments were conducted (Fig. S9). The surface areas of ZIF NPs were calculated as up to $1 4 0 0 \mathrm { m } ^ { 2 } / \mathrm { g }$ using the Brunauer-EmmettTeller (BET) model (Table 1). In contrast to results from Kaur et al. that Co75Zn25-ZIF-8 exhibited highest surface area and pore volume among Co-doped ZIF-8 particles[27], Co/ZIF-8 NPs in our experiments manifest negligible difference in surface area, while ZIF-67 displays slightly higher surface area $( 1 4 8 2 \mathrm { m } ^ { 2 } / \mathrm { g } )$ and $\cdot$ -Plot micropore volume $( 0 . 6 7 8 \mathrm { c m } ^ { 3 } / \mathrm { g } )$ ). However, the nanosized character of these ZIFs is expressed in the measured external surface area. External surface area for ZIF-8 oversees $1 6 \%$ from all surface area, and for $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$ it decreases to $9 \%$ , however for ZIF-67 it is negligible $( 2 . 4 \% )$ (Table 1). The external surface area has high relevance to catalytic performance, as demonstrated by previous reports[16, 17]. Fig. S10 represents the analyzation of Barrett-Joiner-Halenda (BJH) adsorption pore volume. The as-synthesized ZIF powders process hierarchical porosity from $1 \ \mathrm { n m }$ to ${ \sim } 1 8 0 \ \mathrm { n m }$ , which is in accordance with the proposed TEM analysis (Fig. 3a-e). Noticeably, $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$ displays the highest pore volume $( 1 . 0 3 1 \mathrm { c m } ^ { 3 } / \mathrm { g } )$ , which is 1.3 times than that of ZIF-8 and even 16 times than that of ZIF-67. The high surface area and hierarchical porosity properties of the series of Codoped ZIF-8 may contribute to enhanced gas storage capabilities for e.g. $\mathrm { C O } _ { 2 }$ and $\mathrm { C H } _ { 4 }$ sorption, which will be further investigated in future studies.
+
+# 3.5. Water Stability and Catalytic Properties of ZIF NPs
+
+For the environmental applications of ZIFs, water stability is of high relevance to recovery of heterogenous ZIF catalysts in the degradation of organic pollutants in water. Although ZIF-67 is unstable in water, it is obvious that both the crystallinity and structure of Co-doped ZIF (with Co content of $2 5 \%$ , $5 0 \%$ and $7 5 \%$ ) particles were preserved after being kept in water for $^ { 2 4 \mathrm { ~ h ~ } }$ , as proven by PXRD results (Fig. 5a), which demonstrate that the presence of $Z \mathrm { n } ( \mathrm { I I } )$ in the framework can dramatically increase the chemical stability of Co-doped ZIF materials.
+
+As a proof of concept, degradation of Rhodamine B in water was conducted to assess the catalytic properties of ultrasound assisted synthesized ZIF nanocrystals. By calculating the decrease in the absorbance band of RhB (about $5 5 4 \mathrm { n m }$ ) to determine the decrease of the RhB concentration, the rate and extent of RhB degradation are shown in Fig. 5b. The control solution containing pure RhB with PMS presents a slight degradation (about $5 \%$ ) after $1 . 5 \mathrm { ~ h ~ }$ , indicating that PMS alone is ineffective for decolorizing RhB in water (Fig. S11). Moreover, when pure ZIF-8 is added into RhB solution with PMS, no obvious decolorization of RhB is observed (ca. $9 \%$ ) (Fig. S12a). In contrast, after introducing Co-doped ZIF-8 $2 5 \mathrm { m g / L }$ ) into the degradation reaction, concentration of RhB is reduced to $1 5 \%$ after $9 0 \mathrm { { m i n } }$ (Fig. S12b-d), indicating that the existence of $\mathrm { C o ( I I ) }$ in ZIF-8 can facilitate RhB degradation in water by effectively activating PMS to generate sulfate radicals.
+
+To further investigate the influence of Co doping ratio and relative nanoparticle size on the catalytic performance, $2 5 \mathrm { m g / L }$ of Co25/ZIF-8, Co50/ZIF-8 and $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ were added into RhB solution with PMS, respectively. The kinetic data and rate constants of Co/ZIF-8 are shown in Table S3 $( 0 . 1 7 5 \pm 0 . 0 2 8$ , $0 . 2 6 3 \pm 0 . 0 3 7$ and $0 . 2 9 7 \pm 0 . 0 5 8 \mathrm { { m i n } ^ { - 1 } }$ , for Co25/ZIF-8, $\mathrm { C o } _ { 5 0 } / \mathrm { Z I F } { - } 8$ and $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ , respectively). This result indicates that a higher amount of Co-doping can enhance the degree of PMS activation and afterwards promote the degradation of RhB. Interestingly, the equilibrium $\mathrm { C } / \mathrm { C } _ { 0 }$ of these three degradation reactions is comparable, indicating that even $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$ can achieve efficient catalytic process. Moreover, since ZIF-67 is chemically unstable which would lead to the leachingout of the cobalt ion, it cannot be used in such applications. Thus, the experimental results prove the prospects that low Co doping can greatly enhance the catalytic performance of ZIF-8 with low catalyst loading and better water stability.
+
+# 4. Conclusions
+
+In this work, we synthesized and systematically characterized ZIF-8 and ZIF-67 particles via an ultrasound-assisted method. Based on the disparity in particle size of ZIF-8 and ZIF-67, size distributions were also investigated as a function of cobalt level in Co-doped ZIF-8 frameworks, and thus a purely binomial formula was established to fit the average diameter of ZIF NPs versus the molar percentage of cobalt content. Moreover, the nucleation and growth of ZIF NPs at early stages of reaction suggest that a mechanism of nucleation and subsequent Ostwald ripening govern the crystal formation of ZIF-8, while the growth dominates in the synthesis of ZIF-67. Finally, the catalytic properties of the Co/ZIF-8 crystals were appraised by investigating the capability to activate PMS for RhB degradation. Co doping is demonstrated to be of great importance in tuning the particle size, physicochemical properties, and catalytic activity of ZIF-8 as a heterogenous catalyst, which paves the way to rational design and synthesis of novel porous MOF nanostructures for potential heterogeneous catalysis.
+
+# Acknowledgments
+
+The authors gratefully acknowledge the financial support from the Ministry of Education (MOE) Singapore AcRF Tier 1 grant (2018-T1-001-077) and the UK Engineering and Physical Sciences Research Council (EP/R01650X/1).
+
+# References
+
+[1] A.R. Millward, O.M. Yaghi, Metal-organic frameworks with exceptionally high capacity for storage of carbon dioxide at room temperature, J. Am. Chem. Soc. 127 (2005) 17998-17999.
+
+[2] H. Kim, S. Yang, S.R. Rao, S. Narayanan, E.A. Kapustin, H. Furukawa, A.S. Umans, O.M. Yaghi, E.N. Wang, Water harvesting from air with metal-organic frameworks powered by natural sunlight, Science 356 (2017) 430-434.
+
+[3] E.J. Carrington, C.A. McAnally, A.J. Fletcher, S.P. Thompson, M. Warren, L. Brammer, Solvent-switchable continuous-breathing behaviour in a diamondoid metalorganic framework and its influence on $\mathrm { C O } _ { 2 }$ versus $\mathrm { C H } _ { 4 }$ selectivity, Nat. Chem. 9 (2017) 882-889.
+
+[4] H.R. Abid, Z.H. Rada, Y. Li, H.A. Mohammed, Y. Wang, S. Wang, H. Arandiyan, X. Tan, S. Liu, Boosting $\mathrm { C O } _ { 2 }$ adsorption and selectivity in metal-organic frameworks of MIL-96 (Al) via second metal Ca coordination, RSC Adv. 10 (2020) 8130-8139.
+
+[5] P. Li, J. Li, X. Feng, J. Li, Y. Hao, J. Zhang, H. Wang, A. Yin, J. Zhou, X. Ma, B. Wang, Metal-organic frameworks with photocatalytic bactericidal activity for integrated air cleaning, Nat. Commun. 10 (2019) 2177.
+
+[6] R. Ameloot, F. Vermoortele, W. Vanhove, M.B. Roeffaers, B. Sels, D.E. De Vos, Interfacial synthesis of hollow metal-organic framework capsules demonstrating selective permeability, Nat. Chem. 3 (2011) 382-387.
+
+[7] S. Maiti, A. Pramanik, U. Manju, S. Mahanty, Cu3(1,3,5-benzenetricarboxylate)2 metal-organic framework: a promising anode material for lithium-ion battery, Microporous Mesoporous Mater. 226 (2016) 353-359.
+
+[8] S. Peng, B. Bie, Y. Sun, M. Liu, H. Cong, W. Zhou, Y. Xia, H. Tang, H. Deng, X. Zhou, Metal-organic frameworks for precise inclusion of single-stranded DNA and transfection in immune cells, Nat. Commun. 9 (2018) 1293.
+
+[9] G. Chen, B. Yu, C. Lu, H. Zhang, Y. Shen, H. Cong, Controlled synthesis of Fe3O4@ZIF-8 nanoparticles for drug delivery, CrystEngComm 20 (2018) 7486-7491.
+
+[10] Y. Wang, M. Zhao, J. Ping, B. Chen, X. Cao, Y. Huang, C. Tan, Q. Ma, S. Wu, Y. Yu, Q. Lu, J. Chen, W. Zhao, Y. Ying, H. Zhang, Bioinspired design of ultrathin 2D bimetallic metal-organic-framework nanosheets used as biomimetic enzymes, Adv. Mater. 28 (2016) 4149-4155.
+
+[11] G. Xu, K. Otsubo, T. Yamada, S. Sakaida, H. Kitagawa, Superprotonic conductivity in a highly oriented crystalline metal-organic framework nanofilm, J. Am. Chem. Soc. 135 (2013) 7438-7441.
+
+[12] H. Furukawa, K.E. Cordova, M. O’Keeffe, O.M. Yaghi, The chemistry and applications of metal-organic frameworks, Science 341 (2013) 1230444.
+
+[13] K.S. Park, Z. Ni, A.P. Côté, J.Y. Choi, R. Huang, F. Uribe-Romo, H.K. Chae, M. O'Keeffe, O.M. Yaghi, Exceptional chemical and thermal stability of zeolitic imidazolate frameworks, PNAS 103 (2006) 10186-10191.
+
+[14] X.C. Huang, Y.Y. Lin, J.P. Zhang, X.M. Chen, Ligand-directed strategy for zeolitetype metal-organic frameworks: zinc(II) imidazolates with unusual zeolitic topologies, Angew. Chem. Int. Ed. 45 (2006) 1557-1559.
+
+[15] H. Wu, W. Zhou, T. Yildirim, Hydrogen storage in a prototypical zeolitic imidazolate framework-8, J. Am. Chem. Soc. 129 (2007) 5314-5315.
+
+[16] C. Chizallet, S. Lazare, D. Bazer-Bachi, F. Bonnier, V. Lecocq, E. Soyer, A.A. Quoineaud, N. Bats, Catalysis of transesterification by a nonfunctionalized metal-organic framework: acido-basicity at the external surface of ZIF-8 probed by FTIR and ab initio calculations, J. Am. Chem. Soc. 132 (2010) 12365-12377.
+
+[17] O.M. Linder-Patton, T.J. de Prinse, S. Furukawa, S.G. Bell, K. Sumida, C.J. Doonan, C.J. Sumby, Influence of nanoscale structuralisation on the catalytic performance of ZIF8: a cautionary surface catalysis study, CrystEngComm 20 (2018) 4926-4934.
+
+[18] S. Hwang, W.S. Chi, S.J. Lee, S.H. Im, J.H. Kim, J. Kim, Hollow ZIF-8 nanoparticles improve the permeability of mixed matrix membranes for $\mathrm { C O } _ { 2 } / \mathrm { C H } _ { 4 }$ gas separation, J. Membr. Sci. 480 (2015) 11-19.
+
+[19] Y. Hu, Z. Liu, J. Xu, Y. Huang, Y. Song, Evidence of pressure enhanced $\mathrm { C O } _ { 2 }$ storage in ZIF-8 probed by FTIR spectroscopy, J. Am. Chem. Soc. 135 (2013) 9287-9290.
+
+[20] I. Khay, G. Chaplais, H. Nouali, C. Marichal, J. Patarin, Water intrusion-extrusion experiments in ZIF-8: impacts of the shape and particle size on the energetic performances, RSC Adv. 5 (2015) 31514-31518.
+
+[21] M. Chiacchia, C. Cerutti, R. Gromnicova, K. Rietdorf, I.A. Romero, D. Bradshaw, Zinc-imidazolate polymers (ZIPs) as a potential carrier to brain capillary endothelial cells, J. Mater. Chem. B 3 (2015) 9053-9059.
+
+[22] A. Schejn, A. Aboulaich, L. Balan, V. Falk, J. Lalevée, G. Medjahdi, L. Aranda, K. Mozet, R. Schneider, $\mathrm { C u } ^ { 2 + } ,$ -doped zeolitic imidazolate frameworks (ZIF-8): efficient and stable catalysts for cycloadditions and condensation reactions, Catal. Sci. Technol. 5 (2015) 1829-1839.
+
+[23] P. Zhang, B. Guan, L. Yu, X.W.D. Lou, Formation of double-shelled zinc-cobalt sulfide dodecahedral cages from bimetallic zeolitic imidazolate frameworks for hybrid supercapacitors, Angew. Chem. 129 (2017) 7247-7251.
+
+[24] J. Tang, R.R. Salunkhe, J. Liu, N.L. Torad, M. Imura, S. Furukawa, Y. Yamauchi, Thermal conversion of core-shell metal-organic frameworks: A new method for selectively functionalized nanoporous hybrid carbon, J. Am. Chem. Soc. 137 (2015) 1572-1580.
+
+[25] F. Hillman, J.M. Zimmerman, S.M. Paek, M.R. Hamid, W.T. Lim, H.K. Jeong, Rapid microwave-assisted synthesis of hybrid zeolitic-imidazolate frameworks with mixed metals and mixed linkers, J. Mater. Chem. A 5 (2017) 6090-6099.
+
+[26] C. Avci, I. Imaz, A. Carné Sánchez, J.A. Pariente, N. Tasios, J. Pérez-Carvajal, M.I. Alonso, A. Blanco, M. Dijkstra, C. López, D. Maspoch, Self-assembly of polyhedral metal-organic framework particles into three-dimensional ordered superstructures, Nat. Chem. 10 (2017) 78-84.
+
+[27] G. Kaur, R.K. Rai, D. Tyagi, X. Yao, P.Z. Li, X.C. Yang, Y. Zhao, Q. Xu, S.K. Singh, Room-temperature synthesis of bimetallic Co-Zn based zeolitic imidazolate frameworks in water for enhanced $\mathrm { C O } _ { 2 }$ and $\mathrm { H } _ { 2 }$ uptakes, J. Mater. Chem. A 4 (2016) 14932-14938.
+
+[28] R.R. Kuruppathparambil, R. Babu, H.M. Jeong, G.Y. Hwang, G.S. Jeong, M.I. Kim, D.W. Kim, D.W. Park, A solid solution zeolitic imidazolate framework as a room temperature efficient catalyst for the chemical fixation of $\mathrm { C O } _ { 2 }$ , Green Chem. 18 (2016) 6349-6356.
+
+[29] K. Zhou, B. Mousavi, Z. Luo, S. Phatanasri, S. Chaemchuen, F. Verpoort, Characterization and properties of ${ { Z } _ { \mathrm { n } } } / { { \mathrm { C } } _ { 0 } }$ zeolitic imidazolate frameworks vs. ZIF-8 and ZIF-67, J. Mater. Chem. A 5 (2017) 952-957.
+
+[30] L. Hu, Z. Yan, X. Mo, X. Peng, L. Chen, Hierarchical Co/ZIF-8 as an efficient catalyst for cycloaddition of $\mathrm { C O } _ { 2 }$ and epoxide, Microporous Mesoporous Mater. 294 (2020) 109917.
+
+[31] J. Yang, F. Zhang, H. Lu, X. Hong, H. Jiang, Y. Wu, Y. Li, Hollow Zn/Co ZIF particles derived from core-shell ZIF-67@ZIF-8 as selective catalyst for the semihydrogenation of acetylene, Angew. Chem. 54 (2015) 10889-10893.
+
+[32] K.Y.A. Lin, H.A. Chang, Zeolitic imidazole framework-67 (ZIF-67) as a heterogeneous catalyst to activate peroxymonosulfate for degradation of Rhodamine B in water, J. Taiwan Inst. Chem. Eng. 53 (2015) 40-45.
+
+[33] S. Wang, C.M. McGuirk, A. d'Aquino, J.A. Mason, C.A. Mirkin, Metal-organic framework nanoparticles, Adv. Mater. 30 (2018) 1800202.
+
+[34] X. Xiao, L. Zou, H. Pang, Q. Xu, Synthesis of micro/nanoscaled metal-organic frameworks and their direct electrochemical applications, Chem. Soc. Rev. 49 (2020) 301-331.
+
+[35] J.K. Reddy, K. Motokura, T.R. Koyama, A. Miyaji, T. Baba, Effect of morphology and particle size of ZSM-5 on catalytic performance for ethylene conversion and heptane cracking, J. Catal. 289 (2012) 53-61.
+
+[36] A. Umemura, S. Diring, S. Furukawa, H. Uehara, T. Tsuruoka, S. Kitagawa, Morphology design of porous coordination polymer crystals by coordination modulation, J. Am. Chem. Soc. 133 (2011) 15506-15513.
+
+[37] M.H. Pham, G.T. Vuong, F.G. Fontaine, T.O. Do, Rational synthesis of metalorganic framework nanocubes and nanosheets using selective modulators and their morphology-dependent gas-sorption properties, Cryst. Growth Des. 12 (2012) 3091-3095.
+
+[38] J. Cravillon, R. Nayuk, S. Springer, A. Feldhoff, K. Huber, M. Wiebcke, Controlling zeolitic imidazolate framework nano- and microcrystal formation: insight into crystal growth by time-resolved in situ static light scattering, Chem. Mater. 23 (2011) 2130-2141.
+
+[39] D. Saliba, M. Ammar, M. Rammal, M. Al-Ghoul, M. Hmadeh, Crystal growth of ZIF-8, ZIF-67, and their mixed-metal derivatives, J. Am. Chem. Soc. 140 (2018) 1812- 1823.
+
+[40] P. Hu, M. Long, Cobalt-catalyzed sulfate radical-based advanced oxidation: a review on heterogeneous catalysts and applications, Appl. Catal., B 181 (2016) 103-117.
+
+[41] J. Cravillon, C.A. Schröder, H. Bux, A. Rothkirch, J. Caro, M. Wiebcke, Formate modulated solvothermal synthesis of ZIF-8 investigated using time-resolved in situ X-ray diffraction and scanning electron microscopy, CrystEngComm 14 (2012) 492-498.
+
+[42] B.E. Warren, X-ray diffraction, Courier Corporation, Massachusetts, 1990.
+
+[43] X. Li, X. Gao, L. Ai, J. Jiang, Mechanistic insight into the interaction and adsorption of $\mathrm { C r } ( \mathrm { V I } )$ with zeolitic imidazolate framework-67 microcrystals from aqueous solution, Chem. Eng. J. 274 (2015) 238-246.
+
+[44] X. Lou, Y. Ning, C. Li, X. Hu, M. Shen, B. Hu, Bimetallic zeolite imidazolate framework for enhanced lithium storage boosted by the redox participation of nitrogen atoms, Sci. China Mater. 61 (2018) 1040-1048.
+
+[45] G. Fang, J. Zhou, Y. Cai, S. Liu, X. Tan, A. Pan, S. liang, Metal-organic frameworks templated two dimensional hybrid bimetallic metal oxides with enhanced lithium/sodium storage capability, J. Mater. Chem. A 5 (2017) 13983-13993.
+
+[46] J.K. Zaręba, M. Nyk, M. Samoć, Co/ZIF-8 heterometallic nanoparticles: control of nanocrystal size and properties by a mixed-metal approach, Cryst. Growth Des. 16 (2016) 6419-6425.
+
+[47] N.T.K. Thanh, N. Maclean, S. Mahiddine, Mechanisms of nucleation and growth of nanoparticles in solution, Chem. Rev. 114 (2014) 7610-7630.
+
+[48] J. Cravillon, C.A. Schröder, R. Nayuk, J. Gummel, K. Huber, M. Wiebcke, Fast nucleation and growth of ZIF‐8 nanocrystals monitored by time‐resolved in situ small‐ angle and wide‐angle X‐ray scattering, Angew. Chem., Int. Ed. 50 (2011) 8067-8071.
+
+[49] V. Safarifard, A. Morsali, Applications of ultrasound to the synthesis of nanoscale metal-organic coordination polymers, Coord. Chem. Rev. 292 (2015) 1-14.
+
+Table 1. Comparison of BET surface area $( S _ { \mathrm { B E T } } )$ , external surface area $( S _ { \mathrm { e x t } } )$ , microporous volume $\mathrm { ( V _ { t - p l o t \ m i c r o } ) }$ , and BJH cumulative pore volume $\mathrm { ( V _ { B J H } ) }$ for ZIF NPs.   
+
+<table><tr><td>Sample</td><td>SBeT (m2/g)</td><td>Sext (m2/g)</td><td>Vt-plot micro (cm3/g)</td><td>VBJH² (cm3/g)</td></tr><tr><td>ZIF-8</td><td>1414</td><td>221</td><td>0.560</td><td>0.786</td></tr><tr><td>C025/ZIF-8</td><td>1456</td><td>130</td><td>0.622</td><td>1.031</td></tr><tr><td>C050/ZIF-8</td><td>1452</td><td>73</td><td>0.647</td><td>0.290</td></tr><tr><td>C075/ZIF-8</td><td>1459</td><td>49</td><td>0.662</td><td>0.155</td></tr><tr><td>ZIF-67</td><td>1482</td><td>36</td><td>0.678</td><td>0.063</td></tr></table>
+
+${ } ^ { \mathrm { a v } } { \scriptstyle \mathrm { B J H } }$ is the Barrett-Joiner-Halenda (BJH) adsorption cumulative volume of pores between
+
+# Figure Captions
+
+Fig. 1. (a) Schematic diagram of ultrasound-assisted synthesis of ZIFs. (b) Schematic diagram of crystal structure of ZIF-8, Co-doped ZIF and ZIF-67, respectively (blue and purple tetrahedra represent tetrahedrally-coordinated zinc and cobalt, respectively). (c) PXRD patterns of ZIF-8, ZIF-67, and simulated ZIF-8/67. (d) Thermogravimetric analysis of ZIF-8 and ZIF-67. SEM and TEM images of (e, g) ZIF-8 and (f, h) ZIF-67.
+
+Fig. 2. (a) PXRD patterns and (b) UV-Vis-NIR diffuse reflection spectra of Co-doped nanoparticles. STEM image and EDX mapping of (c-e) $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$ , (f-h) $\mathrm { C o } _ { 5 0 } / \mathrm { Z I F } { - } 8$ , and (i-k) Co75/ZIF-8, respectively.
+
+Fig. 3. TEM images along with particle size distribution histograms for (a) ZIF-8, (b) Co25/ZIF-8, (c) Co50/ZIF-8, (d) $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ and (e) ZIF-67, respectively. (f) A plot of average diameter of NPs as a function of molar ratio of cobalt. In the polynomial formula, $y$ represents the average diameter of NPs expressed in nanometers, while $x$ represents the molar concentration of cobalt(Ⅱ) in precursor solution. The error bars show the standard deviation of average NP size.
+
+Fig. 4. Nucleation and growth kinetics of ZIFs particles: SEM TED images of ZIF-8 after reactions for (a) $3 0 \mathrm { ~ s ~ }$ , (b) $6 0 \mathrm { { s } }$ , and (c) 90 s, respectively. SEM TED images of $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ after reactions for (d) 30 s, (e) 60 s and (f) $9 0 \ \mathrm { s } \ $ , respectively. SEM TED images of ZIF-67 after reactions for (g) 30 s, (h) 60 s and (i) 90 s, respectively.
+
+Fig. 5. (a) PXRD of Co-doped ZIF-8 in the presence of $0 \%$ , $2 5 \%$ , $5 0 \%$ , $7 5 \%$ and $1 0 0 \%$ of $\mathrm { C o ( I I ) }$ , after being kept in water for $^ { 2 4 \mathrm { ~ h ~ } }$ . (b) Catalytic performance of ZIF-8 and Co-doped ZIF-8 to activate PMS in RhB degradation $\mathrm { ( Z I F = 2 5 ~ m g / L }$ , $\mathrm { P M S } = 1 5 0 \ : \mathrm { m g / L }$ , $\mathrm { R h B } = 5 0 \mathrm { m g / L } )$ .
+
+![](images/597480202457b7a5b46aa34d03e6f84e66a700d5c634d751307f761b99ff837c.jpg)  
+Fig. 1. (a) Schematic diagram of ultrasound-assisted synthesis of ZIFs. (b) Schematic diagram of
+
+crystal structure of ZIF-8, Co-doped ZIF and ZIF-67, respectively (blue and purple tetrahedra represent tetrahedrally-coordinated zinc and cobalt, respectively). (c) PXRD patterns of ZIF-8, ZIF-67, and simulated ZIF-8/67. (d) Thermogravimetric analysis of ZIF-8 and ZIF-67. SEM and TEM images of (e, g) ZIF-8 and (f, h) ZIF-67.
+
+![](images/8753970e61ebe694e2edcaad97b648adfcd396d99b20fab9a83a851d474e6d04.jpg)  
+Fig. 2. (a) PXRD patterns and (b) UV-Vis-NIR diffuse reflection spectra of Co-doped nanoparticles. STEM image and EDX mapping of (c-e) $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$ , (f-h) $\mathrm { C o } _ { 5 0 } / \mathrm { Z I F } { - } 8$ , and (i-k) Co75/ZIF-8, respectively.
+
+![](images/2c7f50a422b1de4356d4a5f850f65a907acf388ef5678e7e8bf6522c7d2cc89b.jpg)  
+Fig. 3. TEM images along with particle size distribution histograms for (a) ZIF-8, (b) $\mathrm { C o } _ { 2 5 } / \mathrm { Z I F } { - } 8$
+
+(c) $\mathrm { C o } _ { 5 0 } / \mathrm { Z I F } { - } 8$ , (d) $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ and (e) ZIF-67, respectively. (f) A plot of average diameter of NPs as a function of molar ratio of cobalt. In the polynomial formula, $y$ represents the average diameter of NPs expressed in nanometers, while $x$ represents the molar concentration of cobalt(Ⅱ) in precursor solution. The error bars show the standard deviation of average NP size.
+
+![](images/da70f406913c4483a11c94395450541744964cd2610e28aa145a01167b6a8d0b.jpg)  
+Fig. 4. Nucleation and growth kinetics of ZIFs particles: SEM TED images of ZIF-8 after
+
+reactions for (a) $3 0 \mathrm { ~ s ~ }$ , (b) $6 0 \mathrm { { s } }$ , and (c) 90 s, respectively. SEM TED images of $\mathrm { C o } _ { 7 5 } / \mathrm { Z I F } { - } 8$ after reactions for (d) 30 s, (e) 60 s and (f) 90 s, respectively. SEM TED images of ZIF-67 after reactions for (g) 30 s, (h) 60 s and (i) 90 s, respectively.
+
+![](images/30f8d9487fa3721622d7f4b6a8517272e34662f016f286b22dd2a3d739a3e6c3.jpg)  
+Fig. 5. (a) PXRD of Co-doped ZIF-8 in the presence of $0 \%$ , $2 5 \%$ , $50 \%$ , $7 5 \%$ and $100 \%$ of $\mathrm { C o ( I I ) }$
+
+after being kept in water for $^ { 2 4 \mathrm { ~ h ~ } }$ . (b) Catalytic performance of ZIF-8 and $\mathrm { C o }$ -doped ZIF-8 to activate PMS in RhB degradation $\mathrm { ( Z I F = 2 5 ~ m g / L }$ , $\mathrm { P M S } = 1 5 0 \ : \mathrm { m g / L }$ , $\mathrm { R h B } = 5 0 \mathrm { m g / L } )$ .

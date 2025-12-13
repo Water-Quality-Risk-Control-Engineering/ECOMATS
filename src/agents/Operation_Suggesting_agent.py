@@ -45,13 +45,13 @@ class OperationSuggestingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 在 DashScope 兼容端点默认禁用工具调用
+        # 使用操作指导专用工具集，聚焦于材料参数和试剂查询
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_material_assessment_tools()
+                agent.tools = ToolFactory.create_operation_guidance_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_material_assessment_tools()
+            agent.tools = ToolFactory.create_operation_guidance_tools()
         return agent

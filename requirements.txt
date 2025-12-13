@@ -1,5 +1,12 @@
+# CrewAI框架
 crewai==1.2.1
-python-dotenv
-requests
-mp-api
-dashscope
+crewai-tools==1.2.1
+
+# LLM API
+openai>=1.100.0
+dashscope>=1.25.0
+
+# 工具和工具数据库
+python-dotenv>=1.0.0
+requests>=2.32.0
+mp-api>=0.45.0

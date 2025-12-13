@@ -5,7 +5,7 @@ Tools module initialization file / 工具模块初始化文件
 # Import all functional tools / 导入所有功能工具
 from .materials_project_tool import get_materials_project_tool
 from .pubchem_tool import get_pubchem_tool
-from .evaluation_tool import EvaluationTool
+# EvaluationTool 已移除 - 在 ECOMATS 项目中未被使用，仅在 BioCrew 项目中使用
 from .name2cas_tool import get_name2cas_tool
 from .name2properties_tool import get_name2properties_tool
 from .cid2properties_tool import get_cid2properties_tool
@@ -15,6 +15,7 @@ from .pnec_tool import get_pnec_tool
 from .material_identifier_tool import get_material_identifier_tool
 from .data_validator_tool import get_data_validator_tool
 from .structure_validator_tool import get_structure_validator_tool
+from .molport_tool import get_molport_tool
 
 # Import CrewAI tool wrappers / 导入CrewAI工具包装器
 from .crewai_materials_project_tool import materials_project_tool
@@ -28,6 +29,14 @@ from .crewai_pnec_tool import CrewAIPNECTool
 from .crewai_material_identifier_tool import CrewAIMaterialIdentifierTool
 from .crewai_data_validator_tool import CrewAIDataValidatorTool
 from .crewai_structure_validator_tool import CrewAIStructureValidatorTool
+from .crewai_molport_tool import (
+    molport_availability_tool,
+    molport_search_tool,
+    molport_molecule_info_tool,
+    CrewAIMolPortAvailabilityTool,
+    CrewAIMolPortSearchTool,
+    CrewAIMolPortMoleculeInfoTool
+)
 
 # Import tool factory / 导入工具工厂
 from .factory import ToolFactory
@@ -42,7 +51,7 @@ from src.utils.assessment_scoring_logic import AssessmentScoringLogic
 __all__ = [
     'get_materials_project_tool',
     'get_pubchem_tool',
-    'EvaluationTool',
+    # 'EvaluationTool',  # 已移除 - 未在 ECOMATS 中使用
     'get_name2cas_tool',
     'get_name2properties_tool',
     'get_cid2properties_tool',
@@ -52,6 +61,7 @@ __all__ = [
     'get_material_identifier_tool',
     'get_data_validator_tool',
     'get_structure_validator_tool',
+    'get_molport_tool',
     'materials_project_tool',
     'pubchem_tool',
     'CrewAIName2CASTool',
@@ -64,6 +74,12 @@ __all__ = [
     'CrewAIDataValidatorTool',
     'ToolFactory',
     'CrewAIStructureValidatorTool',
+    'molport_availability_tool',
+    'molport_search_tool',
+    'molport_molecule_info_tool',
+    'CrewAIMolPortAvailabilityTool',
+    'CrewAIMolPortSearchTool',
+    'CrewAIMolPortMoleculeInfoTool',
     'AssessmentToolExecutor',
     'AssessmentScoringLogic'
 ]

@@ -34,8 +34,9 @@ class AssessmentScreeningAgentOverall(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 根据端点兼容性决定是否启用工具调用
-        agent.tools = ToolFactory.create_all_tools() if tools_enabled() else []
+        # 使用轻量级验证工具集，仅用于数据格式验证
+        # 核心职责是聚合三位专家的结果，不需要重新评估材料
+        agent.tools = ToolFactory.create_final_validation_tools() if tools_enabled() else []
         
         # 强化提示词，明确其聚合角色
         agent.backstory += "\n\n你的核心职责是从AssessmentScreeningAgentA、B、C三位专家处收集评估结果，进行加权计算和一致性分析，生成最终报告。你不需要重新评估材料本身，而是综合已有意见。"

@@ -19,7 +19,9 @@ This is a multi-agent system built using the CrewAI framework, specifically desi
 - Integrates chemical database tools to validate material designs
 - Implements triple-blind review and consistency analysis mechanisms
 - Supports iterative design optimization
-- Implements 5 specialized AI tools to enhance material property querying capabilities
+- Implements 13+ specialized AI tools to enhance material property querying capabilities
+- Integrates MolPort API for commercial availability assessment of chemical compounds
+- Comprehensive data validation and structure verification tools
 
 ## Project Structure
 
@@ -38,7 +40,7 @@ ECOMATS/
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
 │   │   ├── task_organizing_agent.py
-│   │   └── task_allocator.py
+│   │   └── task_allocator.py         # Enhanced task allocation with evaluation-only mode
 │   ├── config/                # Configuration files
 │   │   └── config.py
 │   ├── prompts/               # Prompt files
@@ -62,37 +64,49 @@ ECOMATS/
 │   │   └── synthesis_method_task.py
 │   ├── tools/                 # Tool implementations
 │   │   ├── __init__.py
-│   │   ├── crewai_cid2properties_tool.py
-│   │   ├── crewai_formula2properties_tool.py
-│   │   ├── crewai_material_search_tool.py
-│   │   ├── crewai_materials_project_tool.py
-│   │   ├── crewai_name2cas_tool.py
-│   │   ├── crewai_name2properties_tool.py
-│   │   ├── crewai_pnec_tool.py
-│   │   ├── crewai_pubchem_tool.py
-│   │   ├── cid2properties_tool.py
-│   │   ├── evaluation_tool.py
-│   │   ├── formula2properties_tool.py
-│   │   ├── material_search_tool.py
-│   │   ├── materials_project_tool.py
-│   │   ├── name2cas_tool.py
-│   │   ├── name2properties_tool.py
-│   │   ├── pnec_tool.py
-│   │   └── pubchem_tool.py
+│   │   ├── factory.py                          # Tool factory for centralized management
+│   │   ├── materials_project_tool.py           # Materials Project API integration
+│   │   ├── pubchem_tool.py                     # PubChem API integration
+│   │   ├── molport_tool.py                     # MolPort API for commercial availability
+│   │   ├── name2cas_tool.py                    # Name to CAS number conversion
+│   │   ├── cid2properties_tool.py              # CID to properties query
+│   │   ├── name2properties_tool.py             # Name to properties query
+│   │   ├── formula2properties_tool.py          # Formula to properties query
+│   │   ├── material_search_tool.py             # Material database search
+│   │   ├── pnec_tool.py                        # PNEC environmental toxicity tool
+│   │   ├── material_identifier_tool.py         # Material type identification
+│   │   ├── data_validator_tool.py              # Data validation tool
+│   │   ├── structure_validator_tool.py         # Chemical structure validation
+│   │   ├── crewai_materials_project_tool.py    # CrewAI wrapper
+│   │   ├── crewai_pubchem_tool.py              # CrewAI wrapper
+│   │   ├── crewai_molport_tool.py              # CrewAI wrapper (3 tools)
+│   │   ├── crewai_name2cas_tool.py             # CrewAI wrapper
+│   │   ├── crewai_cid2properties_tool.py       # CrewAI wrapper
+│   │   ├── crewai_name2properties_tool.py      # CrewAI wrapper
+│   │   ├── crewai_formula2properties_tool.py   # CrewAI wrapper
+│   │   ├── crewai_material_search_tool.py      # CrewAI wrapper
+│   │   ├── crewai_pnec_tool.py                 # CrewAI wrapper
+│   │   ├── crewai_material_identifier_tool.py  # CrewAI wrapper
+│   │   ├── crewai_data_validator_tool.py       # CrewAI wrapper
+│   │   └── crewai_structure_validator_tool.py  # CrewAI wrapper
 │   └── utils/                 # Utility functions
 │       ├── llm_config.py
-│       └── prompt_loader.py
+│       ├── prompt_loader.py
+│       ├── context_store.py              # Context storage for tool caching
+│       ├── assessment_tool_executor.py   # Assessment tool execution logic
+│       └── assessment_scoring_logic.py   # Assessment scoring calculations
 ├── scripts/                   # Script files
 │   ├── main.py                # Main program entry
-│   ├── generate_catalysts.py  # Catalyst generation script
-│   ├── generate_catalysts_advanced.py # Advanced catalyst generation script
-│   ├── run_test.py            # Test running script
-│   └── test_new_tools.py      # New tools test script
+│   ├── test_molport_tool.py   # MolPort API connectivity test
+│   └── (other test scripts)
 ├── tests/                     # Unified test directory
-│   ├── agent_tool_validation.py
-│   ├── comprehensive_task_allocation_test.py
-│   ├── material_designer_tool_test.py
-│   └── ... (all test files)
+│   ├── test_api_connectivity.py           # API connectivity tests
+│   ├── test_evaluation_only_autonomous.py # Evaluation-only mode tests
+│   └── (other test files)
+├── docs/                      # Documentation directory
+│   ├── molport_integration_guide.md       # MolPort integration guide
+│   ├── 工具冗余分析报告.md                   # Tool redundancy analysis report
+│   └── API_Key配置检查报告.md                # API Key configuration check report
 ├── examples/                  # Example files
 │   └── task_allocation_example.py
 ├── .env.example               # Environment variable example
@@ -150,8 +164,23 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 2. Configure your API keys in the `.env` file:
    ```env
+   # Required: Qwen LLM API
    QWEN_API_KEY=Your Qwen API key
-   MATERIALS_PROJECT_API_KEY=Your Materials Project API key (optional)
+   QWEN_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
+   QWEN_MODEL_NAME=qwen-plus
+   
+   # Required: Materials Project API
+   MATERIALS_PROJECT_API_KEY=Your Materials Project API key
+   
+   # Optional: MolPort API (for commercial availability queries)
+   MOLPORT_API_KEY=Your MolPort API key
+   
+   # Optional: PubChem API (public API, key not required but recommended)
+   PUBCHEM_API_KEY=Your PubChem API key
+   
+   # System configuration
+   ENABLE_TOOLS=true
+   VERBOSE=True
    ```
 
 3. (Optional) Configure Alibaba Cloud EAS self-deployed model:
@@ -175,14 +204,39 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 The system integrates the following database query tools that agents can automatically invoke as needed:
 
+### Core Database Tools
+
 1. **Materials Project Tool** - Accesses materials science database to obtain material properties, including band gap, formation energy, crystal structure, etc. Optimized with field selection and chunking to improve query performance. (materials_project_tool.py)
 2. **PubChem Tool** - Queries chemical compound information, including CAS numbers, molecular weights, SMILES, InChI, and other detailed properties. Enhanced with InChIKey search capability and improved molecular formula validation. (pubchem_tool.py)
-3. **Name2CAS Tool** - Converts material names to CAS numbers (name2cas_tool.py)
-4. **Name2Properties Tool** - Queries physicochemical properties by material name (name2properties_tool.py)
-5. **CID2Properties Tool** - Queries properties by PubChem CID (cid2properties_tool.py)
-6. **Formula2Properties Tool** - Predicts properties based on chemical formula (formula2properties_tool.py)
-7. **MaterialSearch Tool** - Retrieves performance data of similar materials (material_search_tool.py)
-8. **PNEC Tool** - Queries Predicted No Effect Concentration data for chemical substances, used for environmental risk assessment (pnec_tool.py)
+3. **MolPort Tool** - NEW! Commercial availability assessment tool with three specialized functions:
+   - **Compound Availability Checker** - Check if compounds are commercially available
+   - **Chemical Structure Search** - Search for similar compounds (exact, similarity, substructure)
+   - **Molecule Info Loader** - Get detailed supplier, pricing, and stock information
+
+### Specialized Query Tools
+
+4. **Name2CAS Tool** - Converts material names to CAS numbers (name2cas_tool.py)
+5. **Name2Properties Tool** - Queries physicochemical properties by material name (name2properties_tool.py)
+6. **CID2Properties Tool** - Queries properties by PubChem CID (cid2properties_tool.py)
+7. **Formula2Properties Tool** - Predicts properties based on chemical formula (formula2properties_tool.py)
+8. **MaterialSearch Tool** - Retrieves performance data of similar materials (material_search_tool.py)
+
+### Validation and Analysis Tools
+
+9. **PNEC Tool** - Queries Predicted No Effect Concentration data for chemical substances, used for environmental risk assessment (pnec_tool.py)
+10. **Material Identifier Tool** - Identifies material type (MOF, inorganic, organic, etc.) (material_identifier_tool.py)
+11. **Data Validator Tool** - Validates data completeness and consistency (data_validator_tool.py)
+12. **Structure Validator Tool** - Validates chemical structures and SMILES format (structure_validator_tool.py)
+
+### Tool Factory Pattern
+
+All tools are managed through the **ToolFactory** class, which provides specialized tool sets for different agent types:
+- Material Design Tools
+- Material Assessment Tools (includes MolPort for economic viability)
+- Material Search Tools
+- Operation Guidance Tools
+- Literature Extraction Tools
+- Final Validation Tools
 
 ## Iterative Design Mechanism
 
@@ -237,11 +291,37 @@ The system implements a tool factory pattern to manage and provide tools to agen
 
 1. **ToolFactory Class** - Centralized tool management in `src/tools/factory.py`
 2. **Specialized Tool Sets** - Pre-defined tool sets for different agent types:
-   - Material Design Tools
-   - Material Assessment Tools
-   - Material Search Tools
+   - Material Design Tools (5 tools)
+   - Material Assessment Tools (7 tools, includes MolPort)
+   - Material Search Tools (4 tools)
+   - Operation Guidance Tools (4 tools)
+   - Literature Extraction Tools (5 tools)
+   - Final Validation Tools (1 tool)
 3. **Consistent Tool Interface** - All tools follow CrewAI's BaseTool interface
 4. **Easy Tool Management** - Simplified tool addition and removal through the factory pattern
+5. **Context Caching** - Integrated context storage for improved performance
+
+## Recent Updates (2025-12-13)
+
+### New Features
+- ✅ **MolPort API Integration** - Added commercial availability assessment for chemical compounds
+- ✅ **Enhanced Task Allocation** - Improved evaluation-only mode recognition with chemical formula detection
+- ✅ **Comprehensive Testing** - Added API connectivity tests and evaluation-only mode tests
+- ✅ **Tool Analysis** - Created detailed tool redundancy analysis report
+- ✅ **API Configuration** - Complete API key configuration and validation
+
+### System Status
+- ✅ All API connections tested and verified
+- ✅ MolPort tool fully functional (availability, search, pricing)
+- ✅ Task allocation supports intelligent mode detection
+- ✅ All core tools operational with proper API keys
+
+### Documentation
+- 📚 [Project Status Overview](docs/项目状态总览.md) - **Start here for current project status**
+- 📚 [Documentation Center](docs/README.md) - Complete documentation index
+- 📚 [MolPort Integration Guide](docs/molport_integration_guide.md)
+- 📚 [Tool Redundancy Analysis Report](docs/工具冗余分析报告.md)
+- 📚 [API Key Configuration Check Report](docs/API_Key配置检查报告.md)
 
 ## [中文版本](README_zh.md)
 

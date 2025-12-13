@@ -1,6 +1,6 @@
 import logging
 from src.agents.base_agent import BaseAgent
-from src.tools import pubchem_tool, CrewAIName2PropertiesTool, CrewAICID2PropertiesTool, CrewAIMaterialSearchTool, CrewAIDataValidatorTool
+from src.tools import ToolFactory
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -53,6 +53,6 @@ class ExtractingAgent(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # Add chemical database query tools for the literature processing expert
-        agent.tools = [pubchem_tool, CrewAIName2PropertiesTool(), CrewAICID2PropertiesTool(), CrewAIMaterialSearchTool(), CrewAIDataValidatorTool()]
+        # 使用标准化的文献提取工具集
+        agent.tools = ToolFactory.create_literature_extraction_tools()
         return agent

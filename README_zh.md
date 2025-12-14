@@ -181,6 +181,13 @@ ECOMATS/
 
 ## 使用说明
 
+### 平台兼容性
+
+**推荐**: Linux / macOS / WSL2  
+**Windows 用户**: 请查看 [Windows 兼容性指南](docs/Windows_Compatibility_Guide.md) 了解 `signal.SIGHUP` 兼容性问题和解决方案。
+
+### 配置步骤
+
 1. 复制`.env.example`文件为`.env`：
    ```bash
    cp .env.example .env

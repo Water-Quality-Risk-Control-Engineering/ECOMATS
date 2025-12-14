@@ -9,8 +9,20 @@ import os
 import json
 import asyncio
 import logging
+import signal
 from datetime import datetime
 from dotenv import load_dotenv
+
+# Windows 兼容性补丁：SIGHUP 信号支持
+if sys.platform == 'win32':
+    if not hasattr(signal, 'SIGHUP'):
+        signal.SIGHUP = None  # Windows 不支持 SIGHUP，创建占位符
+    # 设置控制台编码为 UTF-8，避免中文乱码
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass  # Python < 3.7 不支持 reconfigure
 
 # 关键:在导入CrewAI之前设置环境变量!
 load_dotenv()  # 先加载.env

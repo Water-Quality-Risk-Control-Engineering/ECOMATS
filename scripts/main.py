@@ -6,9 +6,21 @@ ECOMATS - 基于CrewAI的水处理材料设计多智能体系统
 import sys
 import os
 import json
+import signal
 from dotenv import load_dotenv
 from crewai import Crew, Process
 import dashscope
+
+# Windows 兼容性补丁：SIGHUP 信号支持
+if sys.platform == 'win32':
+    if not hasattr(signal, 'SIGHUP'):
+        signal.SIGHUP = None  # Windows 不支持 SIGHUP，创建占位符
+    # 设置控制台编码为 UTF-8，避免中文乱码
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass  # Python < 3.7 不支持 reconfigure
 
 def get_user_input():
     """获取用户自定义的材料设计需求 / Get user-defined material design requirements"""

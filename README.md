@@ -182,6 +182,13 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 ## Usage Instructions
 
+### Platform Compatibility
+
+**Recommended**: Linux / macOS / WSL2
+**Windows Users**: See [Windows Compatibility Guide](docs/Windows_Compatibility_Guide.md) for `signal.SIGHUP` compatibility issues and solutions.
+
+### Setup Steps
+
 1. Copy `.env.example` file to `.env`:
    ```bash
    cp .env.example .env

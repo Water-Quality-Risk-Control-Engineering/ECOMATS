@@ -145,13 +145,15 @@ class ToolFactory:
     @staticmethod
     def create_material_search_tools():
         """
-        创建材料搜索专用工具实例
-        包含商业可获得性检查，用于验证前驱体和试剂的可获得性
+        创建材料搜索专用工具实例 (SynthesisGuidingAgent 使用)
+        包含 PubChem 和 Materials Project 用于验证试剂信息
         
         Returns:
             list: 材料搜索工具实例的列表
         """
         tools = [
+            materials_project_tool,             # 查询相似材料的合成方法 (Prompt 要求)
+            pubchem_tool,                       # 验证试剂信息和分子量 (Prompt 要求)
             CrewAIMaterialSearchTool(),         # 材料搜索工具
             CrewAIName2CASTool(),               # 名称到CAS号查询工具
             CrewAIMaterialIdentifierTool(),     # 材料识别工具
@@ -170,64 +172,55 @@ class ToolFactory:
             list: 机理分析工具实例的列表
         """
         tools = [
-            materials_project_tool,         # 查询材料结构和电子结构
-            pubchem_tool,                   # 查询化学品反应活性
-            CrewAIName2PropertiesTool(),    # 查询化学品性质
-            CrewAIFormula2PropertiesTool(), # 通过分子式查询性质
-            CrewAIStructureValidatorTool()  # 验证材料结构
+            CrewAIMaterialIdentifierTool(),  # 材料识别 (Prompt 要求先识别材料类型)
+            materials_project_tool,          # 查询材料结构和电子结构
+            pubchem_tool,                    # 查询化学品反应活性
+            CrewAIStructureValidatorTool()   # 验证材料结构
         ]
         return tools
     
     @staticmethod
-    def create_catalytic_assessment_tools():
+    def create_unified_assessment_tools():
         """
-        创建催化性能评估专用工具实例 (Expert A)
-        聚焦于材料结构、电子结构和催化活性
+        创建统一的 ASA 评估工具集 (Expert A/B/C 共用)
+        Create unified ASA assessment tools (shared by Expert A/B/C)
+        
+        根据 Prompt 要求，每个 ASA 都需要从 5 个维度进行全面评估：
+        According to Prompt requirements, each ASA needs to evaluate from 5 dimensions:
+        - 催化性能 (50%) - 需要 materials_project
+        - 经济可行性 (10%) - 需要 pubchem, molport
+        - 环境友好性 (10%) - 需要 pubchem, PNEC
+        - 技术可行性 (10%) - 需要 materials_project, structure_validator
+        - 结构合理性 (20%) - 需要 structure_validator, material_identifier
         
         Returns:
-            list: 催化性能评估工具实例的列表
+            list: 统一的评估工具实例列表 / Unified assessment tools list
         """
         tools = [
-            materials_project_tool,          # 材料结构和电子结构
-            CrewAIMaterialIdentifierTool(),  # 材料识别
-            CrewAIStructureValidatorTool(),  # 结构验证
-            CrewAIDataValidatorTool()        # 数据验证
+            materials_project_tool,          # 材料结构和电子结构 / Material structure
+            pubchem_tool,                    # 化学品性质和毒性 / Chemical properties and toxicity
+            CrewAIMaterialIdentifierTool(),  # 材料识别 / Material identification
+            CrewAIStructureValidatorTool(),  # 结构验证 / Structure validation
+            CrewAIPNECTool(),                # 环境风险评估 / Environmental risk (PNEC)
+            CrewAIDataValidatorTool()        # 数据验证 / Data validation
         ]
         return tools
+    
+    # 保留旧方法作为别名，保持向后兼容 / Keep old methods as aliases for backward compatibility
+    @staticmethod
+    def create_catalytic_assessment_tools():
+        """已废弃：请使用 create_unified_assessment_tools() / Deprecated: use create_unified_assessment_tools()"""
+        return ToolFactory.create_unified_assessment_tools()
     
     @staticmethod
     def create_economic_assessment_tools():
-        """
-        创建经济可行性评估专用工具实例 (Expert B)
-        聚焦于材料成本、商业可获得性和合成可行性
-        
-        Returns:
-            list: 经济可行性评估工具实例的列表
-        """
-        tools = [
-            pubchem_tool,                    # 查询化学品信息
-            CrewAIMaterialIdentifierTool(),  # 材料识别
-            molport_availability_tool,       # 商业可获得性和价格
-            CrewAIDataValidatorTool()        # 数据验证
-        ]
-        return tools
+        """已废弃：请使用 create_unified_assessment_tools() / Deprecated: use create_unified_assessment_tools()"""
+        return ToolFactory.create_unified_assessment_tools()
     
     @staticmethod
     def create_environmental_assessment_tools():
-        """
-        创建环境友好性评估专用工具实例 (Expert C)
-        聚焦于环境影响、毒性和安全性
-        
-        Returns:
-            list: 环境友好性评估工具实例的列表
-        """
-        tools = [
-            pubchem_tool,                    # 查询化学品毒性和安全信息
-            CrewAIPNECTool(),                # 环境影响评估 (PNEC)
-            CrewAIStructureValidatorTool(),  # 结构验证
-            CrewAIDataValidatorTool()        # 数据验证
-        ]
-        return tools
+        """已废弃：请使用 create_unified_assessment_tools() / Deprecated: use create_unified_assessment_tools()"""
+        return ToolFactory.create_unified_assessment_tools()
     
     @staticmethod
     def create_materials_project_tool():

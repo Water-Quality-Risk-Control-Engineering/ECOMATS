@@ -216,16 +216,9 @@ def run_preset_workflow(user_requirement, llm):
     # 创建任务，将用户需求传递给任务 / Create tasks and pass user requirements to tasks
     # 1. 首先创建材料设计任务 / First create material design task
     design_task = DesignTask(llm).create_task(agents['material_designer'], user_requirement=user_requirement)
-    try:
-        from src.utils.assessment_tool_executor import AssessmentToolExecutor
-        executor = AssessmentToolExecutor()
-        material_formula = None
-        import re as _re
-        m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
-        material_formula = m.group(0) if m else (user_requirement or "")
-        executor.execute_mandatory_tool_calls(material_formula)
-    except Exception:
-        pass
+    
+    # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
+    # 移除了预执行调用以避免冗余 / Removed pre-execution to avoid redundancy
     
     # 2. 为每个评估专家创建评估任务，都依赖于设计任务 / Create evaluation tasks for each evaluation expert, all dependent on design task
     # 明确传递用户需求给评估任务，以确保工具调用策略得到执行
@@ -323,19 +316,15 @@ def run_preset_workflow(user_requirement, llm):
         return run_tool_only_summary(user_requirement)
 
 def _execute_material_tools(user_requirement: str, project_root: str):
-    """预执行材料相关工具调用 / Pre-execute material-related tool calls"""
-    try:
-        import sys
-        sys.path.insert(0, os.path.abspath(project_root))
-        from src.utils.assessment_tool_executor import AssessmentToolExecutor
-        import re as _re
-        
-        executor = AssessmentToolExecutor()
-        m = _re.search(r"\b(?:[A-Z][a-z]?\d*){2,}\b", user_requirement or "")
-        material_formula = m.group(0) if m else (user_requirement or "")
-        executor.execute_mandatory_tool_calls(material_formula)
-    except Exception:
-        pass
+    """
+    已废弃: 预执行材料相关工具调用 / DEPRECATED: Pre-execute material-related tool calls
+    
+    此函数已不再使用。Agent 会根据需要自行调用工具，并通过 ContextStore 缓存结果。
+    This function is no longer used. Agents will call tools as needed and cache results via ContextStore.
+    
+    保留此函数以保持向后兼容。 / Keeping this function for backward compatibility.
+    """
+    pass  # 不再预执行 / No longer pre-execute
 
 
 def run_autonomous_workflow(user_requirement, llm):
@@ -410,8 +399,7 @@ def run_autonomous_workflow(user_requirement, llm):
         design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
         required_tasks.append(design_task)
         
-        # 预执行工具调用 / Pre-execute tool calls
-        _execute_material_tools(user_requirement, project_root)
+        # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
         
     elif intent.get('needs_evaluation', False) or intent.get('needs_mechanism', False) or intent.get('needs_synthesis', False) or intent.get('needs_operation', False):
         # 用户提供了材料，创建虚拟上下文任务（不实际执行）
@@ -427,8 +415,7 @@ def run_autonomous_workflow(user_requirement, llm):
             agent=coordinator_agent  # 使用协调员作为占位符 / Use coordinator as placeholder
         )
         # 注意：虚拟任务不添加到 required_tasks / Note: Virtual task NOT added to required_tasks
-        
-        _execute_material_tools(user_requirement, project_root)
+        # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
     
     # ============================================================
     # Step 2: 处理评估任务 / Handle Evaluation Tasks

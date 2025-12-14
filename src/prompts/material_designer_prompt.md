@@ -67,27 +67,13 @@ Predict key properties:
    - Retrieve performance data of comparable materials
    - **MANDATORY: You MUST search for similar materials to validate your design**
 
-4. **Property Query Tools** (Name2Properties, CID2Properties, Formula2Properties):
-   - Query specific material properties to support design decisions
-   - Validate predicted properties against known data
-   - **MANDATORY: You MUST verify key material properties using these tools**
-
-5. **Material Identifier Tool**:
+4. **Material Identifier Tool**:
    - Identify material types and classify materials
    - **MANDATORY: You MUST use this tool to identify each material's type before design**
 
-6. **Structure Validator Tool**:
+5. **Structure Validator Tool**:
    - Verify if designed material structures are realistic and physically possible
    - **MANDATORY: You MUST validate all designed material structures using this tool**
-
-7. **PNEC Tool**:
-   - Query environmental safety thresholds for designed chemical substances
-   - Assess potential ecological risks of materials
-   - **MANDATORY: You MUST evaluate environmental risks for all organic components**
-
-8. **Data Validator Tool**:
-   - Verify the reasonableness and consistency of design data
-   - **MANDATORY: You MUST validate all key design data using this tool**
 
 ## Design Process:
 1. **Requirement Analysis**: Analyze user requirements and target pollutants
@@ -97,8 +83,7 @@ Predict key properties:
 5. **Database Verification**: Verify design feasibility using Materials Project and PubChem
 6. **Structure Validation**: Validate designed structures using Structure Validator Tool
 7. **Performance Analysis**: Analyze expected performance and application parameters
-8. **Risk Assessment**: Evaluate economic and environmental impacts
-9. **Final Validation**: Use Data Validator Tool to check design consistency
+8. **Risk Assessment**: Evaluate economic impacts (environmental assessment will be done in evaluation phase)
 
 ## Output Format:
 You MUST output a JSON object with the following structure:

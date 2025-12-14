@@ -162,6 +162,11 @@ TEXTS = {
             "synthesis_method_task": {
                 "description": """为设计的材料提供详细可行的合成方法。
 
+**重要**：根据用户需求确定合成方法数量：
+- 如果用户请求 "N种合成方法"，必须提供恰好 N 种不同的方法
+- 如果用户请求 "多种"/"几种"，至少提供 3 种不同方法
+- 如果未指定数量，提供 1 种最优方法
+
 合成方案要求：
 1. 详细的合成步骤
 2. 所需原材料和试剂清单
@@ -170,11 +175,12 @@ TEXTS = {
 5. 质量检测方法
 """,
                 "expected_output": """合成方法指导书，包括：
-1. 完整的合成流程图
-2. 详细的操作步骤
-3. 原材料和试剂清单
-4. 工艺参数表
-5. 质量控制标准
+1. 用户请求的合成方法数量（必须匹配）
+2. 每种方法的完整合成流程
+3. 详细的操作步骤
+4. 原材料和试剂清单
+5. 工艺参数表
+6. 质量控制标准
 """,
             },
             "operation_suggesting_task": {
@@ -362,6 +368,11 @@ Analysis Content:
             "synthesis_method_task": {
                 "description": """Provide detailed and feasible synthesis methods for designed materials.
 
+**IMPORTANT**: Determine the number of synthesis methods based on user request:
+- If user requests "N synthesis methods", provide exactly N different methods
+- If user requests "multiple"/"several" methods, provide at least 3 different methods
+- If no quantity specified, provide 1 optimal method
+
 Synthesis Plan Requirements:
 1. Detailed synthesis steps
 2. Required raw materials and reagent list
@@ -370,11 +381,12 @@ Synthesis Plan Requirements:
 5. Quality testing methods
 """,
                 "expected_output": """Synthesis method guide including:
-1. Complete synthesis flowchart
-2. Detailed operation steps
-3. Raw materials and reagent list
-4. Process parameter table
-5. Quality control standards
+1. Exact number of synthesis methods requested by user (MUST match)
+2. Complete synthesis process for each method
+3. Detailed operation steps
+4. Raw materials and reagent list
+5. Process parameter table
+6. Quality control standards
 """,
             },
             "operation_suggesting_task": {

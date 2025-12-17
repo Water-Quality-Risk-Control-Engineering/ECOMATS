@@ -46,14 +46,14 @@ class AssessmentScreeningAgentC(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 使用环境友好性评估专用工具集 (Expert C: 环境影响和安全性)
+        # 使用 Expert C 专用工具集（结构合理性）
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_environmental_assessment_tools()
+                agent.tools = ToolFactory.create_expert_c_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_environmental_assessment_tools()
+            agent.tools = ToolFactory.create_expert_c_tools()
         
         return agent

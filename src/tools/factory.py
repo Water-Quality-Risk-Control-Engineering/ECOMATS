@@ -2,6 +2,10 @@
 """
 工具工厂
 用于创建和管理各种数据库查询工具
+
+优化说明:
+- 使用单例模式缓存工具实例，避免重复创建
+- 评估专家工具集按职责精简，减少LLM决策复杂度
 """
 
 # CrewAI工具包装器
@@ -26,107 +30,107 @@ from src.tools.crewai_molport_tool import (
 from src.tools.crewai_pg_vector_tool import CrewAIPGVectorTool
 from src.tools.crewai_gdb_tool import CrewAIGDBCatalystTool, CrewAIGDBPollutantTool
 
+# =============================================================================
+# 工具实例单例缓存 - 避免重复创建实例
+# =============================================================================
+_tool_instances = {}
+
+def _get_tool(tool_class, key: str):
+    """获取工具单例实例"""
+    if key not in _tool_instances:
+        _tool_instances[key] = tool_class()
+    return _tool_instances[key]
+
 
 class ToolFactory:
-    """工具工厂类"""
+    """工具工厂类 - 使用单例模式缓存工具实例"""
+    
+    # 工具集缓存
+    _toolset_cache = {}
     
     @staticmethod
     def create_all_tools():
         """
-        创建所有工具实例
+        创建所有工具实例（使用单例缓存）
         
         Returns:
             list: 所有工具实例的列表
         """
-        tools = [
-            materials_project_tool,
-            pubchem_tool,
-            CrewAIName2CASTool(),
-            CrewAIName2PropertiesTool(),
-            CrewAICID2PropertiesTool(),
-            CrewAIFormula2PropertiesTool(),
-            CrewAIMaterialSearchTool(),
-            CrewAIPNECTool(),
-            CrewAIMaterialIdentifierTool(),
-            CrewAIDataValidatorTool(),
-            CrewAIStructureValidatorTool(),
-            molport_availability_tool,
-            molport_search_tool,
-            molport_molecule_info_tool
-        ]
-        
-        return tools
+        if 'all' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['all'] = [
+                materials_project_tool,
+                pubchem_tool,
+                _get_tool(CrewAIName2CASTool, 'name2cas'),
+                _get_tool(CrewAIName2PropertiesTool, 'name2props'),
+                _get_tool(CrewAICID2PropertiesTool, 'cid2props'),
+                _get_tool(CrewAIFormula2PropertiesTool, 'formula2props'),
+                _get_tool(CrewAIMaterialSearchTool, 'material_search'),
+                _get_tool(CrewAIPNECTool, 'pnec'),
+                _get_tool(CrewAIMaterialIdentifierTool, 'material_id'),
+                _get_tool(CrewAIDataValidatorTool, 'data_validator'),
+                _get_tool(CrewAIStructureValidatorTool, 'structure_validator'),
+                molport_availability_tool,
+                molport_search_tool,
+                molport_molecule_info_tool
+            ]
+        return ToolFactory._toolset_cache['all']
     
     # 已移除 create_enhanced_validation_tools() - 未被使用的方法
     
     @staticmethod
     def create_final_validation_tools():
         """
-        创建最终验证专用工具实例（轻量级）
-        用于 Assessment_Overall_agent，仅用于数据验证和格式检查
-        
-        Returns:
-            list: 最终验证工具实例的列表
+        创建最终验证专用工具实例（轻量级，1个工具）
         """
-        tools = [
-            CrewAIDataValidatorTool()  # 仅用于验证三位专家的评估结果格式
-        ]
-        return tools
+        if 'final_validation' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['final_validation'] = [
+                _get_tool(CrewAIDataValidatorTool, 'data_validator')
+            ]
+        return ToolFactory._toolset_cache['final_validation']
     
     @staticmethod
     def create_operation_guidance_tools():
         """
-        创建操作指导专用工具实例
-        用于 Operation_Suggesting_agent，聚焦于材料参数和试剂查询
-        
-        Returns:
-            list: 操作指导工具实例的列表
+        创建操作指导专用工具实例（精简版，3个核心工具）
         """
-        tools = [
-            materials_project_tool,        # 查询材料的物理化学参数
-            pubchem_tool,                  # 查询试剂和化学品性质
-            CrewAIMaterialSearchTool(),    # 查找参考材料和工艺
-            molport_availability_tool      # 验证试剂和原料的可获得性
-        ]
-        return tools
+        if 'operation' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['operation'] = [
+                pubchem_tool,                                    # 试剂性质
+                _get_tool(CrewAIMaterialSearchTool, 'material_search'),  # 参考工艺
+                molport_availability_tool                        # 原料可获得性
+            ]
+        return ToolFactory._toolset_cache['operation']
     
     @staticmethod
     def create_literature_extraction_tools():
         """
-        创建文献提取专用工具实例
-        用于 Extracting_agent，专注于从文献中提取化学信息
-        
-        Returns:
-            list: 文献提取工具实例的列表
+        创建文献提取专用工具实例（精简版，3个核心工具）
         """
-        tools = [
-            pubchem_tool,                   # 验证提取的化学名称和性质
-            CrewAIName2PropertiesTool(),    # 通过名称查询性质
-            CrewAICID2PropertiesTool(),     # 通过CID查询性质
-            CrewAIMaterialSearchTool(),     # 搜索材料数据库
-            CrewAIDataValidatorTool()       # 验证提取数据的准确性
-        ]
-        return tools
+        if 'literature' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['literature'] = [
+                pubchem_tool,                                    # 化学名称验证
+                _get_tool(CrewAIName2PropertiesTool, 'name2props'),  # 名称查性质
+                _get_tool(CrewAIDataValidatorTool, 'data_validator')  # 数据验证
+            ]
+        return ToolFactory._toolset_cache['literature']
     
     @staticmethod
     def create_material_design_tools():
         """
-        创建材料设计专用工具实例（使用增强验证机制）
+        创建材料设计专用工具实例（精简版，5个核心工具）
         
         Returns:
             list: 材料设计工具实例的列表
         """
-        # 轻量化设计模式：减少即时工具数量，优先标识与结构验证，MP最小字段查询
-        tools = [
-            materials_project_tool,
-            pubchem_tool,
-            CrewAIMaterialIdentifierTool(),
-            CrewAIStructureValidatorTool(),
-            CrewAIMaterialSearchTool(),
-            CrewAIPGVectorTool(),            # 历史设计案例检索
-            CrewAIGDBCatalystTool()          # 催化剂知识图谱查询
-        ]
-        return tools
+        if 'material_design' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['material_design'] = [
+                materials_project_tool,                          # 材料数据库
+                _get_tool(CrewAIMaterialIdentifierTool, 'material_id'),  # 材料识别
+                _get_tool(CrewAIStructureValidatorTool, 'structure_validator'),  # 结构验证
+                _get_tool(CrewAIPGVectorTool, 'pg_vector'),      # 历史案例检索
+                _get_tool(CrewAIGDBCatalystTool, 'gdb_catalyst') # 知识图谱
+            ]
+        return ToolFactory._toolset_cache['material_design']
     
     @staticmethod
     def create_material_assessment_tools():
@@ -151,67 +155,88 @@ class ToolFactory:
     @staticmethod
     def create_material_search_tools():
         """
-        创建材料搜索专用工具实例 (SynthesisGuidingAgent 使用)
-        包含 PubChem 和 Materials Project 用于验证试剂信息
-        
-        Returns:
-            list: 材料搜索工具实例的列表
+        创建材料搜索专用工具实例（精简版，4个核心工具）
+        用于 SynthesisGuidingAgent
         """
-        tools = [
-            materials_project_tool,             # 查询相似材料的合成方法 (Prompt 要求)
-            pubchem_tool,                       # 验证试剂信息和分子量 (Prompt 要求)
-            CrewAIMaterialSearchTool(),         # 材料搜索工具
-            CrewAIName2CASTool(),               # 名称到CAS号查询工具
-            CrewAIMaterialIdentifierTool(),     # 材料识别工具
-            molport_availability_tool           # 商业可获得性检查
-        ]
-        
-        return tools
+        if 'material_search' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['material_search'] = [
+                pubchem_tool,                                    # 试剂信息
+                _get_tool(CrewAIMaterialSearchTool, 'material_search'),  # 材料搜索
+                _get_tool(CrewAIName2CASTool, 'name2cas'),       # CAS号查询
+                molport_availability_tool                        # 商业可获得性
+            ]
+        return ToolFactory._toolset_cache['material_search']
     
     @staticmethod
     def create_mechanism_analysis_tools():
         """
-        创建机理分析专用工具实例
-        用于 MechanismMiningAgent，聚焦于材料结构和化学性质查询
-        
-        Returns:
-            list: 机理分析工具实例的列表
+        创建机理分析专用工具实例（精简版，3个核心工具）
         """
-        tools = [
-            CrewAIMaterialIdentifierTool(),  # 材料识别 (Prompt 要求先识别材料类型)
-            materials_project_tool,          # 查询材料结构和电子结构
-            pubchem_tool,                    # 查询化学品反应活性
-            CrewAIStructureValidatorTool(),  # 验证材料结构
-            CrewAIGDBCatalystTool()          # 查询催化剂活性物种和降解关系
-        ]
-        return tools
+        if 'mechanism' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['mechanism'] = [
+                materials_project_tool,                          # 材料结构/电子结构
+                _get_tool(CrewAIMaterialIdentifierTool, 'material_id'),  # 材料识别
+                _get_tool(CrewAIGDBCatalystTool, 'gdb_catalyst') # 活性物种/降解关系
+            ]
+        return ToolFactory._toolset_cache['mechanism']
     
     @staticmethod
     def create_unified_assessment_tools():
         """
-        创建统一的 ASA 评估工具集 (Expert A/B/C 共用)
-        Create unified ASA assessment tools (shared by Expert A/B/C)
-        
-        根据 Prompt 要求，每个 ASA 都需要从 5 个维度进行全面评估：
-        According to Prompt requirements, each ASA needs to evaluate from 5 dimensions:
-        - 催化性能 (50%) - 需要 materials_project
-        - 经济可行性 (10%) - 需要 pubchem, molport
-        - 环境友好性 (10%) - 需要 pubchem, PNEC
-        - 技术可行性 (10%) - 需要 materials_project, structure_validator
-        - 结构合理性 (20%) - 需要 structure_validator, material_identifier
+        创建统一的 ASA 评估工具集 (Expert A/B/C 共用，精简版)
         
         Returns:
-            list: 统一的评估工具实例列表 / Unified assessment tools list
+            list: 统一的评估工具实例列表
         """
-        tools = [
-            materials_project_tool,          # 材料结构和电子结构 / Material structure
-            pubchem_tool,                    # 化学品性质和毒性 / Chemical properties and toxicity
-            CrewAIMaterialIdentifierTool(),  # 材料识别 / Material identification
-            CrewAIStructureValidatorTool(),  # 结构验证 / Structure validation
-            CrewAIPNECTool(),                # 环境风险评估 / Environmental risk (PNEC)
-            CrewAIDataValidatorTool()        # 数据验证 / Data validation
-        ]
-        return tools
+        if 'unified_assessment' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['unified_assessment'] = [
+                materials_project_tool,
+                pubchem_tool,
+                _get_tool(CrewAIMaterialIdentifierTool, 'material_id'),
+                _get_tool(CrewAIStructureValidatorTool, 'structure_validator'),
+                _get_tool(CrewAIPNECTool, 'pnec'),
+                _get_tool(CrewAIDataValidatorTool, 'data_validator')
+            ]
+        return ToolFactory._toolset_cache['unified_assessment']
+    
+    @staticmethod
+    def create_expert_a_tools():
+        """
+        Expert A 专用工具集（催化性能 + 技术可行性，3个工具）
+        """
+        if 'expert_a' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['expert_a'] = [
+                materials_project_tool,                          # 催化性能数据
+                _get_tool(CrewAIStructureValidatorTool, 'structure_validator'),  # 技术可行性
+                _get_tool(CrewAIDataValidatorTool, 'data_validator')  # 数据验证
+            ]
+        return ToolFactory._toolset_cache['expert_a']
+    
+    @staticmethod
+    def create_expert_b_tools():
+        """
+        Expert B 专用工具集（经济可行性 + 环境友好性，3个工具）
+        """
+        if 'expert_b' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['expert_b'] = [
+                pubchem_tool,                                    # 化学品性质/毒性
+                _get_tool(CrewAIPNECTool, 'pnec'),               # 环境风险
+                molport_availability_tool                        # 商业可获得性
+            ]
+        return ToolFactory._toolset_cache['expert_b']
+    
+    @staticmethod
+    def create_expert_c_tools():
+        """
+        Expert C 专用工具集（结构合理性，3个工具）
+        """
+        if 'expert_c' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['expert_c'] = [
+                _get_tool(CrewAIMaterialIdentifierTool, 'material_id'),  # 材料类型识别
+                _get_tool(CrewAIStructureValidatorTool, 'structure_validator'),  # 结构验证
+                _get_tool(CrewAIDataValidatorTool, 'data_validator')  # 数据验证
+            ]
+        return ToolFactory._toolset_cache['expert_c']
     
     # 保留旧方法作为别名，保持向后兼容 / Keep old methods as aliases for backward compatibility
     @staticmethod
@@ -241,75 +266,76 @@ class ToolFactory:
     
     @staticmethod
     def create_name2cas_tool():
-        """创建名称到CAS号查询工具实例"""
-        return CrewAIName2CASTool()
+        """创建名称到CAS号查询工具实例（单例）"""
+        return _get_tool(CrewAIName2CASTool, 'name2cas')
     
     @staticmethod
     def create_name2properties_tool():
-        """创建名称到性质查询工具实例"""
-        return CrewAIName2PropertiesTool()
+        """创建名称到性质查询工具实例（单例）"""
+        return _get_tool(CrewAIName2PropertiesTool, 'name2props')
     
     @staticmethod
     def create_cid2properties_tool():
-        """创建CID到性质查询工具实例"""
-        return CrewAICID2PropertiesTool()
+        """创建CID到性质查询工具实例（单例）"""
+        return _get_tool(CrewAICID2PropertiesTool, 'cid2props')
     
     @staticmethod
     def create_formula2properties_tool():
-        """创建化学式到性质查询工具实例"""
-        return CrewAIFormula2PropertiesTool()
+        """创建化学式到性质查询工具实例（单例）"""
+        return _get_tool(CrewAIFormula2PropertiesTool, 'formula2props')
     
     @staticmethod
     def create_material_search_tool():
-        """创建材料搜索工具实例"""
-        return CrewAIMaterialSearchTool()
+        """创建材料搜索工具实例（单例）"""
+        return _get_tool(CrewAIMaterialSearchTool, 'material_search')
     
     @staticmethod
     def create_pnec_tool():
-        """创建PNEC工具实例"""
-        return CrewAIPNECTool()
+        """创建PNEC工具实例（单例）"""
+        return _get_tool(CrewAIPNECTool, 'pnec')
     
     @staticmethod
     def create_material_identifier_tool():
-        """创建材料识别工具实例"""
-        return CrewAIMaterialIdentifierTool()
+        """创建材料识别工具实例（单例）"""
+        return _get_tool(CrewAIMaterialIdentifierTool, 'material_id')
     
     @staticmethod
     def create_data_validator_tool():
-        """创建数据验证工具实例"""
-        return CrewAIDataValidatorTool()
+        """创建数据验证工具实例（单例）"""
+        return _get_tool(CrewAIDataValidatorTool, 'data_validator')
     
     @staticmethod
     def create_structure_validator_tool():
-        """创建结构验证工具实例"""
-        return CrewAIStructureValidatorTool()
+        """创建结构验证工具实例（单例）"""
+        return _get_tool(CrewAIStructureValidatorTool, 'structure_validator')
     
     @staticmethod
     def create_knowledge_query_tools():
         """
-        创建知识库查询工具集
-        包含向量数据库和图数据库查询工具
+        创建知识库查询工具集（单例）
         
         Returns:
             list: 知识库查询工具列表
         """
-        return [
-            CrewAIPGVectorTool(),       # SFT问答对向量检索
-            CrewAIGDBCatalystTool(),    # 催化剂知识图谱查询
-            CrewAIGDBPollutantTool()    # 污染物降解查询
-        ]
+        if 'knowledge_query' not in ToolFactory._toolset_cache:
+            ToolFactory._toolset_cache['knowledge_query'] = [
+                _get_tool(CrewAIPGVectorTool, 'pg_vector'),
+                _get_tool(CrewAIGDBCatalystTool, 'gdb_catalyst'),
+                _get_tool(CrewAIGDBPollutantTool, 'gdb_pollutant')
+            ]
+        return ToolFactory._toolset_cache['knowledge_query']
     
     @staticmethod
     def create_pg_vector_tool():
-        """创建PostgreSQL向量数据库查询工具实例"""
-        return CrewAIPGVectorTool()
+        """创建PostgreSQL向量数据库查询工具实例（单例）"""
+        return _get_tool(CrewAIPGVectorTool, 'pg_vector')
     
     @staticmethod
     def create_gdb_catalyst_tool():
-        """创建催化剂知识图谱查询工具实例"""
-        return CrewAIGDBCatalystTool()
+        """创建催化剂知识图谱查询工具实例（单例）"""
+        return _get_tool(CrewAIGDBCatalystTool, 'gdb_catalyst')
     
     @staticmethod
     def create_gdb_pollutant_tool():
-        """创建污染物降解查询工具实例"""
-        return CrewAIGDBPollutantTool()
+        """创建污染物降解查询工具实例（单例）"""
+        return _get_tool(CrewAIGDBPollutantTool, 'gdb_pollutant')

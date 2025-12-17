@@ -17,6 +17,12 @@ from .data_validator_tool import get_data_validator_tool
 from .structure_validator_tool import get_structure_validator_tool
 from .molport_tool import get_molport_tool
 
+# Import database query tools / 导入数据库查询工具
+from .pg_vector_tool import PGVectorTool, get_pg_vector_tool
+from .gdb_tool import GDBTool, get_gdb_tool
+from .crewai_pg_vector_tool import CrewAIPGVectorTool
+from .crewai_gdb_tool import CrewAIGDBCatalystTool, CrewAIGDBPollutantTool
+
 # Import CrewAI tool wrappers / 导入CrewAI工具包装器
 from .crewai_materials_project_tool import materials_project_tool
 from .crewai_pubchem_tool import pubchem_tool
@@ -81,5 +87,13 @@ __all__ = [
     'CrewAIMolPortSearchTool',
     'CrewAIMolPortMoleculeInfoTool',
     'AssessmentToolExecutor',
-    'AssessmentScoringLogic'
+    'AssessmentScoringLogic',
+    # Database query tools
+    'PGVectorTool',
+    'get_pg_vector_tool',
+    'GDBTool',
+    'get_gdb_tool',
+    'CrewAIPGVectorTool',
+    'CrewAIGDBCatalystTool',
+    'CrewAIGDBPollutantTool'
 ]

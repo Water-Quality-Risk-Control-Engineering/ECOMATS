@@ -22,6 +22,10 @@ from src.tools.crewai_molport_tool import (
     molport_molecule_info_tool
 )
 
+# 数据库查询工具 / Database query tools
+from src.tools.crewai_pg_vector_tool import CrewAIPGVectorTool
+from src.tools.crewai_gdb_tool import CrewAIGDBCatalystTool, CrewAIGDBPollutantTool
+
 
 class ToolFactory:
     """工具工厂类"""
@@ -118,7 +122,9 @@ class ToolFactory:
             pubchem_tool,
             CrewAIMaterialIdentifierTool(),
             CrewAIStructureValidatorTool(),
-            CrewAIMaterialSearchTool()
+            CrewAIMaterialSearchTool(),
+            CrewAIPGVectorTool(),            # 历史设计案例检索
+            CrewAIGDBCatalystTool()          # 催化剂知识图谱查询
         ]
         return tools
     
@@ -175,7 +181,8 @@ class ToolFactory:
             CrewAIMaterialIdentifierTool(),  # 材料识别 (Prompt 要求先识别材料类型)
             materials_project_tool,          # 查询材料结构和电子结构
             pubchem_tool,                    # 查询化学品反应活性
-            CrewAIStructureValidatorTool()   # 验证材料结构
+            CrewAIStructureValidatorTool(),  # 验证材料结构
+            CrewAIGDBCatalystTool()          # 查询催化剂活性物种和降解关系
         ]
         return tools
     
@@ -276,3 +283,33 @@ class ToolFactory:
     def create_structure_validator_tool():
         """创建结构验证工具实例"""
         return CrewAIStructureValidatorTool()
+    
+    @staticmethod
+    def create_knowledge_query_tools():
+        """
+        创建知识库查询工具集
+        包含向量数据库和图数据库查询工具
+        
+        Returns:
+            list: 知识库查询工具列表
+        """
+        return [
+            CrewAIPGVectorTool(),       # SFT问答对向量检索
+            CrewAIGDBCatalystTool(),    # 催化剂知识图谱查询
+            CrewAIGDBPollutantTool()    # 污染物降解查询
+        ]
+    
+    @staticmethod
+    def create_pg_vector_tool():
+        """创建PostgreSQL向量数据库查询工具实例"""
+        return CrewAIPGVectorTool()
+    
+    @staticmethod
+    def create_gdb_catalyst_tool():
+        """创建催化剂知识图谱查询工具实例"""
+        return CrewAIGDBCatalystTool()
+    
+    @staticmethod
+    def create_gdb_pollutant_tool():
+        """创建污染物降解查询工具实例"""
+        return CrewAIGDBPollutantTool()

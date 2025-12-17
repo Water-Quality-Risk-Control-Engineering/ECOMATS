@@ -56,8 +56,14 @@ tests/
 *.tmp
 *.temp
 
-# Claude Code configuration
+# AI Assistant configuration
 CLAUDE.md
+AGENT.md
 
 # Output files
 outputs/
+# SFT数据集文件夹（不提交到repo）
+sft_datasets/
+sft_datasets_converted/
+SFT_Generation_Package/
+README_SFT_GENERATION.md

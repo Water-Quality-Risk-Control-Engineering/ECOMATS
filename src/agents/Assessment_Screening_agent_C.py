@@ -21,7 +21,7 @@ class AssessmentScreeningAgentC(BaseAgent):
         """
         from src.config.config import Config
         super().__init__(llm, "Assessment_Screening_agent_C", "全面评估材料方案的各个方面", "expert_c_prompt.md",
-                        temperature=Config.EXPERT_C_TEMPERATURE)
+                         temperature=Config.EXPERT_C_TEMPERATURE, max_iter=15)  # ASA需要独立使用工具
     
     def create_agent(self):
         """Create and configure the assessment screening agent.
@@ -46,14 +46,14 @@ class AssessmentScreeningAgentC(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 使用 Expert C 专用工具集（结构合理性）
+        # 使用环境友好性评估专用工具集 (Expert C: 环境影响和安全性)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_expert_c_tools()
+                agent.tools = ToolFactory.create_environmental_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_expert_c_tools()
+            agent.tools = ToolFactory.create_environmental_assessment_tools()
         
         return agent

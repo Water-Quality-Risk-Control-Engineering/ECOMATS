@@ -1,46 +1,38 @@
 description: |
   Design water treatment material solutions based on user requirements.
   
-  Design Steps:
-  1. Analyze target pollutant characteristics and treatment requirements
-  2. Select appropriate material types (e.g., single-atom catalysts, dual-atom catalysts, MOF materials)
-  3. Prioritize reusing previously obtained structure validation or identifier results
-  4. **Mandatory: Use PubChem tool to verify target pollutant chemical information**
-  5. Design material structure based on tool data
-  6. **Mandatory: Use Structure Validator tool to verify if designed material structures exist**
-  7. Redesign if validation fails
-  8. Optimize material structure parameters for catalytic performance and stability
-  9. Balance material diversity, structural stability, and catalytic performance
+  ⚠️ Tool Call Limits (Strictly Follow):
+  - Each tool max 2 calls
+  - Structure Validator max 2 calls (choose alternative design if validation fails, don't re-validate)
+  - Material Identifier max 2 calls
+  - Total tool calls should not exceed 8
   
-  Tool Usage Strategy:
-  1. **Target Analysis Phase**:
-     - Call PubChem tool for pollutant chemical information (formula, molecular weight, CAS, SMILES)
-     - Analyze pollutant chemical structure and degradation challenges
-     - Record tool call parameters and results
+  Design Steps (Streamlined):
+  1. Analyze target pollutant → Call PubChem 1x
+  2. Select material type → Call Material Identifier 1x
+  3. Query material database → Call Materials Project 1x
+  4. Validate material structure → Call Structure Validator 1x
+  5. If validation fails, choose alternative design (don't re-validate)
   
-  2. **Material Design Phase (Rate Limiting & Reuse)**:
-     - Call Material Identifier Tool to determine material type
-     - Call appropriate design tools based on material type
-     - Call Structure Validator Tool to verify material structures
-     - If validation fails, record failure reason and redesign
+  Tool Usage Strategy (Rate Limiting & Reuse):
+  1. **Pollutant Analysis** (1 call):
+     - PubChem for target pollutant info
   
-  3. **Performance Optimization Phase**:
-     - Call Name2Properties Tool or Formula2Properties Tool for property parameters
-     - Call Material Search Tool for similar material catalytic data
-     - Optimize active sites and reaction pathways based on tool data
+  2. **Material Identification** (1 call):
+     - Material Identifier to determine type
   
-  4. **Final Validation Phase**:
-     - Comprehensive validation ensuring all tool results are consistent
-     - Record all tool call details
-     - Ensure designed structures exist or have synthesis feasibility
+  3. **Data Query** (1-2 calls):
+     - Materials Project for structure data
+     - Reuse previously obtained data
+  
+  4. **Structure Validation** (max 2 calls):
+     - Structure Validator for verification
+     - Choose alternative design if fails, don't loop
   
   Design Key Points:
-  - Ensure materials have good catalytic performance and structural stability
-  - Optimize active sites and reaction pathways
-  - Meet target pollutant degradation requirements
-  - **Must verify designed material structures exist in reality**
-  - **Must use Materials Project and PubChem tools for data support**
-  - Record all tool call parameters and results
+  - Ensure good catalytic performance and stability
+  - Choose alternative design if validation fails, avoid re-validation
+  - Reuse previously obtained tool data
 
 expected_output: |
   Provide complete material design solution including:

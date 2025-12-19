@@ -17,7 +17,8 @@ class AssessmentScreeningAgentOverall(BaseAgent):
             role="Assessment_Screening_agent_Overall",  # 最终验证专家 / Final validation expert
             goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告，同时提供改进建议",  # Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions
             prompt_file="enhanced_final_validator_prompt.md",
-            temperature=Config.FINAL_VALIDATOR_TEMPERATURE
+            temperature=Config.FINAL_VALIDATOR_TEMPERATURE,
+            max_iter=8  # 复用上游结果，较少迭代
         )
     
     def create_agent(self):
@@ -34,9 +35,9 @@ class AssessmentScreeningAgentOverall(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 使用轻量级验证工具集，仅用于数据格式验证
-        # 核心职责是聚合三位专家的结果，不需要重新评估材料
-        agent.tools = ToolFactory.create_final_validation_tools() if tools_enabled() else []
+        # ASA Final 不需要工具，仅对 ASA A/B/C 的输出做综合分析
+        # ASA Final does not need tools, only synthesizes outputs from ASA A/B/C
+        agent.tools = []
         
         # 强化提示词，明确其聚合角色
         agent.backstory += "\n\n你的核心职责是从AssessmentScreeningAgentA、B、C三位专家处收集评估结果，进行加权计算和一致性分析，生成最终报告。你不需要重新评估材料本身，而是综合已有意见。"

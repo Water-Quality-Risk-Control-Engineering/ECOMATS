@@ -22,7 +22,8 @@ class OperationSuggestingAgent(BaseAgent):
             "Operation_Suggesting_agent",  # Role: Operation Suggestion Expert
             "为材料合成、生产和应用提供详细的操作指导建议",  # Goal: Provide detailed operational guidance for material synthesis, production and application
             "operation_suggesting_prompt.md",  # Prompt template file
-            temperature=Config.OPERATION_SUGGESTING_TEMPERATURE  # Temperature setting from config
+            temperature=Config.OPERATION_SUGGESTING_TEMPERATURE,  # Temperature setting from config
+            max_iter=8  # 复用上游结果，较少迭代
         )
     
     def create_agent(self):

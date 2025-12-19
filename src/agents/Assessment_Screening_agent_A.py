@@ -24,7 +24,8 @@ class AssessmentScreeningAgentA(BaseAgent):
             "Assessment_Screening_agent_A",  # Expert A / 专家A
             "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation of material proposals from various aspects / 全面评估材料方案的各个方面
             "expert_a_prompt.md",  # Prompt file for expert A / 专家A的提示文件
-            temperature=Config.EXPERT_A_TEMPERATURE  # Temperature setting from config / 从配置中获取的温度设置
+            temperature=Config.EXPERT_A_TEMPERATURE,  # Temperature setting from config / 从配置中获取的温度设置
+            max_iter=15  # ASA需要独立使用工具，允许更多迭代
         )
     
     def create_agent(self):
@@ -52,14 +53,15 @@ class AssessmentScreeningAgentA(BaseAgent):
             # 保持self.llm不变
         
         agent = super().create_agent()
-        # 使用 Expert A 专用工具集（催化性能 + 技术可行性）
+        # 使用催化性能评估专用工具集 (Expert A: 催化性能和结构合理性)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_expert_a_tools()
+                agent.tools = ToolFactory.create_catalytic_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_expert_a_tools()
+            # 如果工具启用检测失败，回退到启用催化评估工具集
+            agent.tools = ToolFactory.create_catalytic_assessment_tools()
         
         return agent

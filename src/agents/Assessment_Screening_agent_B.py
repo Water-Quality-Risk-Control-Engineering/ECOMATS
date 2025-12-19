@@ -17,7 +17,8 @@ class AssessmentScreeningAgentB(BaseAgent):
             role="Assessment_Screening_agent_B",  # Assessment and screening expert B / 评估筛选专家B
             goal="Comprehensively evaluate various aspects of material proposals",  # Comprehensively evaluate various aspects of material proposals / 全面评估材料方案的各个方面
             prompt_file="expert_b_prompt.md",
-            temperature=Config.EXPERT_B_TEMPERATURE
+            temperature=Config.EXPERT_B_TEMPERATURE,
+            max_iter=15  # ASA需要独立使用工具，允许更多迭代
         )
     
     def create_agent(self):
@@ -34,14 +35,14 @@ class AssessmentScreeningAgentB(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 使用 Expert B 专用工具集（经济可行性 + 环境友好性）
+        # 使用经济可行性评估专用工具集 (Expert B: 经济可行性和商业可获得性)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_expert_b_tools()
+                agent.tools = ToolFactory.create_economic_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_expert_b_tools()
+            agent.tools = ToolFactory.create_economic_assessment_tools()
         
         return agent

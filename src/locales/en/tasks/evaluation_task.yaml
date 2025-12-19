@@ -1,10 +1,10 @@
 description: |
   Please evaluate the material scheme based on the following five dimensions:
   1. Catalytic Performance (Weight 50%)
-  2. Economic Feasibility (Weight 10%)
+  2. Economic Viability (Weight 10%)
   3. Environmental Friendliness (Weight 10%)
   4. Technical Feasibility (Weight 10%)
-  5. Structural Rationality (Weight 20%)
+  5. Structural Validity (Weight 20%)
   
   Catalytic performance is the core criterion.
   
@@ -14,14 +14,13 @@ description: |
   3. If catalytic performance fails, clearly identify issues and recommend redesign
   4. If catalytic performance passes, comprehensively evaluate other dimensions
   
-  Tool Usage Strategy:
-  1. **Data Collection Phase**: Call Material Identifier Tool and Structure Validator Tool
-  2. **Structural Rationality Verification**: Call Materials Project and PubChem tools
-  3. **Catalytic Performance Evaluation**: Call Material Search Tool for similar material data
-  4. **Economic Feasibility Evaluation**: Call tools for cost-related data
-  5. **Environmental Friendliness Evaluation**: Call PNEC Tool and PubChem tools
-  6. **Technical Feasibility Evaluation**: Evaluate synthesis methods and industrialization
-  7. **Data Validation Phase**: Cross-validate all tool query results
+  Tool Usage Strategy (6 tools available):
+  1. **Material Identifier Tool**: Classify material type before evaluation
+  2. **Structure Validator Tool**: Verify structural validity and physical plausibility
+  3. **Materials Project Tool**: Query material structure and electronic properties
+  4. **PubChem Tool**: Query toxicity and environmental impact data
+  5. **PNEC Tool**: Assess environmental risk thresholds
+  6. **MolPort Availability Tool**: Check commercial availability of precursors for economic evaluation
   
   Evaluation Requirements:
   - Conduct independent evaluation, focus on scientific rationality and application potential
@@ -30,7 +29,7 @@ description: |
   - Record all tool call parameters and results
   
   Evaluation Output Format:
-  1. Dimension scores (max 10)
+  1. Dimension scores (1-10 scale)
   2. Core criterion assessment: Pass/Fail
   3. Comprehensive evaluation and decision recommendation
   4. Tool verification results

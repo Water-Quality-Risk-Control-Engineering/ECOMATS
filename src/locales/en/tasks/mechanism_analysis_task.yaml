@@ -8,13 +8,11 @@ description: |
   4. Provide verifiable mechanism predictions and optimization suggestions
   
   Tool Usage Strategy:
-  1. **Target Material Identification**: Call Material Identifier Tool
-  2. **Metal Material Data Collection**: Call Materials Project for electronic structure and crystal structure
-  3. **Organic Pollutant Data Collection**: Call PubChem for molecular structure and bonding properties
-  4. **Similar Material Performance Data**: Call material_search_tool for catalytic data
-  5. **Structure Verification**: Call Structure Validator Tool
-  6. **Data Cross-Validation**: Validate all tool query results
-  7. **Mechanism Analysis**: Combine all tool data for comprehensive analysis
+  1. **Reuse Upstream Data**: First check if Material Identifier and Structure Validator results exist from upstream tasks
+  2. **Metal Material Data**: Call Materials Project for electronic structure (only if not already obtained)
+  3. **Organic Pollutant Data**: Call PubChem for molecular structure (only if not already obtained)
+  4. **Supplementary Queries**: Only query missing data not available from upstream
+  5. **Mechanism Analysis**: Combine all available data for comprehensive analysis
   
   Analysis Dimensions (must include all):
   1. Microstructure mechanisms: Atomic/molecular structure, active sites, ligand effects

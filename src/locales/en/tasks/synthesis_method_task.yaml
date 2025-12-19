@@ -12,12 +12,10 @@ description: |
   6. Quality Control Indicators: Determine key quality control points and characterization methods
   
   Tool Usage Strategy:
-  1. **Synthesis Target Confirmation**: Call Material Identifier Tool and Structure Validator Tool
-  2. **Raw Material Information Collection**: Call PubChem tool for properties and safety data
+  1. **Reuse Upstream Results**: Check for existing Material Identifier and Structure Validator results
+  2. **Raw Material Information**: Call PubChem for properties and safety data (only if not cached)
   3. **Synthesis Route Design**: Call Material Search Tool for similar material synthesis methods
-  4. **Process Parameter Optimization**: Call Formula2Properties Tool for product property predictions
-  5. **Safety Risk Assessment**: Call PubChem tool for safety data sheets
-  6. **Feasibility Verification**: Cross-validate all tool query results
+  4. **Feasibility Verification**: Cross-validate with existing tool results from upstream
   
   Design Key Points:
   - Ensure synthesis method feasibility and reproducibility

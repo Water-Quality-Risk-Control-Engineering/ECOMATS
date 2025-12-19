@@ -29,12 +29,16 @@ MEMORY_GUIDANCE_EN = """
 class BaseAgent:
     """基础智能体类，提供通用的智能体创建功能 / Base agent class that provides general agent creation functionality"""
     
-    def __init__(self, llm, role, goal, prompt_file, temperature=None):
+    # 默认迭代次数限制 - 防止工具过度调用 / Default iteration limit to prevent excessive tool calls
+    DEFAULT_MAX_ITER = 10
+    
+    def __init__(self, llm, role, goal, prompt_file, temperature=None, max_iter=None):
         self.llm = llm
         self.role = role
         self.goal = goal
         self.prompt_file = prompt_file
         self.temperature = temperature
+        self.max_iter = max_iter or self.DEFAULT_MAX_ITER
     
     def create_agent(self):
         agent_llm = self.llm
@@ -69,5 +73,6 @@ class BaseAgent:
             backstory=backstory,
             verbose=False,
             allow_delegation=False,
-            llm=agent_llm
+            llm=agent_llm,
+            max_iter=self.max_iter  # 限制迭代次数防止工具过度调用
         )

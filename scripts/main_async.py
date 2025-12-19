@@ -26,12 +26,32 @@ if sys.platform == 'win32':
 
 # 关键:在导入CrewAI之前设置环境变量!
 load_dotenv()  # 先加载.env
-os.environ['OPENAI_API_KEY'] = os.getenv('QWEN_API_KEY') or 'dummy'
-os.environ['OPENAI_API_BASE'] = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+
+# 设置 OpenAI 兼容的环境变量（CrewAI 异步模式需要）
+_api_key = os.getenv('QWEN_API_KEY') or 'dummy'
+_api_base = os.getenv('QWEN_API_BASE') or 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+os.environ['OPENAI_API_KEY'] = _api_key
+os.environ['OPENAI_API_BASE'] = _api_base
+os.environ['OPENAI_BASE_URL'] = _api_base  # CrewAI 异步客户端可能使用此变量
 
 # Monkey patch: 修复CrewAI异步memory的bug
 # CrewAI 1.7.0的memory在异步模式下会调用asearch(),但ChromaDB客户端是同步的
 # 这个patch直接使用同步搜索,避免异步错误
+
+# Patch 1: 修复 ChromaDBClient.asearch()
+import crewai.rag.chromadb.client as chromadb_client_module
+original_ChromaDBClient = chromadb_client_module.ChromaDBClient
+
+class PatchedChromaDBClient(original_ChromaDBClient):
+    """修复异步搜索的ChromaDBClient - 在异步方法中调用同步实现"""
+    async def asearch(self, **kwargs):
+        """异步搜索直接使用同步search()"""
+        # 直接调用同步方法,跳过异步客户端检查
+        return self.search(**kwargs)
+
+chromadb_client_module.ChromaDBClient = PatchedChromaDBClient
+
+# Patch 2: 修复 RAGStorage.asearch()
 import crewai.memory.storage.rag_storage as rag_storage_module
 original_RAGStorage = rag_storage_module.RAGStorage
 
@@ -43,6 +63,8 @@ class PatchedRAGStorage(original_RAGStorage):
         return self.search(query, limit, filter, score_threshold)
 
 rag_storage_module.RAGStorage = PatchedRAGStorage
+
+print("✅ CrewAI 异步内存兼容性补丁已应用 / Async memory compatibility patch applied")
 
 from crewai import Crew, Process
 
@@ -65,6 +87,7 @@ sys.path.insert(0, os.path.abspath(project_root))
 
 from src.config.config import Config
 from src.utils.llm_config import create_llm
+from src.utils.workflow_monitor import WorkflowMonitor, create_monitor, get_monitor
 
 
 def create_dashscope_embedder():
@@ -106,9 +129,17 @@ def create_dashscope_embedder():
                 Embeddings: numpy数组列表 (list[np.ndarray])
             """
             try:
+                # DashScope text-embedding-v2 限制: 1-2048 字符
+                # 截断超长文本
+                MAX_LENGTH = 2048  # 留一些余量
+                truncated_input = [
+                    text[:MAX_LENGTH] if len(text) > MAX_LENGTH else text
+                    for text in input
+                ]
+                
                 response = self.client.embeddings.create(
                     model=self.model,
-                    input=input
+                    input=truncated_input
                 )
                 # 关键: 返回numpy数组列表!
                 embeddings = [
@@ -238,9 +269,14 @@ def create_all_agents(llm):
     }
 
 
-async def run_autonomous_workflow_async(user_requirement, llm):
+async def run_autonomous_workflow_async(user_requirement, llm, monitor: WorkflowMonitor = None):
     """异步自主调度工作流 - 基于 TOA 意图驱动架构
     Async autonomous workflow - based on TOA intent-driven architecture
+    
+    Args:
+        user_requirement: 用户需求
+        llm: LLM实例
+        monitor: 工作流监控器实例（可选）
     """
     from src.agents.task_organizing_agent import TaskOrganizingAgent
     from src.tasks.design_task import DesignTask
@@ -273,6 +309,15 @@ async def run_autonomous_workflow_async(user_requirement, llm):
     coordinator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
     coordinator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
     coordinator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
+    
+    # 初始化监控器 / Initialize monitor
+    if monitor is None:
+        monitor = create_monitor()
+    monitor.set_workflow_info(user_requirement, "autonomous", is_async=True)
+    
+    # 任务开始时间记录 / Task start time tracking
+    import time
+    task_start_times = {}
     
     # ============================================================
     # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
@@ -457,12 +502,31 @@ async def run_autonomous_workflow_async(user_requirement, llm):
     # 创建 Crew 并异步执行 / Create Crew and execute async
     DashScopeEmbedder = create_dashscope_embedder()
     
+    # 创建任务回调函数，用于监控 / Create task callback for monitoring
+    def task_callback(task_output):
+        task_name = getattr(task_output, 'name', None) or f"Task_{len(task_start_times) + 1}"
+        task_description = getattr(task_output, 'description', 'N/A')
+        agent = getattr(task_output, 'agent', None)
+        agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
+        agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
+        
+        json_output = None
+        if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            json_output = task_output.json_dict
+        
+        if monitor:
+            if task_name not in task_start_times:
+                task_start_times[task_name] = time.time()
+                monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
+            monitor.end_agent_execution(output=str(task_output), json_output=json_output)
+    
     crew = Crew(
         agents=required_agents,
         tasks=required_tasks,
         process=Process.sequential,
         verbose=True,
-        memory=True,
+        memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
+        task_callback=task_callback,  # 添加任务回调
         embedder={
             "provider": "custom",
             "config": {
@@ -479,13 +543,36 @@ async def run_autonomous_workflow_async(user_requirement, llm):
     # 异步执行 Crew! / Execute Crew async!
     result = await crew.akickoff(inputs={'requirement': user_requirement})
     
+    # 保存监控报告 / Save monitor report
+    if monitor:
+        monitor.set_final_result(result, "completed")
+        monitor.save_report()
+        monitor.save_readable_report()
+        monitor.print_summary()
+    
     return result
 
 
-async def run_preset_workflow_async(user_requirement, llm):
-    """异步预设工作流 - 使用CrewAI 1.7.0异步功能"""
+async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMonitor = None):
+    """异步预设工作流 - 使用CrewAI 1.7.0异步功能
+    
+    Args:
+        user_requirement: 用户需求
+        llm: LLM实例
+        monitor: 工作流监控器实例（可选）
+    """
+    import time
+    
     print("\n🚀 启动异步预设工作流...")
     print("-" * 70)
+    
+    # 初始化监控器 / Initialize monitor
+    if monitor is None:
+        monitor = create_monitor()
+    monitor.set_workflow_info(user_requirement, "preset", is_async=True)
+    
+    # 任务开始时间记录 / Task start time tracking
+    task_start_times = {}
     
     from src.tasks.design_task import DesignTask
     from src.tasks.evaluation_task import EvaluationTask  
@@ -568,6 +655,24 @@ async def run_preset_workflow_async(user_requirement, llm):
     # 注意: 传入类而不是实例!
     DashScopeEmbedder = create_dashscope_embedder()
     
+    # 创建任务回调函数，用于监控 / Create task callback for monitoring
+    def task_callback(task_output):
+        task_name = getattr(task_output, 'name', None) or f"Task_{len(task_start_times) + 1}"
+        task_description = getattr(task_output, 'description', 'N/A')
+        agent = getattr(task_output, 'agent', None)
+        agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
+        agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
+        
+        json_output = None
+        if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            json_output = task_output.json_dict
+        
+        if monitor:
+            if task_name not in task_start_times:
+                task_start_times[task_name] = time.time()
+                monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
+            monitor.end_agent_execution(output=str(task_output), json_output=json_output)
+    
     crew = Crew(
         agents=list(agents.values()),
         tasks=[
@@ -579,7 +684,8 @@ async def run_preset_workflow_async(user_requirement, llm):
         ],
         process=Process.sequential,
         verbose=True,
-        memory=True,  # 启用记忆系统
+        memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
+        task_callback=task_callback,  # 添加任务回调
         embedder={
             "provider": "custom",
             "config": {
@@ -614,11 +720,24 @@ async def run_preset_workflow_async(user_requirement, llm):
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})
     
+    # 保存监控报告 / Save monitor report
+    if monitor:
+        monitor.set_final_result(result, "completed")
+        monitor.save_report()
+        monitor.save_readable_report()
+        monitor.print_summary()
+    
     return result
 
 
-def run_preset_workflow_sync(user_requirement, llm):
-    """同步预设工作流 - 保持向后兼容"""
+def run_preset_workflow_sync(user_requirement, llm, monitor: WorkflowMonitor = None):
+    """同步预设工作流 - 保持向后兼容
+    
+    Args:
+        user_requirement: 用户需求
+        llm: LLM实例
+        monitor: 工作流监控器实例（可选）
+    """
     print("\n📌 启动同步预设工作流...")
     print("-" * 70)
     
@@ -626,7 +745,8 @@ def run_preset_workflow_sync(user_requirement, llm):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from main import run_preset_workflow
     
-    return run_preset_workflow(user_requirement, llm)
+    # 传递监控器到同步工作流
+    return run_preset_workflow(user_requirement, llm, monitor)
 
 
 async def main_async():
@@ -653,22 +773,26 @@ async def main_async():
     # 获取工作模式
     mode, use_async = get_workflow_mode()
     
+    # 创建监控器 / Create monitor
+    monitor = create_monitor()
+    print("📊 工作流监控器已初始化 / Workflow monitor initialized")
+    
     if mode == "preset":
         if use_async:
             # 异步预设工作流
-            result = await run_preset_workflow_async(user_requirement, llm)
+            result = await run_preset_workflow_async(user_requirement, llm, monitor)
         else:
-            # 同步预设工作流
-            result = run_preset_workflow_sync(user_requirement, llm)
+            # 同步预设工作流 - 传递监控器
+            result = run_preset_workflow_sync(user_requirement, llm, monitor)
     else:
         # 自主调度模式 / Autonomous scheduling mode
         if use_async:
             # 异步自主调度 / Async autonomous
-            result = await run_autonomous_workflow_async(user_requirement, llm)
+            result = await run_autonomous_workflow_async(user_requirement, llm, monitor)
         else:
-            # 同步自主调度 / Sync autonomous
+            # 同步自主调度 / Sync autonomous - 传递监控器
             from main import run_autonomous_workflow
-            result = run_autonomous_workflow(user_requirement, llm)
+            result = run_autonomous_workflow(user_requirement, llm, monitor)
     
     # 输出结果 / Output result
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
@@ -682,6 +806,17 @@ async def main_async():
     # 保存结果到outputs目录（不在终端打印完整结果）
     # Save result to outputs directory (without printing full result to terminal)
     save_result(result, user_requirement, mode, use_async)
+    
+    # 输出监控报告信息 / Output monitor report info
+    lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
+    if lang == 'en':
+        print(f"\n📊 Monitor reports saved to outputs folder:")
+        print(f"   - JSON format: monitor_report_*.json")
+        print(f"   - Readable format: monitor_report_*.txt")
+    else:
+        print(f"\n📊 监控报告已保存到 outputs 文件夹：")
+        print(f"   - JSON格式: monitor_report_*.json")
+        print(f"   - 可读格式: monitor_report_*.txt")
     
     return result
 

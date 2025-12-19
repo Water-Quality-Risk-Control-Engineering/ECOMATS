@@ -7,9 +7,16 @@ import sys
 import os
 import json
 import signal
+import time
 from dotenv import load_dotenv
 from crewai import Crew, Process
 import dashscope
+
+# 添加项目路径以便导入监控模块
+project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, os.path.abspath(project_root))
+
+from src.utils.workflow_monitor import WorkflowMonitor, create_monitor, get_monitor
 
 # Windows 兼容性补丁：SIGHUP 信号支持
 if sys.platform == 'win32':
@@ -197,8 +204,14 @@ def run_design_iteration(user_requirement, llm, iteration_count=0):
     else:
         return result
 
-def run_preset_workflow(user_requirement, llm):
-    """运行预设工作流模式 / Run preset workflow mode"""
+def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
+    """运行预设工作流模式 / Run preset workflow mode
+    
+    Args:
+        user_requirement: 用户需求
+        llm: LLM实例
+        monitor: 工作流监控器实例（可选）
+    """
     print("启动预设工作流模式...")
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     sys.path.insert(0, os.path.abspath(project_root))
@@ -209,6 +222,13 @@ def run_preset_workflow(user_requirement, llm):
     from src.tasks.mechanism_analysis_task import MechanismAnalysisTask
     from src.tasks.synthesis_method_task import SynthesisMethodTask
     from src.tasks.operation_suggesting_task import OperationSuggestingTask
+    
+    # 如果没有传入监控器，创建一个新的
+    if monitor is None:
+        monitor = create_monitor()
+    
+    # 设置监控器信息
+    monitor.set_workflow_info(user_requirement, "preset", is_async=False)
     
     # 创建所有智能体 / Create all agents
     agents = create_all_agents(llm)
@@ -239,12 +259,37 @@ def run_preset_workflow(user_requirement, llm):
     # 6. 创建操作建议任务，依赖于最终验证任务 / Create operation suggestion task, dependent on final validation task
     operation_suggesting_task = OperationSuggestingTask(llm).create_task(agents['operation_suggesting'], final_validation_task, user_requirement=user_requirement)
     
-    # 定义任务回调函数，用于保存整体流程结果
+    # 创建任务列表和 Agent 映射（用于监控器）
+    # Create task list and Agent mapping (for monitor)
+    task_agent_map = [
+        (design_task, agents['material_designer'], 'Creative_Designing_agent'),
+        (evaluation_task_a, agents['expert_a'], 'Assessment_Screening_agent_A'),
+        (evaluation_task_b, agents['expert_b'], 'Assessment_Screening_agent_B'),
+        (evaluation_task_c, agents['expert_c'], 'Assessment_Screening_agent_C'),
+        (final_validation_task, agents['final_validator'], 'Assessment_Screening_agent_Overall'),
+        (synthesis_method_task, agents['synthesis_expert'], 'Synthesis_Guiding_agent'),
+        (mechanism_analysis_task, agents['mechanism_expert'], 'Mechanism_Mining_agent'),
+        (operation_suggesting_task, agents['operation_suggesting'], 'Operation_Suggesting_agent'),
+    ]
+    
+    # 创建任务描述到 Agent 的映射
+    task_desc_to_agent = {}
+    for task, agent, role_name in task_agent_map:
+        desc_key = str(task.description)[:100]  # 使用描述前100字符作为键
+        task_desc_to_agent[desc_key] = (agent, role_name)
+
+    # 定义任务回调函数，用于保存整体流程结果和监控数据
     # 生成全局时间戳，确保所有任务使用相同的流程结果文件
     import datetime
     global_workflow_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # 任务开始时间记录（用于计算每个任务耗时）
+    task_start_times = {}
+    task_completion_order = []  # 记录任务完成顺序
+    last_task_end_time = time.time()  # 上一个任务的结束时间
     
     def task_callback(task_output):
+        nonlocal last_task_end_time
         import json
         import os
         
@@ -256,27 +301,66 @@ def run_preset_workflow(user_requirement, llm):
         workflow_result_filename = f"workflow_result_{global_workflow_timestamp}.txt"
         workflow_result_filepath = os.path.join(outputs_dir, workflow_result_filename)
         
-        # 获取任务名称
-        task_name = getattr(task_output, 'name', 'unknown_task')
-        if not task_name:
-            task_name = 'unknown_task'
+        # 获取任务信息
+        task_description = getattr(task_output, 'description', 'N/A')
+        task_name_raw = getattr(task_output, 'name', None)
+        
+        # 通过任务描述查找对应的 Agent
+        desc_key = str(task_description)[:100]
+        agent_info = task_desc_to_agent.get(desc_key)
+        
+        if agent_info:
+            agent, agent_role = agent_info
+            agent_name = getattr(agent, 'name', agent_role)
+        else:
+            # 回退方案：从 TaskOutput 尝试获取
+            agent = getattr(task_output, 'agent', None)
+            agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
+            agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
+        
+        # 生成唯一任务名
+        task_idx = len(task_completion_order) + 1
+        task_name = task_name_raw or f"Task_{task_idx}_{agent_role}"
+        task_completion_order.append(task_name)
+        
+        # 获取JSON输出
+        json_output = None
+        if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            json_output = task_output.json_dict
+        
+        # 计算实际耗时
+        current_time = time.time()
+        task_start_time = last_task_end_time
+        task_duration = current_time - task_start_time
+        
+        # 使用监控器记录执行
+        if monitor:
+            monitor.start_agent_execution(agent_name, agent_role, task_name, str(task_description)[:200])
+            if monitor._current_execution:
+                monitor._current_execution.start_time = task_start_time
+            monitor.end_agent_execution(output=str(task_output)[:5000], json_output=json_output)
+        
+        # 更新上一个任务结束时间
+        last_task_end_time = current_time
         
         # 将任务输出追加到流程结果文件
         with open(workflow_result_filepath, 'a', encoding='utf-8') as f:
             f.write(f"\n\n{'='*60}\n")
             f.write(f"任务名称: {task_name}\n")
+            f.write(f"Agent: {agent_role}\n")
             f.write(f"执行时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"耗时: {task_duration:.2f}s ({task_duration/60:.1f}min)\n")
             f.write("=" * 60 + "\n")
-            f.write(f"任务描述: {getattr(task_output, 'description', 'N/A')}\n")
+            f.write(f"任务描述: {str(task_description)[:500]}\n")
             f.write(f"预期输出: {getattr(task_output, 'expected_output', 'N/A')}\n")
             f.write("=" * 60 + "\n")
             f.write(f"实际输出:\n{str(task_output)}\n")
             
             # 如果有JSON输出，也保存
-            if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            if json_output:
                 f.write("\n" + "=" * 60 + "\n")
                 f.write("JSON输出:\n")
-                json.dump(task_output.json_dict, f, ensure_ascii=False, indent=2)
+                json.dump(json_output, f, ensure_ascii=False, indent=2)
             f.write(f"\n{'='*60}\n")
     
     # 创建Crew / Create Crew
@@ -311,8 +395,21 @@ def run_preset_workflow(user_requirement, llm):
     # 执行 / Execute
     try:
         result = ecomats_crew.kickoff()
+        
+        # 设置最终结果并保存监控报告
+        if monitor:
+            monitor.set_final_result(result, "completed")
+            monitor.save_report()
+            monitor.save_readable_report()
+            monitor.print_summary()
+        
         return result
-    except Exception:
+    except Exception as e:
+        # 记录错误
+        if monitor:
+            monitor.set_final_result(None, "error", str(e))
+            monitor.save_report()
+            monitor.save_readable_report()
         return run_tool_only_summary(user_requirement)
 
 def _execute_material_tools(user_requirement: str, project_root: str):
@@ -327,11 +424,16 @@ def _execute_material_tools(user_requirement: str, project_root: str):
     pass  # 不再预执行 / No longer pre-execute
 
 
-def run_autonomous_workflow(user_requirement, llm):
+def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
     """运行智能体自主调度模式 / Run agent autonomous scheduling mode
     
     基于 TOA 意图识别的全新架构，直接使用 intent 对象控制流程
     New architecture based on TOA intent recognition, directly using intent object to control workflow
+    
+    Args:
+        user_requirement: 用户需求
+        llm: LLM实例
+        monitor: 工作流监控器实例（可选）
     """
     print("启动智能体自主调度模式... / Starting autonomous scheduling mode...")
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -361,6 +463,11 @@ def run_autonomous_workflow(user_requirement, llm):
     coordinator.register_agent("MechanismMiningAgent", agents['mechanism_expert'])
     coordinator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
     coordinator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
+    
+    # 初始化监控器 / Initialize monitor
+    if monitor is None:
+        monitor = create_monitor()
+    monitor.set_workflow_info(user_requirement, "autonomous", is_async=False)
     
     # ============================================================
     # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
@@ -530,12 +637,25 @@ def run_autonomous_workflow(user_requirement, llm):
         print(f"   {i}. {agent_role}")
     print(f"{'='*60}\n")
     
-    # 定义任务回调函数，用于保存整体流程结果
+    # 创建任务描述到 Agent 的映射（用于监控器）
+    task_desc_to_agent = {}
+    for task in required_tasks:
+        if task and task.agent:
+            desc_key = str(task.description)[:100]
+            task_desc_to_agent[desc_key] = (task.agent, getattr(task.agent, 'role', 'Unknown'))
+    
+    # 定义任务回调函数，用于保存整体流程结果和监控数据
     # 生成全局时间戳，确保所有任务使用相同的流程结果文件
     import datetime
     global_workflow_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     
+    # 任务开始时间记录（用于计算每个任务耗时）
+    task_start_times = {}
+    task_completion_order = []  # 记录任务完成顺序
+    last_task_end_time = time.time()  # 上一个任务的结束时间
+    
     def task_callback(task_output):
+        nonlocal last_task_end_time
         import json
         import os
         
@@ -547,27 +667,66 @@ def run_autonomous_workflow(user_requirement, llm):
         workflow_result_filename = f"workflow_result_{global_workflow_timestamp}.txt"
         workflow_result_filepath = os.path.join(outputs_dir, workflow_result_filename)
         
-        # 获取任务名称
-        task_name = getattr(task_output, 'name', 'unknown_task')
-        if not task_name:
-            task_name = 'unknown_task'
+        # 获取任务信息
+        task_description = getattr(task_output, 'description', 'N/A')
+        task_name_raw = getattr(task_output, 'name', None)
+        
+        # 通过任务描述查找对应的 Agent
+        desc_key = str(task_description)[:100]
+        agent_info = task_desc_to_agent.get(desc_key)
+        
+        if agent_info:
+            agent, agent_role = agent_info
+            agent_name = getattr(agent, 'name', agent_role)
+        else:
+            # 回退方案：从 TaskOutput 尝试获取
+            agent = getattr(task_output, 'agent', None)
+            agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
+            agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
+        
+        # 生成唯一任务名
+        task_idx = len(task_completion_order) + 1
+        task_name = task_name_raw or f"Task_{task_idx}_{agent_role}"
+        task_completion_order.append(task_name)
+        
+        # 获取JSON输出
+        json_output = None
+        if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            json_output = task_output.json_dict
+        
+        # 计算实际耗时
+        current_time = time.time()
+        task_start_time = last_task_end_time
+        task_duration = current_time - task_start_time
+        
+        # 使用监控器记录执行
+        if monitor:
+            monitor.start_agent_execution(agent_name, agent_role, task_name, str(task_description)[:200])
+            if monitor._current_execution:
+                monitor._current_execution.start_time = task_start_time
+            monitor.end_agent_execution(output=str(task_output)[:5000], json_output=json_output)
+        
+        # 更新上一个任务结束时间
+        last_task_end_time = current_time
         
         # 将任务输出追加到流程结果文件
         with open(workflow_result_filepath, 'a', encoding='utf-8') as f:
             f.write(f"\n\n{'='*60}\n")
             f.write(f"任务名称: {task_name}\n")
+            f.write(f"Agent: {agent_role}\n")
             f.write(f"执行时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"耗时: {task_duration:.2f}s ({task_duration/60:.1f}min)\n")
             f.write("=" * 60 + "\n")
-            f.write(f"任务描述: {getattr(task_output, 'description', 'N/A')}\n")
+            f.write(f"任务描述: {str(task_description)[:500]}\n")
             f.write(f"预期输出: {getattr(task_output, 'expected_output', 'N/A')}\n")
             f.write("=" * 60 + "\n")
             f.write(f"实际输出:\n{str(task_output)}\n")
             
             # 如果有JSON输出，也保存
-            if hasattr(task_output, 'json_dict') and task_output.json_dict:
+            if json_output:
                 f.write("\n" + "=" * 60 + "\n")
                 f.write("JSON输出:\n")
-                json.dump(task_output.json_dict, f, ensure_ascii=False, indent=2)
+                json.dump(json_output, f, ensure_ascii=False, indent=2)
             f.write(f"\n{'='*60}\n")
     
     # 创建Crew / Create Crew
@@ -593,8 +752,21 @@ def run_autonomous_workflow(user_requirement, llm):
     # 执行 / Execute
     try:
         result = ecomats_crew.kickoff()
+        
+        # 设置最终结果并保存监控报告
+        if monitor:
+            monitor.set_final_result(result, "completed")
+            monitor.save_report()
+            monitor.save_readable_report()
+            monitor.print_summary()
+        
         return result
-    except Exception:
+    except Exception as e:
+        # 记录错误
+        if monitor:
+            monitor.set_final_result(None, "error", str(e))
+            monitor.save_report()
+            monitor.save_readable_report()
         return run_tool_only_summary(user_requirement)
 
 def main():
@@ -642,15 +814,19 @@ def main():
     llm = create_llm()
     print("成功创建Qwen3 LLM实例用于主程序")
     
+    # 创建监控器 / Create monitor
+    monitor = create_monitor()
+    print("📊 工作流监控器已初始化")
+    
     # 根据用户选择的工作模式执行相应的流程 / Execute corresponding process based on user-selected workflow mode
     if workflow_mode == "preset":
         run_design_iteration(user_requirement, llm)
     else:
-        run_autonomous_workflow(user_requirement, llm)
+        run_autonomous_workflow(user_requirement, llm, monitor)
     
-    # 工作流结果已经通过task_callback保存到workflow_result文件中
-    # 不再生成单独的result文件
-    print("工作流执行完成，结果已保存到workflow_result文件中")
+    # 工作流结果和监控报告已经通过task_callback保存到outputs文件夹中
+    print("\n工作流执行完成，结果已保存到 outputs 文件夹")
+    print("📊 监控报告包括：JSON格式 (monitor_report_*.json) 和 可读格式 (monitor_report_*.txt)")
 
 def run_tool_only_summary(user_requirement):
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')

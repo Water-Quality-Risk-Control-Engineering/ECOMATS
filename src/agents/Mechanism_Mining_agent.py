@@ -16,7 +16,8 @@ class MechanismMiningAgent(BaseAgent):
             role="Mechanism_Mining_agent",  # 机理挖掘专家 / Mechanism mining expert
             goal="挖掘污染物降解的反应机理和动力学特性",  # 挖掘污染物降解的反应机理和动力学特性 / Mine reaction mechanisms and kinetic characteristics of pollutant degradation
             prompt_file="mechanism_expert_prompt.md",
-            temperature=Config.MECHANISM_EXPERT_TEMPERATURE
+            temperature=Config.MECHANISM_EXPERT_TEMPERATURE,
+            max_iter=8  # 复用上游结果，较少迭代
         )
     
     def create_agent(self):

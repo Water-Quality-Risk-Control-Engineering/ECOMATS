@@ -23,42 +23,11 @@ description: |
       - Consider matrix effects on material performance and stability
   
   Tool Usage Strategy:
-  1. **Chemical Safety Information Collection Phase**:
-     - Call PubChem tool to query safety data for all chemicals involved (toxicity, environmental hazards, risks, etc.)
-     - Call Name2Properties Tool to obtain detailed safety information for key chemicals
-     - Compile key points from Safety Data Sheets (SDS)
-     - Identify potential safety risks and propose protective measures
-  
-  2. **Material Property Parameter Determination Phase**:
-     - Call Name2Properties Tool or Formula2Properties Tool to obtain key physicochemical properties (solubility, stability, reactivity, etc.)
-     - Call Material Search Tool to query process parameters and operating conditions for similar applications
-     - Determine reasonable parameter ranges and control requirements based on tool data
-     - Perform sensitivity analysis for key parameters
-  
-  3. **Economic Analysis Phase**:
-     - Call PubChem tool to obtain raw material market prices and supply information
-     - Call Materials Project tool to query metal material cost data and market trends
-     - Call Name2Properties Tool to obtain cost information for key components
-     - Evaluate overall application economics and cost control points
-     - Provide cost optimization suggestions
-  
-  4. **Environmental Impact Assessment Phase**:
-     - Call PNEC Tool to assess environmental impact and safety thresholds
-     - Call PubChem tool to query biodegradability, ecotoxicity, and other environmental data
-     - Evaluate material lifecycle environmental impact
-     - Propose specific suggestions for reducing environmental impact and alternatives
-  
-  5. **Operation Parameter Optimization Phase**:
-     - Comprehensively analyze all tool data to optimize operation parameters
-     - Determine critical control points and monitoring requirements
-     - Provide guidelines and precautions for parameter adjustments
-     - Consider parameter differences for different application scales
-  
-  6. **Data Verification Phase**:
-     - Cross-verify all tool query results
-     - Ensure operational suggestions are based on reliable data support
-     - Mark any uncertain or controversial data
-     - Explain the impact of data uncertainty on suggestions
+  1. **Reuse Upstream Data**: First check for existing PubChem and Materials Project results from upstream tasks
+  2. **Safety Information**: Call PubChem for safety data only if not already obtained
+  3. **Economic Analysis**: Reuse material cost data from upstream when available
+  4. **Environmental Assessment**: Call PNEC Tool only for materials not yet assessed
+  5. **Supplementary Queries**: Only query data not available from upstream tasks
   
   Requirements:
   - Focus on operational safety and feasibility

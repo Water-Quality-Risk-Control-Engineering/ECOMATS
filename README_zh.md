@@ -56,13 +56,9 @@ ECOMATS/
 │   │   └── config.py
 │   ├── prompts/               # Prompt文件
 │   │   ├── coordinator_prompt.md
-│   │   ├── expert_a_prompt.md
-│   │   ├── expert_b_prompt.md
-│   │   ├── expert_c_prompt.md
-│   │   ├── final_validator_prompt.md
+│   │   ├── expert_template_prompt.md      # A/B/C 专家参数化模板
 │   │   ├── literature_processor_prompt.md
 │   │   ├── material_designer_prompt.md
-│   │   ├── mechanism_expert_prompt.md
 │   │   ├── operation_suggesting_prompt.md
 │   │   └── synthesis_expert_prompt.md
 │   ├── tasks/                 # 任务定义
@@ -101,11 +97,16 @@ ECOMATS/
 │   │   ├── crewai_pnec_tool.py                 # CrewAI 封装
 │   │   ├── crewai_material_identifier_tool.py  # CrewAI 封装
 │   │   ├── crewai_data_validator_tool.py       # CrewAI 封装
-│   │   └── crewai_structure_validator_tool.py  # CrewAI 封装
+│   │   ├── crewai_structure_validator_tool.py  # CrewAI 封装
+│   │   ├── pg_vector_tool.py                   # PostgreSQL 向量数据库工具
+│   │   ├── crewai_pg_vector_tool.py            # PGVector CrewAI 封装
+│   │   ├── gdb_tool.py                         # 图数据库（阿里云 GDB）工具
+│   │   └── crewai_gdb_tool.py                  # GDB CrewAI 封装
 │   └── utils/                 # 工具函数
 │       ├── llm_config.py
 │       ├── prompt_loader.py
 │       ├── context_store.py              # 工具缓存的上下文存储
+│       ├── workflow_monitor.py           # 工作流监控与报告
 │       ├── assessment_tool_executor.py   # 评估工具执行逻辑
 │       └── assessment_scoring_logic.py   # 评估评分计算
 ├── scripts/                   # 脚本文件
@@ -131,8 +132,6 @@ ECOMATS/
 │   ├── molport_integration_guide.md
 │   ├── tool_redundancy_analysis.md
 │   └── API_Key配置检查报告.md
-├── examples/                  # 示例文件
-│   └── task_allocation_example.py
 ├── .env.example               # 环境变量示例
 ├── requirements.txt           # 依赖列表
 └── README.md                  # 项目文档（英文）
@@ -209,6 +208,19 @@ ECOMATS/
    # 可选：PubChem API（公开API，不需要密钥但建议配置）
    PUBCHEM_API_KEY=您的PubChem API密钥
    
+   # 可选：PostgreSQL 向量数据库（用于 SFT 向量检索）
+   PG_HOST=your_host
+   PG_PORT=5432
+   PG_DATABASE=your_database
+   PG_USER=your_username
+   PG_PASSWORD=your_password
+   
+   # 可选：图数据库（用于阿里云 GDB 图谱查询）
+   GDB_HOST=your_host
+   GDB_PORT=3734
+   GDB_USERNAME=your_username
+   GDB_PASSWORD=your_password
+   
    # 系统配置
    ENABLE_TOOLS=true
    VERBOSE=True
@@ -243,40 +255,6 @@ ECOMATS/
    - 同步模式：完整工作流约 33 秒
    - 批量设计（10个材料）：43秒 vs 326秒（快 7.5 倍）
 
-### 升级到 CrewAI 1.2.1 的注意事项（LiteLLM 集成）
-
-- CrewAI 使用 LiteLLM 作为统一的模型连接层。为避免版本升级导致的调用异常（例如模型前缀导致 provider 识别错误、httpx 依赖冲突等），项目已统一改为使用 CrewAI 原生的 `LLM` 构造方式。
-- 代码中的 LLM 创建已迁移至 `src/utils/llm_config.py` 的工厂函数：
-  - `create_llm(temperature=None)`：用于默认 OpenAI 兼容端点（本项目对接 DashScope/Qwen3）。
-  - `create_eas_llm(temperature=None)`：用于阿里云 EAS 自部署模型端点。
-- 迁移后的好处：
-  - 不再在模型名上添加 `openai/` 或 `qwen/` 等前缀，避免 LiteLLM 在 CrewAI 1.2.1 中无法识别 provider 的问题。
-  - 统一在 Agent 层按需重建温度，避免直接克隆底层 ChatOpenAI 实例导致不兼容。
-
-示例：
-
-```python
-from src.utils.llm_config import create_llm, create_eas_llm
-
-# 默认（DashScope/Qwen3）
-llm = create_llm()
-
-# 若已配置 EAS：
-llm = create_eas_llm(temperature=0.3)
-```
-
-升级步骤建议：
-- 保持 `requirements.txt` 中只声明 `crewai`，不要手动指定 `litellm` 版本，避免与 CrewAI 的固定版本冲突。
-- 如遇到 `ModuleNotFoundError: No module named 'litellm'` 或 `provider not provided`：
-  - 确认未在模型名添加手动前缀；
-  - 使用上述工厂函数创建 `LLM`；
-  - 检查环境变量是否正确（`QWEN_API_BASE`、`QWEN_API_KEY`、`QWEN_MODEL_NAME`；或 `EAS_ENDPOINT`、`EAS_TOKEN`、`EAS_MODEL_NAME`）。
-
-5. 运行系统：
-   ```bash
-   python scripts/main.py
-   ```
-
 ## 代理工具集成
 
 系统集成了以下数据库查询工具，代理可以根据需要自动调用：
@@ -305,15 +283,20 @@ llm = create_eas_llm(temperature=0.3)
 11. **Data Validator Tool** - 验证数据完整性和一致性 (data_validator_tool.py)
 12. **Structure Validator Tool** - 验证化学结构和SMILES格式 (structure_validator_tool.py)
 
+### 数据库查询工具
+
+13. **PGVector Tool** - PostgreSQL 向量数据库查询，用于 SFT 问答对检索 (pg_vector_tool.py)
+14. **GDB Tool** - 阿里云图数据库查询，支持催化剂-污染物关系探索 (gdb_tool.py)
+
 ### 工具工厂模式
 
-所有工具通过 **ToolFactory** 类管理，为不同类型的代理提供专业工具集：
-- 材料设计工具
-- 材料评估工具（包含 MolPort 用于经济可行性）
-- 材料搜索工具
-- 操作指导工具
-- 文献提取工具
-- 最终验证工具
+所有工具通过 **ToolFactory** 类（`src/tools/factory.py`）管理，为不同类型的代理提供专业工具集：
+- **材料设计工具**（5个工具） - Materials Project、PubChem、Material Identifier、Structure Validator、Material Search
+- **材料评估工具**（6个工具） - 包含 MolPort 用于商业可用性评估
+- **材料搜索工具**（3个工具） - 用于合成方法探索
+- **机理分析工具**（2个工具） - Materials Project 和 PubChem 用于机理研究
+- **操作指导工具**（3个工具） - 安全与环境评估
+- **文献提取工具**（5个工具） - 化学信息提取与验证
 
 ## 迭代设计机制
 
@@ -362,21 +345,7 @@ llm = create_eas_llm(temperature=0.3)
 3. 通过CrewAI的工具机制将新工具集成到代理中
 4. 更新相关代理的prompt文件以指导其使用新工具
 
-## 工具工厂模式
 
-系统实现了工具工厂模式来管理和向代理提供工具：
-
-1. **ToolFactory类** - 在`src/tools/factory.py`中集中管理工具
-2. **专用工具集** - 为不同类型的代理预定义工具集：
-   - 材料设计工具（5个工具）
-   - 材料评估工具（7个工具，包含 MolPort）
-   - 材料搜索工具（4个工具）
-   - 操作指导工具（4个工具）
-   - 文献提取工具（5个工具）
-   - 最终验证工具（1个工具）
-3. **一致的工具接口** - 所有工具都遵循CrewAI的BaseTool接口
-4. **简易的工具管理** - 通过工厂模式简化工具的添加和移除
-5. **上下文缓存** - 集成上下文存储以提高性能
 
 ## 最近更新 (2025-12-13)
 

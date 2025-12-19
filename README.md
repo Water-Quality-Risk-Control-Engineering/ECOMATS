@@ -51,19 +51,14 @@ ECOMATS/
 │   │   ├── Operation_Suggesting_agent.py
 │   │   ├── Synthesis_Guiding_agent.py
 │   │   ├── base_agent.py
-│   │   ├── task_organizing_agent.py
 │   │   └── task_organizing_agent.py   # Task organizing agent with intent recognition & agent registry
 │   ├── config/                # Configuration files
 │   │   └── config.py
 │   ├── prompts/               # Prompt files
 │   │   ├── coordinator_prompt.md
-│   │   ├── expert_a_prompt.md
-│   │   ├── expert_b_prompt.md
-│   │   ├── expert_c_prompt.md
-│   │   ├── final_validator_prompt.md
+│   │   ├── expert_template_prompt.md      # Parameterized template for A/B/C experts
 │   │   ├── literature_processor_prompt.md
 │   │   ├── material_designer_prompt.md
-│   │   ├── mechanism_expert_prompt.md
 │   │   ├── operation_suggesting_prompt.md
 │   │   └── synthesis_expert_prompt.md
 │   ├── tasks/                 # Task definitions
@@ -102,11 +97,16 @@ ECOMATS/
 │   │   ├── crewai_pnec_tool.py                 # CrewAI wrapper
 │   │   ├── crewai_material_identifier_tool.py  # CrewAI wrapper
 │   │   ├── crewai_data_validator_tool.py       # CrewAI wrapper
-│   │   └── crewai_structure_validator_tool.py  # CrewAI wrapper
+│   │   ├── crewai_structure_validator_tool.py  # CrewAI wrapper
+│   │   ├── pg_vector_tool.py                   # PostgreSQL vector database tool
+│   │   ├── crewai_pg_vector_tool.py            # CrewAI wrapper for PGVector
+│   │   ├── gdb_tool.py                         # Graph database (Aliyun GDB) tool
+│   │   └── crewai_gdb_tool.py                  # CrewAI wrapper for GDB
 │   └── utils/                 # Utility functions
 │       ├── llm_config.py
 │       ├── prompt_loader.py
 │       ├── context_store.py              # Context storage for tool caching
+│       ├── workflow_monitor.py           # Workflow monitoring and reporting
 │       ├── assessment_tool_executor.py   # Assessment tool execution logic
 │       └── assessment_scoring_logic.py   # Assessment scoring calculations
 ├── scripts/                   # Script files
@@ -132,8 +132,6 @@ ECOMATS/
 │   ├── molport_integration_guide.md
 │   ├── tool_redundancy_analysis.md
 │   └── API_Key配置检查报告.md
-├── examples/                  # Example files
-│   └── task_allocation_example.py
 ├── .env.example               # Environment variable example
 ├── requirements.txt           # Dependency list
 └── README.md                 # Project documentation (Chinese)
@@ -210,6 +208,19 @@ The coordinator dynamically determines task execution order for more flexible ta
    # Optional: PubChem API (public API, key not required but recommended)
    PUBCHEM_API_KEY=Your PubChem API key
    
+   # Optional: PostgreSQL Vector DB (for SFT vector search)
+   PG_HOST=your_host
+   PG_PORT=5432
+   PG_DATABASE=your_database
+   PG_USER=your_username
+   PG_PASSWORD=your_password
+   
+   # Optional: Graph DB (for Aliyun GDB graph queries)
+   GDB_HOST=your_host
+   GDB_PORT=3734
+   GDB_USERNAME=your_username
+   GDB_PASSWORD=your_password
+   
    # System configuration
    ENABLE_TOOLS=true
    VERBOSE=True
@@ -272,15 +283,20 @@ The system integrates the following database query tools that agents can automat
 11. **Data Validator Tool** - Validates data completeness and consistency (data_validator_tool.py)
 12. **Structure Validator Tool** - Validates chemical structures and SMILES format (structure_validator_tool.py)
 
+### Database Query Tools
+
+13. **PGVector Tool** - PostgreSQL vector database queries for SFT Q&A pair retrieval (pg_vector_tool.py)
+14. **GDB Tool** - Aliyun Graph Database queries for catalyst-pollutant relationship exploration (gdb_tool.py)
+
 ### Tool Factory Pattern
 
-All tools are managed through the **ToolFactory** class, which provides specialized tool sets for different agent types:
-- Material Design Tools
-- Material Assessment Tools (includes MolPort for economic viability)
-- Material Search Tools
-- Operation Guidance Tools
-- Literature Extraction Tools
-- Final Validation Tools
+All tools are managed through the **ToolFactory** class (`src/tools/factory.py`), which provides specialized tool sets for different agent types:
+- **Material Design Tools** (5 tools) - Materials Project, PubChem, Material Identifier, Structure Validator, Material Search
+- **Material Assessment Tools** (6 tools) - Includes MolPort for commercial availability assessment
+- **Material Search Tools** (3 tools) - For synthesis method exploration
+- **Mechanism Analysis Tools** (2 tools) - Materials Project and PubChem for mechanism studies
+- **Operation Guidance Tools** (3 tools) - Safety and environmental assessment
+- **Literature Extraction Tools** (5 tools) - Chemical information extraction and validation
 
 ## Iterative Design Mechanism
 
@@ -329,21 +345,7 @@ The system implements triple-blind review and consistency analysis mechanisms:
 3. Integrate the new tool into agents through CrewAI's tool mechanism
 4. Update the prompt files of relevant agents to guide their use of the new tool
 
-### Tool Factory Pattern
 
-The system implements a tool factory pattern to manage and provide tools to agents:
-
-1. **ToolFactory Class** - Centralized tool management in `src/tools/factory.py`
-2. **Specialized Tool Sets** - Pre-defined tool sets for different agent types:
-   - Material Design Tools (5 tools)
-   - Material Assessment Tools (7 tools, includes MolPort)
-   - Material Search Tools (4 tools)
-   - Operation Guidance Tools (4 tools)
-   - Literature Extraction Tools (5 tools)
-   - Final Validation Tools (1 tool)
-3. **Consistent Tool Interface** - All tools follow CrewAI's BaseTool interface
-4. **Easy Tool Management** - Simplified tool addition and removal through the factory pattern
-5. **Context Caching** - Integrated context storage for improved performance
 
 ## Recent Updates (2025-12-13)
 

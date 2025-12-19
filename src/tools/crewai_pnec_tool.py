@@ -5,18 +5,21 @@ from src.tools.pnec_tool import get_pnec_tool
 from src.utils.context_store import ContextStore
 
 class PNECToolInput(BaseModel):
-    """PNEC工具输入参数模型"""
-    query: str = Field(description="查询内容（CAS号或化合物名称）")
-    query_type: str = Field(default="name", description="查询类型 ('name' 或 'cas')")
+    """PNEC工具输入参数模型 / PNEC Tool Input Model"""
+    query: str = Field(description="查询内容 / Query content (CAS number or compound name)")
+    query_type: str = Field(default="name", description="查询类型 / Query type ('name' or 'cas')")
 
 class CrewAIPNECTool(BaseTool):
-    """CrewAI工具包装器，用于查询化学物质的预测无效应浓度(PNEC)数据"""
+    """CrewAI工具包装器，用于查询PNEC数据 / CrewAI tool wrapper for PNEC data query"""
     
     name: str = "PNEC Database Query"
     description: str = (
-        "查询化学物质的预测无效应浓度(PNEC)数据，用于环境风险评估。"
-        "可以基于CAS号或化合物名称查询PNEC值。"
-        "当需要评估化学物质的环境安全性时使用此工具。"
+        "查询化学物质的预测无效应浓度(PNEC)数据，用于环境风险评估。/ "
+        "Query Predicted No Effect Concentration (PNEC) data for environmental risk assessment. "
+        "可以基于CAS号或化合物名称查询PNEC值。/ "
+        "Query PNEC values by CAS number or compound name. "
+        "当需要评估化学物质的环境安全性时使用此工具。/ "
+        "Use when you need to assess environmental safety of chemicals."
     )
     args_schema: type[BaseModel] = PNECToolInput
     

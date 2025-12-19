@@ -120,6 +120,7 @@ class WorkflowMonitor:
         # Agent执行记录
         self.agent_executions: List[AgentExecution] = []
         self._current_execution: Optional[AgentExecution] = None
+        self._execution_map: Dict[str, AgentExecution] = {}  # 支持并行任务
         
         # 交互记录
         self.interactions: List[InteractionRecord] = []
@@ -165,38 +166,54 @@ class WorkflowMonitor:
             status="running"
         )
         
+        # 支持并行任务：用 agent_role 作为 key
+        self._execution_map[agent_role] = execution
         self._current_execution = execution
         self.agent_executions.append(execution)
         
-        print(f"📊 [Monitor] Agent开始执行: {agent_role} - {task_name}")
+        # 静默模式：不在控制台输出监控信息，仅记录到报告
+        # print(f"📊 [Monitor] Agent开始执行: {agent_role} - {task_name}")
     
     def end_agent_execution(self, output: str = "", json_output: Dict = None, 
-                           error: str = "") -> None:
-        """结束当前Agent执行记录
+                           error: str = "", agent_role: str = None) -> None:
+        """结束指定或当前Agent执行记录
         
         Args:
             output: 执行输出
             json_output: JSON格式输出
             error: 错误信息
+            agent_role: 指定的Agent角色（用于并行任务）
         """
-        if self._current_execution:
-            self._current_execution.end_time = time.time()
-            self._current_execution.duration_seconds = (
-                self._current_execution.end_time - self._current_execution.start_time
+        # 优先使用指定的 agent_role，否则使用 _current_execution
+        if agent_role and agent_role in self._execution_map:
+            execution = self._execution_map[agent_role]
+        else:
+            execution = self._current_execution
+        
+        if execution:
+            execution.end_time = time.time()
+            execution.duration_seconds = (
+                execution.end_time - execution.start_time
             )
-            self._current_execution.output = str(output)
-            self._current_execution.json_output = json_output
+            execution.output = str(output)
+            execution.json_output = json_output
             
             if error:
-                self._current_execution.status = "error"
-                self._current_execution.error_message = error
+                execution.status = "error"
+                execution.error_message = error
             else:
-                self._current_execution.status = "completed"
+                execution.status = "completed"
             
-            duration = self._current_execution._format_duration()
-            print(f"✅ [Monitor] Agent执行完成: {self._current_execution.agent_role} - 耗时: {duration}")
+            # 从 map 中移除已完成的执行
+            if agent_role and agent_role in self._execution_map:
+                del self._execution_map[agent_role]
             
-            self._current_execution = None
+            # 静默模式
+            # duration = execution._format_duration()
+            # print(f"✅ [Monitor] Agent执行完成: {execution.agent_role} - 耗时: {duration}")
+            
+            if execution == self._current_execution:
+                self._current_execution = None
     
     def record_interaction(self, from_agent: str, to_agent: str, 
                           interaction_type: str, content: str) -> None:
@@ -349,7 +366,7 @@ class WorkflowMonitor:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
         
-        print(f"📊 [Monitor] 监控报告已保存: {filepath}")
+        # print(f"📊 [Monitor] 监控报告已保存: {filepath}")
         return filepath
     
     def save_readable_report(self, filename: str = None) -> str:
@@ -401,10 +418,14 @@ class WorkflowMonitor:
             # 3. 各Agent耗时详情
             f.write("⏱️ Agent耗时详情 / Agent Duration Details\n")
             f.write("-" * 40 + "\n")
-            for role, duration in sorted(stats['agent_durations'].items(), key=lambda x: x[1], reverse=True):
-                bar_length = int(duration / max(stats['agent_durations'].values()) * 30)
-                bar = "█" * bar_length + "░" * (30 - bar_length)
-                f.write(f"  {role[:30]:<30} | {bar} | {duration:.2f}s\n")
+            if stats['agent_durations'] and max(stats['agent_durations'].values()) > 0:
+                max_duration = max(stats['agent_durations'].values())
+                for role, duration in sorted(stats['agent_durations'].items(), key=lambda x: x[1], reverse=True):
+                    bar_length = int(duration / max_duration * 30)
+                    bar = "█" * bar_length + "░" * (30 - bar_length)
+                    f.write(f"  {role[:30]:<30} | {bar} | {duration:.2f}s\n")
+            else:
+                f.write("  (无Agent耗时数据 / No agent duration data)\n")
             f.write("\n")
             
             # 4. 任务执行时间线
@@ -443,7 +464,7 @@ class WorkflowMonitor:
             f.write("\n" + "=" * 80 + "\n")
             f.write("报告生成时间: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
         
-        print(f"📊 [Monitor] 可读报告已保存: {filepath}")
+        # print(f"📊 [Monitor] 可读报告已保存: {filepath}")
         return filepath
     
     def print_summary(self) -> None:

@@ -155,6 +155,78 @@ def create_dashscope_embedder():
     return DashScopeEmbeddingFunction  # 返回类而不是实例!
 
 
+# 通用 task_callback 创建器 (模块级别) / Generic task_callback creator (module level)
+def create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent):
+    """创建支持并行任务的 task_callback 工厂函数"""
+    import time
+    
+    def create_task_callback(task_completion_times, crew_start_time, task_counter, suffix=""):
+        eval_start_key = f'eval_start_time{suffix}'
+        
+        def task_callback(task_output):
+            task_counter[0] += 1
+            task_id = task_counter[0]
+            
+            agent_str = getattr(task_output, 'agent', None) or 'Unknown'
+            task_name = getattr(task_output, 'name', None) or f"{agent_str}_Task_{task_id}"
+            task_description = getattr(task_output, 'description', 'N/A')
+            agent_name = agent_str
+            agent_role = agent_str
+            
+            current_agent_context.role = agent_role
+            
+            json_output = None
+            if hasattr(task_output, 'json_dict') and task_output.json_dict:
+                json_output = task_output.json_dict
+            
+            if monitor:
+                current_time = time.time()
+                
+                # 检测并行任务：A/B/C 共享相同开始时间
+                is_parallel_eval = 'Assessment_Screening_agent_' in agent_role and agent_role[-1] in 'ABC'
+                
+                if is_parallel_eval:
+                    if eval_start_key not in task_start_times:
+                        if task_completion_times:
+                            task_start_times[eval_start_key] = task_completion_times[-1]
+                        elif crew_start_time[0]:
+                            task_start_times[eval_start_key] = crew_start_time[0]
+                        else:
+                            task_start_times[eval_start_key] = current_time
+                    actual_start = task_start_times[eval_start_key]
+                else:
+                    if task_completion_times:
+                        actual_start = task_completion_times[-1]
+                    elif crew_start_time[0]:
+                        actual_start = crew_start_time[0]
+                    else:
+                        actual_start = current_time
+                
+                task_completion_times.append(current_time)
+                
+                unique_task_key = f"{agent_role}_{task_id}"
+                if unique_task_key not in task_start_times:
+                    task_start_times[unique_task_key] = actual_start
+                    monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
+                    if monitor._current_execution:
+                        monitor._current_execution.start_time = actual_start
+                monitor.end_agent_execution(output=str(task_output), json_output=json_output, agent_role=agent_role)
+                
+                # 记录 Agent 之间的交互
+                if last_completed_agent[0] and last_completed_agent[0] != agent_role:
+                    monitor.record_interaction(
+                        from_agent=last_completed_agent[0],
+                        to_agent=agent_role,
+                        interaction_type="task_handoff",
+                        content=f"Task completed: {task_name}"
+                    )
+                last_completed_agent[0] = agent_role
+        
+        return task_callback
+    
+    return create_task_callback
+
+
 def get_ui_text(key):
     """获取UI文本 / Get UI text"""
     try:
@@ -384,6 +456,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     if intent.get('needs_evaluation', False):
         evaluation_mode = intent.get('evaluation_mode', 'with_summary')
         evaluation_agents = coordinator.get_all_agents_for_task("evaluation")
+        print(f"\n🔍 评估专家数量: {len(evaluation_agents)} - {[a.role for a in evaluation_agents]}")
         evaluation_tasks = []
         
         for agent in evaluation_agents:
@@ -502,31 +575,59 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     # 创建 Crew 并异步执行 / Create Crew and execute async
     DashScopeEmbedder = create_dashscope_embedder()
     
-    # 创建任务回调函数，用于监控 / Create task callback for monitoring
-    def task_callback(task_output):
-        task_name = getattr(task_output, 'name', None) or f"Task_{len(task_start_times) + 1}"
-        task_description = getattr(task_output, 'description', 'N/A')
-        agent = getattr(task_output, 'agent', None)
-        agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
-        agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
-        
-        json_output = None
-        if hasattr(task_output, 'json_dict') and task_output.json_dict:
-            json_output = task_output.json_dict
-        
-        if monitor:
-            if task_name not in task_start_times:
-                task_start_times[task_name] = time.time()
-                monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
-            monitor.end_agent_execution(output=str(task_output), json_output=json_output)
+    # 工具调用追踪器 - 按 Agent 分组记录 / Tool call tracker - grouped by Agent
+    import threading
+    tool_calls_by_agent = {}  # {agent_role: [(tool_name, count)]}
+    tool_call_lock = threading.Lock()
+    current_agent_context = threading.local()  # 线程本地存储当前 Agent
+    last_completed_agent = [None]  # 记录上一个完成的 Agent
+    
+    # 使用模块级别的工厂函数创建 task_callback
+    create_task_callback = create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent)
+    
+    # 创建步骤回调函数，用于追踪工具调用 / Create step callback for tracking tool calls
+    def step_callback(step_output):
+        """捕获每一步执行，包括工具调用 / Capture each step including tool calls"""
+        try:
+            # 获取当前 Agent (从线程本地存储)
+            agent_role = getattr(current_agent_context, 'role', 'Unknown')
+            
+            # 检查是否是工具调用 (AgentAction)
+            if hasattr(step_output, 'tool'):
+                tool_name = step_output.tool
+                with tool_call_lock:
+                    if agent_role not in tool_calls_by_agent:
+                        tool_calls_by_agent[agent_role] = {}
+                    if tool_name not in tool_calls_by_agent[agent_role]:
+                        tool_calls_by_agent[agent_role][tool_name] = 0
+                    tool_calls_by_agent[agent_role][tool_name] += 1
+                    count = tool_calls_by_agent[agent_role][tool_name]
+                    # 实时输出，带 Agent 标识
+                    print(f"  🔧 [{agent_role[:15]}] {tool_name} (#{count})")
+        except Exception:
+            pass  # 忽略追踪错误
+    
+    # 为每个 Agent 设置 step_callback 并注入上下文
+    for agent in required_agents:
+        original_execute = None
+        agent_role = getattr(agent, 'role', 'Unknown')
+        agent.step_callback = step_callback
+    
+    # 创建任务回调函数 / Create task callback for monitoring
+    task_completion_times = []
+    crew_start_time = [None]
+    task_counter = [0]
+    task_callback = create_task_callback(task_completion_times, crew_start_time, task_counter, suffix="")
     
     crew = Crew(
+        name="ECOMATS",  # 设置 Crew 名称
         agents=required_agents,
         tasks=required_tasks,
         process=Process.sequential,
         verbose=True,
         memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
         task_callback=task_callback,  # 添加任务回调
+        step_callback=step_callback,  # 步骤回调追踪工具调用
         embedder={
             "provider": "custom",
             "config": {
@@ -539,6 +640,9 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         print("⚡ Using async execution mode...")
     else:
         print("⚡ 使用异步执行模式...")
+    
+    # 记录 Crew 开始时间
+    crew_start_time[0] = time.time()
     
     # 异步执行 Crew! / Execute Crew async!
     result = await crew.akickoff(inputs={'requirement': user_requirement})
@@ -655,25 +759,19 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
     # 注意: 传入类而不是实例!
     DashScopeEmbedder = create_dashscope_embedder()
     
-    # 创建任务回调函数，用于监控 / Create task callback for monitoring
-    def task_callback(task_output):
-        task_name = getattr(task_output, 'name', None) or f"Task_{len(task_start_times) + 1}"
-        task_description = getattr(task_output, 'description', 'N/A')
-        agent = getattr(task_output, 'agent', None)
-        agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
-        agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
-        
-        json_output = None
-        if hasattr(task_output, 'json_dict') and task_output.json_dict:
-            json_output = task_output.json_dict
-        
-        if monitor:
-            if task_name not in task_start_times:
-                task_start_times[task_name] = time.time()
-                monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
-            monitor.end_agent_execution(output=str(task_output), json_output=json_output)
+    # 创建任务回调函数 / Create task callback for monitoring
+    import threading
+    current_agent_context = threading.local()
+    last_completed_agent = [None]
+    create_task_callback = create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent)
+    
+    task_completion_times_2 = []
+    crew_start_time_2 = [None]
+    task_counter_2 = [0]
+    task_callback = create_task_callback(task_completion_times_2, crew_start_time_2, task_counter_2, suffix="_2")
     
     crew = Crew(
+        name="ECOMATS",  # 设置 Crew 名称
         agents=list(agents.values()),
         tasks=[
             design_task,
@@ -716,6 +814,9 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         print("  - 长期记忆: 学习历史任务经验")
         print("  - 实体记忆: 提取关键实体信息")
         print("  - 存储位置: ./.crewai/memory/\n")
+    
+    # 记录 Crew 开始时间
+    crew_start_time_2[0] = time.time()
     
     # 异步执行Crew!
     result = await crew.akickoff(inputs={'requirement': user_requirement})
@@ -805,7 +906,7 @@ async def main_async():
     
     # 保存结果到outputs目录（不在终端打印完整结果）
     # Save result to outputs directory (without printing full result to terminal)
-    save_result(result, user_requirement, mode, use_async)
+    save_result(result, user_requirement, mode, use_async, workflow_id=monitor.workflow_id)
     
     # 输出监控报告信息 / Output monitor report info
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
@@ -821,7 +922,7 @@ async def main_async():
     return result
 
 
-def save_result(result, user_requirement, mode, use_async):
+def save_result(result, user_requirement, mode, use_async, workflow_id=None):
     """保存执行结果到outputs目录 / Save execution result to outputs directory"""
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     
@@ -830,7 +931,7 @@ def save_result(result, user_requirement, mode, use_async):
     os.makedirs(outputs_dir, exist_ok=True)
     
     # 生成文件名 / Generate filename
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = workflow_id or datetime.now().strftime('%Y%m%d_%H%M%S')
     mode_str = f"{mode}_{'async' if use_async else 'sync'}"
     filename = f"workflow_result_{timestamp}_{mode_str}.txt"
     filepath = os.path.join(outputs_dir, filename)

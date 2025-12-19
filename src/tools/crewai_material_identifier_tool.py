@@ -5,18 +5,21 @@ from src.tools.material_identifier_tool import get_material_identifier_tool
 from src.utils.context_store import ContextStore
 
 class MaterialIdentifierToolInput(BaseModel):
-    """材料标识符工具输入参数模型"""
-    query: str = Field(description="材料查询字符串（可以是化学式、元素组合或材料名称）")
+    """材料标识符工具输入参数模型 / Material Identifier Tool Input Model"""
+    query: str = Field(description="材料查询字符串 / Material query string (formula, elements or name)")
 
 class CrewAIMaterialIdentifierTool(BaseTool):
-    """CrewAI工具包装器，用于材料标识符处理，支持全局缓存"""
+    """CrewAI工具包装器，用于材料标识符处理 / CrewAI tool wrapper for material identifier processing"""
     
     name: str = "Material Identifier Tool"
     description: str = (
-        "统一处理金属材料和有机物的标识符（MP-ID和CAS号）。"
-        "能够识别材料类型并获取相应的唯一标识符。"
-        "当需要确定材料的唯一标识符时使用此工具。"
-        "✨ 此工具支持全局缓存，重复查询不会重新调用 API。"
+        "统一处理金属材料和有机物的标识符（MP-ID和CAS号）。/ "
+        "Process metal materials (MP-ID) and organic compounds (CAS number) identifiers. "
+        "能够识别材料类型并获取相应的唯一标识符。/ "
+        "Identify material type and get corresponding unique identifier. "
+        "当需要确定材料的唯一标识符时使用此工具。/ "
+        "Use when you need to determine the unique identifier of a material. "
+        "✨ 此工具支持全局缓存。/ This tool supports global caching."
     )
     args_schema: type[BaseModel] = MaterialIdentifierToolInput
     

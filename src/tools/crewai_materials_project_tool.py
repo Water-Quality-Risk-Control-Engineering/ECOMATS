@@ -6,25 +6,27 @@ from src.tools.materials_project_tool import get_materials_project_tool
 from src.utils.context_store import ContextStore
 
 class MaterialsProjectToolInput(BaseModel):
-    """Materials Project工具输入参数模型"""
-    action: str = Field(default="search", description="要执行的操作 ('search', 'get_material')")
-    material_id: Optional[str] = Field(default=None, description="材料ID（用于获取特定材料信息的操作）")
-    formula: Optional[str] = Field(default=None, description="化学式（用于搜索）")
-    elements: Optional[List[str]] = Field(default=None, description="必须包含的元素列表（用于搜索）")
-    exclude_elements: Optional[List[str]] = Field(default=None, description="必须排除的元素列表（用于搜索）")
-    crystal_system: Optional[str] = Field(default=None, description="晶体系统（用于搜索）")
-    limit: int = Field(default=100, description="返回结果数量限制（用于搜索）")
-    skip: int = Field(default=0, description="跳过的结果数量（用于搜索）")
-    fields: Optional[List[str]] = Field(default=None, description="要包含的数据字段列表")
+    """Materials Project工具输入参数模型 / Materials Project Tool Input Model"""
+    action: str = Field(default="search", description="要执行的操作 / Action to perform ('search', 'get_material')")
+    material_id: Optional[str] = Field(default=None, description="材料ID / Material ID (for get_material action)")
+    formula: Optional[str] = Field(default=None, description="化学式 / Chemical formula (for search)")
+    elements: Optional[List[str]] = Field(default=None, description="必须包含的元素列表 / Elements that must be included (for search)")
+    exclude_elements: Optional[List[str]] = Field(default=None, description="必须排除的元素列表 / Elements to exclude (for search)")
+    crystal_system: Optional[str] = Field(default=None, description="晶体系统 / Crystal system (for search)")
+    limit: int = Field(default=100, description="返回结果数量限制 / Result limit (for search)")
+    skip: int = Field(default=0, description="跳过的结果数量 / Results to skip (for search)")
+    fields: Optional[List[str]] = Field(default=None, description="要包含的数据字段列表 / Data fields to include")
 
 class CrewAIMaterialsProjectTool(BaseTool):
-    """CrewAI工具包装器，用于Materials Project API"""
+    """CrewAI工具包装器，用于Materials Project API / CrewAI tool wrapper for Materials Project API"""
     
     name: str = "Materials Project Database Access"
     description: str = (
-        "访问Materials Project材料科学数据库以搜索材料、获取材料属性等。"
-        "可以搜索具有特定化学式、元素组成、晶体结构或物理性质的材料。"
-        "使用方法: action='search', formula='C3N4' 来搜索材料"
+        "访问Materials Project材料科学数据库以搜索材料、获取材料属性等。/ "
+        "Access Materials Project database to search materials and get material properties. "
+        "可以搜索具有特定化学式、元素组成、晶体结构或物理性质的材料。/ "
+        "Search materials with specific formula, elements, crystal structure or properties. "
+        "Usage: action='search', formula='C3N4'"
     )
     args_schema: type[BaseModel] = MaterialsProjectToolInput
 

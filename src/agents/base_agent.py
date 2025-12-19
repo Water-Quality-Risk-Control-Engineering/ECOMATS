@@ -32,13 +32,14 @@ class BaseAgent:
     # 默认迭代次数限制 - 防止工具过度调用 / Default iteration limit to prevent excessive tool calls
     DEFAULT_MAX_ITER = 10
     
-    def __init__(self, llm, role, goal, prompt_file, temperature=None, max_iter=None):
+    def __init__(self, llm, role, goal, prompt_file, temperature=None, max_iter=None, prompt_params=None):
         self.llm = llm
         self.role = role
         self.goal = goal
         self.prompt_file = prompt_file
         self.temperature = temperature
         self.max_iter = max_iter or self.DEFAULT_MAX_ITER
+        self.prompt_params = prompt_params or {}  # 参数化替换支持
     
     def create_agent(self):
         agent_llm = self.llm
@@ -58,6 +59,12 @@ class BaseAgent:
 
         # 加载提示词并添加Memory优先指导 / Load prompt and add Memory-first guidance
         backstory = load_prompt(self.prompt_file)
+        
+        # 参数化替换支持 / Parameterized replacement support
+        if self.prompt_params:
+            for key, value in self.prompt_params.items():
+                backstory = backstory.replace(f"{{{key}}}", value)
+        
         try:
             from src.config.config import Config
             if Config.LANGUAGE == 'en':

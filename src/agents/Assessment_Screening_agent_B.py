@@ -14,11 +14,12 @@ class AssessmentScreeningAgentB(BaseAgent):
         from src.config.config import Config
         super().__init__(
             llm=llm,
-            role="Assessment_Screening_agent_B",  # Assessment and screening expert B / 评估筛选专家B
-            goal="Comprehensively evaluate various aspects of material proposals",  # Comprehensively evaluate various aspects of material proposals / 全面评估材料方案的各个方面
-            prompt_file="expert_b_prompt.md",
+            role="Assessment_Screening_agent_B",  # Assessment and screening expert B
+            goal="Comprehensively evaluate various aspects of material proposals",
+            prompt_file="expert_template_prompt.md",  # 使用参数化模板
             temperature=Config.EXPERT_B_TEMPERATURE,
-            max_iter=15  # ASA需要独立使用工具，允许更多迭代
+            max_iter=15,
+            prompt_params={"EXPERT_ID": "B"}  # 参数化替换
         )
     
     def create_agent(self):

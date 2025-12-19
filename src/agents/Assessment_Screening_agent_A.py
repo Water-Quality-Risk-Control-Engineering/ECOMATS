@@ -22,10 +22,11 @@ class AssessmentScreeningAgentA(BaseAgent):
         super().__init__(
             llm, 
             "Assessment_Screening_agent_A",  # Expert A / 专家A
-            "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation of material proposals from various aspects / 全面评估材料方案的各个方面
-            "expert_a_prompt.md",  # Prompt file for expert A / 专家A的提示文件
-            temperature=Config.EXPERT_A_TEMPERATURE,  # Temperature setting from config / 从配置中获取的温度设置
-            max_iter=15  # ASA需要独立使用工具，允许更多迭代
+            "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation
+            "expert_template_prompt.md",  # 使用参数化模板 / Use parameterized template
+            temperature=Config.EXPERT_A_TEMPERATURE,
+            max_iter=15,
+            prompt_params={"EXPERT_ID": "A"}  # 参数化替换
         )
     
     def create_agent(self):

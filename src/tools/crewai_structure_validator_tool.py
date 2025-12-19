@@ -5,18 +5,21 @@ from src.tools.structure_validator_tool import get_structure_validator_tool
 from src.utils.context_store import ContextStore
 
 class StructureValidatorToolInput(BaseModel):
-    """结构验证工具输入参数模型"""
-    material_formula: str = Field(description="材料化学式")
+    """结构验证工具输入参数模型 / Structure Validator Tool Input Model"""
+    material_formula: str = Field(description="材料化学式 / Material chemical formula")
 
 class CrewAIStructureValidatorTool(BaseTool):
-    """CrewAI工具包装器，用于材料结构验证，支持全局缓存"""
+    """CrewAI工具包装器，用于材料结构验证 / CrewAI tool wrapper for material structure validation"""
     
     name: str = "Material Structure Validator"
     description: str = (
-        "验证材料结构是否真实存在。"
-        "支持金属材料（使用Materials Project数据库）和有机化合物（使用PubChem数据库）的结构验证。"
-        "当需要确认设计的材料结构在现实中是否存在时使用此工具。"
-        "✨ 此工具支持全局缓存，重复查询不会重新调用 API。"
+        "验证材料结构是否真实存在。/ "
+        "Validate whether material structure exists in reality. "
+        "支持金属材料（使用Materials Project数据库）和有机化合物（使用PubChem数据库）的结构验证。/ "
+        "Support metal materials (Materials Project) and organic compounds (PubChem) validation. "
+        "当需要确认设计的材料结构在现实中是否存在时使用此工具。/ "
+        "Use when you need to confirm if designed material structure exists. "
+        "✨ 此工具支持全局缓存。/ This tool supports global caching."
     )
     args_schema: type[BaseModel] = StructureValidatorToolInput
     

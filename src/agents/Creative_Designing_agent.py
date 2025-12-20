@@ -35,18 +35,18 @@ class CreativeDesigningAgent(BaseAgent):
         Returns:
             Agent: Configured agent instance with tools attached
         """
-        # Try to create EAS model instance
-        # 尝试创建EAS模型实例
+        # 仅在 EAS 配置有效时尝试创建 EAS LLM
+        # Only try EAS LLM when EAS config is valid
         try:
-            from src.utils.llm_config import create_eas_llm
-            eas_llm = create_eas_llm()
-            logger.info("Successfully created EAS LLM instance")
-            # 更新llm属性以使用EAS
-            self.llm = eas_llm
+            from src.config.config import Config
+            if Config.EAS_ENDPOINT and Config.EAS_TOKEN and Config.EAS_MODEL_NAME:
+                from src.utils.llm_config import create_eas_llm
+                eas_llm = create_eas_llm()
+                logger.info("Successfully created EAS LLM instance")
+                self.llm = eas_llm
+            # 否则静默使用传入的 LLM，无需报错
         except Exception as e:
-            logger.error(f"Failed to create EAS model instance: {e}")
-            # 如果EAS配置失败，则使用传入的LLM
-            # Keep self.llm as is
+            logger.debug(f"EAS LLM not available, using default: {e}")
         
         agent = super().create_agent()
         # 在 DashScope 兼容端点默认禁用工具调用，避免函数调用不兼容导致 500

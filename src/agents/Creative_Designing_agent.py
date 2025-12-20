@@ -25,7 +25,7 @@ class CreativeDesigningAgent(BaseAgent):
             goal="设计和优化水处理材料方案，严格按照材料类型分类和结构描述规范进行设计",  # Design and optimize water treatment material solutions, strictly following material type classification and structural description specifications
             prompt_file="material_designer_prompt.md",
             temperature=Config.MATERIAL_DESIGNER_TEMPERATURE,
-            max_iter=8  # 降低迭代次数，避免工具过度调用
+            max_iter=1  # 性能测试：降至1次（原值：8）
         )
     
     def create_agent(self):

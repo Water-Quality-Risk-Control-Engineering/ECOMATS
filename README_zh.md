@@ -56,9 +56,12 @@ ECOMATS/
 │   │   └── config.py
 │   ├── prompts/               # Prompt文件
 │   │   ├── coordinator_prompt.md
-│   │   ├── expert_template_prompt.md      # A/B/C 专家参数化模板
+│   │   ├── enhanced_final_validator_prompt.md  # ASA Overall 综合分析提示词
+│   │   ├── expert_template_prompt.md           # A/B/C 专家参数化模板
+│   │   ├── intent_recognition_prompt.md        # 用户意图识别
 │   │   ├── literature_processor_prompt.md
 │   │   ├── material_designer_prompt.md
+│   │   ├── mechanism_expert_prompt.md          # 机理分析专家
 │   │   ├── operation_suggesting_prompt.md
 │   │   └── synthesis_expert_prompt.md
 │   ├── tasks/                 # 任务定义
@@ -107,6 +110,7 @@ ECOMATS/
 │       ├── prompt_loader.py
 │       ├── context_store.py              # 工具缓存的上下文存储
 │       ├── workflow_monitor.py           # 工作流监控与报告
+│       ├── tool_call_spec.py             # 工具调用规范
 │       ├── assessment_tool_executor.py   # 评估工具执行逻辑
 │       └── assessment_scoring_logic.py   # 评估评分计算
 ├── scripts/                   # 脚本文件
@@ -291,12 +295,10 @@ ECOMATS/
 ### 工具工厂模式
 
 所有工具通过 **ToolFactory** 类（`src/tools/factory.py`）管理，为不同类型的代理提供专业工具集：
-- **材料设计工具**（5个工具） - Materials Project、PubChem、Material Identifier、Structure Validator、Material Search
-- **材料评估工具**（6个工具） - 包含 MolPort 用于商业可用性评估
-- **材料搜索工具**（3个工具） - 用于合成方法探索
-- **机理分析工具**（2个工具） - Materials Project 和 PubChem 用于机理研究
-- **操作指导工具**（3个工具） - 安全与环境评估
-- **文献提取工具**（5个工具） - 化学信息提取与验证
+- **统一评估工具**（4个工具） - Materials Project、PubChem、PNEC、MolPort（ASA A/B/C 共用）
+- **材料设计工具**（2个工具） - Materials Project、PubChem 用于设计
+- **材料搜索工具**（2个工具） - 用于合成方法探索
+- **文献提取工具**（3个工具） - 化学信息提取与验证
 
 ## 迭代设计机制
 
@@ -347,7 +349,7 @@ ECOMATS/
 
 
 
-## 最近更新 (2025-12-13)
+## 最近更新 (2025-12-20)
 
 ### 🚀 重大升级：CrewAI 1.7.0
 - ✅ **异步执行** - 完整 async/await 支持，使用 `crew.akickoff()`

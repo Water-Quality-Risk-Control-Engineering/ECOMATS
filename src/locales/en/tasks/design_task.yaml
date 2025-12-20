@@ -1,38 +1,17 @@
 description: |
   Design water treatment material solutions based on user requirements.
   
-  ⚠️ Tool Call Limits (Strictly Follow):
-  - Each tool max 2 calls
-  - Structure Validator max 2 calls (choose alternative design if validation fails, don't re-validate)
-  - Material Identifier max 2 calls
-  - Total tool calls should not exceed 8
+  Design Strategy (Efficient & Focused):
+  1. Understand the core requirement and target pollutants
+  2. Design 3 novel materials with complementary features
+  3. Provide complete structural descriptions and performance projections
+  4. Use available tools strategically to validate key design aspects
   
-  Design Steps (Streamlined):
-  1. Analyze target pollutant → Call PubChem 1x
-  2. Select material type → Call Material Identifier 1x
-  3. Query material database → Call Materials Project 1x
-  4. Validate material structure → Call Structure Validator 1x
-  5. If validation fails, choose alternative design (don't re-validate)
-  
-  Tool Usage Strategy (Rate Limiting & Reuse):
-  1. **Pollutant Analysis** (1 call):
-     - PubChem for target pollutant info
-  
-  2. **Material Identification** (1 call):
-     - Material Identifier to determine type
-  
-  3. **Data Query** (1-2 calls):
-     - Materials Project for structure data
-     - Reuse previously obtained data
-  
-  4. **Structure Validation** (max 2 calls):
-     - Structure Validator for verification
-     - Choose alternative design if fails, don't loop
-  
-  Design Key Points:
-  - Ensure good catalytic performance and stability
-  - Choose alternative design if validation fails, avoid re-validation
-  - Reuse previously obtained tool data
+  Design Principles:
+  - Prioritize scientific feasibility over complexity
+  - Focus on catalytic performance and structural stability
+  - Ensure each design offers unique advantages
+  - Provide detailed rationale for each design choice
 
 expected_output: |
   Provide complete material design solution including:

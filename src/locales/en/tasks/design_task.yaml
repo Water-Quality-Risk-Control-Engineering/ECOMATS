@@ -1,17 +1,24 @@
 description: |
   Design water treatment material solutions based on user requirements.
   
-  Design Strategy (Efficient & Focused):
-  1. Understand the core requirement and target pollutants
-  2. Design 3 novel materials with complementary features
-  3. Provide complete structural descriptions and performance projections
-  4. Use available tools strategically to validate key design aspects
+  Design Process (Step-by-Step):
+  1. Analyze target pollutant → Use PubChem to understand pollutant characteristics
+  2. Identify material type → Use Material Identifier to determine appropriate material category
+  3. Query material database → Use Materials Project to retrieve structural and property data
+  4. Validate material structure → Use Structure Validator to ensure design feasibility
+  5. If validation fails, select alternative design approach (avoid repeated validation attempts)
   
-  Design Principles:
-  - Prioritize scientific feasibility over complexity
-  - Focus on catalytic performance and structural stability
-  - Ensure each design offers unique advantages
-  - Provide detailed rationale for each design choice
+  Tool Usage Strategy:
+  1. **Pollutant Analysis**: PubChem for target pollutant chemical properties and reactivity
+  2. **Material Identification**: Material Identifier to classify and categorize materials
+  3. **Data Query**: Materials Project for existing material structures and properties as references
+  4. **Structure Validation**: Structure Validator to verify designed structures are chemically valid
+  
+  Design Key Points:
+  - Ensure good catalytic performance and structural stability
+  - If validation fails, choose alternative design approach
+  - Prioritize reusing already obtained tool data
+  - Provide detailed scientific rationale for each design choice
 
 expected_output: |
   Provide complete material design solution including:

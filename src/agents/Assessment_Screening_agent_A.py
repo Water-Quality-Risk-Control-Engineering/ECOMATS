@@ -25,7 +25,7 @@ class AssessmentScreeningAgentA(BaseAgent):
             "全面评估材料方案的各个方面",  # Conduct comprehensive evaluation
             "expert_template_prompt.md",  # 使用参数化模板 / Use parameterized template
             temperature=Config.EXPERT_A_TEMPERATURE,
-            max_iter=15,
+            max_iter=2,  # Less is More: 降至2次（原值：15）- 聚焦核心评估逻辑
             prompt_params={"EXPERT_ID": "A"}  # 参数化替换
         )
     

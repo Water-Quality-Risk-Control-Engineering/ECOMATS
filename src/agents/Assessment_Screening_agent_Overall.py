@@ -18,7 +18,7 @@ class AssessmentScreeningAgentOverall(BaseAgent):
             goal="综合各专家评估结果，进行加权计算并形成最终材料评估报告，同时提供改进建议",  # Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions
             prompt_file="enhanced_final_validator_prompt.md",
             temperature=Config.FINAL_VALIDATOR_TEMPERATURE,
-            max_iter=8  # 复用上游结果，较少迭代
+            max_iter=1  # Less is More: 降至1次（原值：8）- 仅综合已有结果，无需迭代
         )
     
     def create_agent(self):

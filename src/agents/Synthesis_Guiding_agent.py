@@ -27,7 +27,7 @@ class SynthesisGuidingAgent(BaseAgent):
             "设计材料的合成方法和工艺流程",  # Goal in Chinese
             "synthesis_expert_prompt.md",  # Prompt template file
             temperature=Config.SYNTHESIS_EXPERT_TEMPERATURE,  # Temperature setting from config
-            max_iter=8  # 复用上游结果，较少迭代
+            max_iter=2  # Less is More: 降至2次（原值：8）- 复用上游设计，聚焦合成路线
         )
     
     def create_agent(self):

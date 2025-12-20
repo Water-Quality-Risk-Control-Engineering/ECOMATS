@@ -108,13 +108,14 @@ class ToolFactory:
         Returns:
             list: 材料设计工具实例的列表
         """
-        # 轻量化设计模式：减少即时工具数量，优先标识与结构验证，MP最小字段查询
+        # 性能测试模式：仅保留 MP 和 PubChem 核心查询工具
+        # 其他工具暂时注释以便后续恢复使用
         tools = [
             materials_project_tool,
             pubchem_tool,
-            CrewAIMaterialIdentifierTool(),
-            CrewAIStructureValidatorTool(),
-            CrewAIMaterialSearchTool()
+            # CrewAIMaterialIdentifierTool(),      # 材料识别 - 已注释
+            # CrewAIStructureValidatorTool(),      # 结构验证 - 已注释
+            # CrewAIMaterialSearchTool()           # 材料搜索 - 已注释
         ]
         return tools
     

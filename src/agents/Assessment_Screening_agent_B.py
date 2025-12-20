@@ -36,14 +36,14 @@ class AssessmentScreeningAgentB(BaseAgent):
             # Keep self.llm as is
         
         agent = super().create_agent()
-        # 使用经济可行性评估专用工具集 (Expert B: 经济可行性和商业可获得性)
+        # 使用统一的 ASA 评估工具集 (A/B/C 共用)
         try:
             from src.utils.llm_config import tools_enabled
             if tools_enabled():
-                agent.tools = ToolFactory.create_economic_assessment_tools()
+                agent.tools = ToolFactory.create_unified_assessment_tools()
             else:
                 agent.tools = []
         except Exception:
-            agent.tools = ToolFactory.create_economic_assessment_tools()
+            agent.tools = ToolFactory.create_unified_assessment_tools()
         
         return agent

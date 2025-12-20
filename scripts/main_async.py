@@ -484,6 +484,12 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
             if final_validation_agent and final_validation_agent.role not in seen_roles:
                 required_agents.append(final_validation_agent)
                 seen_roles.add(final_validation_agent.role)
+                # 验证 ASA Overall 没有工具 / Verify ASA Overall has no tools
+                agent_tools = getattr(final_validation_agent, 'tools', None)
+                if agent_tools:
+                    print(f"  ⚠️ ASA Overall 意外包含 {len(agent_tools)} 个工具: {[t.name if hasattr(t, 'name') else str(t) for t in agent_tools]}")
+                else:
+                    print(f"  ✅ ASA Overall 无工具（仅综合分析）")
             final_validation_task = FinalValidationTask(llm).create_task(
                 final_validation_agent,
                 [design_task] + evaluation_tasks if design_task else evaluation_tasks,
@@ -589,8 +595,29 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     def step_callback(step_output):
         """捕获每一步执行，包括工具调用 / Capture each step including tool calls"""
         try:
-            # 获取当前 Agent (从线程本地存储)
-            agent_role = getattr(current_agent_context, 'role', 'Unknown')
+            # 尝试从 step_output 获取当前 Agent
+            # CrewAI step_output 可能包含 agent 属性或 agent_name
+            agent_role = 'Unknown'
+            
+            # 方法1: 从 step_output.agent 获取
+            if hasattr(step_output, 'agent'):
+                agent = step_output.agent
+                if hasattr(agent, 'role'):
+                    agent_role = agent.role
+                elif isinstance(agent, str):
+                    agent_role = agent
+            
+            # 方法2: 从 step_output 的其他属性获取
+            if agent_role == 'Unknown' and hasattr(step_output, 'agent_name'):
+                agent_role = step_output.agent_name
+            
+            # 方法3: 从线程本地存储获取（备用）
+            if agent_role == 'Unknown':
+                agent_role = getattr(current_agent_context, 'role', 'Unknown')
+            
+            # 更新线程本地存储
+            if agent_role != 'Unknown':
+                current_agent_context.role = agent_role
             
             # 检查是否是工具调用 (AgentAction)
             if hasattr(step_output, 'tool'):
@@ -624,7 +651,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         agents=required_agents,
         tasks=required_tasks,
         process=Process.sequential,
-        verbose=True,
+        verbose=Config.VERBOSE,  # 从配置读取，.env 中 VERBOSE=False 可禁用 CrewAI 树状显示
         memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
         task_callback=task_callback,  # 添加任务回调
         step_callback=step_callback,  # 步骤回调追踪工具调用
@@ -781,7 +808,7 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
             operation_task
         ],
         process=Process.sequential,
-        verbose=True,
+        verbose=Config.VERBOSE,  # 从配置读取，.env 中 VERBOSE=False 可禁用
         memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
         task_callback=task_callback,  # 添加任务回调
         embedder={

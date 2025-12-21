@@ -27,7 +27,7 @@ class SynthesisGuidingAgent(BaseAgent):
             llm, 
             "Synthesis_Guiding_agent",  # Role: Synthesis Method Expert / 角色：合成方法专家
             "Design material synthesis methods and process flows",  # 设计材料的合成方法和工艺流程
-            "synthesis_expert_prompt.md",  # Prompt template file
+            "synthesis_guiding_agent_prompt.md",  # Prompt template file
             temperature=Config.SYNTHESIS_EXPERT_TEMPERATURE,  # Temperature setting from config
             max_iter=2  # Less is More: Reduced to 2 iterations (original: 8) - Reuse upstream design, focus on synthesis routes / 降至2次（原值：8）- 复用上游设计，聚焦合成路线
         )

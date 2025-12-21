@@ -15,7 +15,7 @@ class MechanismMiningAgent(BaseAgent):
             llm=llm,
             role="Mechanism_Mining_agent",  # Mechanism mining expert / 机理挖掘专家
             goal="Mine reaction mechanisms and kinetic characteristics of pollutant degradation",  # 挖掘污染物降解的反应机理和动力学特性
-            prompt_file="mechanism_expert_prompt.md",
+            prompt_file="mechanism_mining_agent_prompt.md",
             temperature=Config.MECHANISM_EXPERT_TEMPERATURE,
             max_iter=2  # Less is More: Reduced to 2 iterations (original: 8) - Reuse upstream results, focus on mechanism analysis / 降至2次（原值：8）- 复用上游结果，聚焦机理分析
         )

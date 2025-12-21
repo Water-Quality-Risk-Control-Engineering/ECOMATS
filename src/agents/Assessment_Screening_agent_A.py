@@ -23,7 +23,7 @@ class AssessmentScreeningAgentA(BaseAgent):
             llm, 
             "Assessment_Screening_agent_A",  # Expert A / 专家A
             "Comprehensively evaluate various aspects of material proposals",  # 全面评估材料方案的各个方面
-            "expert_template_prompt.md",  # Use parameterized template / 使用参数化模板
+            "assessment_screening_agent_a_prompt.md",  # Use Agent-specific prompt / 使用Agent专用prompt
             temperature=Config.EXPERT_A_TEMPERATURE,
             max_iter=2,  # Less is More: Reduced to 2 iterations (original: 15) - Focus on core evaluation logic / 降至2次（原值：15）- 聚焦核心评估逻辑
             prompt_params={"EXPERT_ID": "A"}  # Parameterized replacement / 参数化替换

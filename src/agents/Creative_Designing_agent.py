@@ -24,7 +24,7 @@ class CreativeDesigningAgent(BaseAgent):
             llm=llm,
             role="Creative_Designing_agent",  # Material Design Expert
             goal="Design and optimize water treatment material solutions, strictly following material type classification and structural description specifications",  # 设计和优化水处理材料方案，严格按照材料类型分类和结构描述规范进行设计
-            prompt_file="material_designer_prompt.md",
+            prompt_file="creative_designing_agent_prompt.md",
             temperature=Config.MATERIAL_DESIGNER_TEMPERATURE,
             max_iter=1  # Performance test: Reduced to 1 iteration (original: 8) / 性能测试：降至1次（原值：8）
         )

@@ -16,7 +16,7 @@ class AssessmentScreeningAgentOverall(BaseAgent):
             llm=llm,
             role="Assessment_Screening_agent_Overall",  # Final validation expert / 最终验证专家
             goal="Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions",  # 综合各专家评估结果，进行加权计算并形成最终材料评估报告，同时提供改进建议
-            prompt_file="enhanced_final_validator_prompt.md",
+            prompt_file="assessment_screening_agent_overall_prompt.md",
             temperature=Config.FINAL_VALIDATOR_TEMPERATURE,
             max_iter=1  # Less is More: Reduced to 1 iteration (original: 8) - Only synthesize existing results, no iteration needed / 降至1次（原值：8）- 仅综合已有结果，无需迭代
         )

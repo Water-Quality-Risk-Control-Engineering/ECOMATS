@@ -26,7 +26,7 @@ class ExtractingAgent(BaseAgent):
             llm=llm,
             role="Extracting_agent",  # Literature Processing Expert
             goal="Process and analyze relevant technical literature to provide background information for material evaluation",  # 处理和分析相关技术文献，为材料评估提供背景信息
-            prompt_file="literature_processor_prompt.md",
+            prompt_file="extracting_agent_prompt.md",
             temperature=Config.LITERATURE_PROCESSOR_TEMPERATURE
         )
     

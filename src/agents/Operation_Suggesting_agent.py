@@ -23,7 +23,7 @@ class OperationSuggestingAgent(BaseAgent):
             llm, 
             "Operation_Suggesting_agent",  # Role: Operation Suggestion Expert / 角色：操作建议专家
             "Provide detailed operational guidance for material synthesis, production and application",  # 为材料合成、生产和应用提供详细的操作指导建议
-            "operation_suggesting_prompt.md",  # Prompt template file
+            "operation_suggesting_agent_prompt.md",  # Prompt template file
             temperature=Config.OPERATION_SUGGESTING_TEMPERATURE,  # Temperature setting from config
             max_iter=2  # Less is More: Reduced to 2 iterations (original: 8) - Reuse upstream synthesis routes, focus on operational details / 降至2次（原值：8）- 复用上游合成路线，聚焦操作细节
         )

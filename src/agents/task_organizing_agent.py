@@ -33,7 +33,7 @@ class TaskOrganizingAgent(BaseAgent):
             llm=llm,
             role="Task_Organizing_agent",
             goal="Organize and coordinate the work of various expert agents to ensure tasks are completed according to plan",  # 组织和协调各个专家智能体的工作，确保任务按计划完成
-            prompt_file="coordinator_prompt.md"
+            prompt_file="task_organizing_agent_prompt.md"
         )
         # 智能体注册表 / Agent registry
         self._agent_registry: Dict[str, Union[Agent, List[Agent]]] = {}

@@ -2,7 +2,7 @@ import logging
 from src.agents.base_agent import BaseAgent
 from src.tools import ToolFactory
 
-# Configure logging / 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 

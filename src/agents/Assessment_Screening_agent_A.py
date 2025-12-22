@@ -36,11 +36,11 @@ class AssessmentScreeningAgentA(BaseAgent):
         try:
             from src.utils.llm_config import create_eas_llm
             eas_llm = create_eas_llm()
-            logger.info("Successfully created EAS LLM instance / 成功创建EAS LLM实例")
+            logger.info("Successfully created EAS LLM instance")
             # Update the llm attribute to use EAS
             self.llm = eas_llm
         except Exception as e:
-            logger.error(f"Failed to create EAS model instance / 创建EAS模型实例失败: {e}")
+            logger.error(f"Failed to create EAS model instance : {e}")
             # If EAS configuration fails, use the passed LLM
             # Keep self.llm as is
         

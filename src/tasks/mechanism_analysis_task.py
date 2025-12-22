@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 机理分析任务 / Mechanism Analysis Task
-负责分析材料的催化机理和作用机制
 """
 
 from .base_task import BaseTask, load_task_text

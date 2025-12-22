@@ -1,6 +1,6 @@
 """
-GDB图数据库查询工具的CrewAI包装器
-用于在CrewAI Agent中查询水处理材料知识图谱
+CrewAI wrapper for GDB graph database query tool.
+Used for querying water treatment material knowledge graph in CrewAI Agents.
 """
 import json
 from typing import Optional
@@ -11,49 +11,49 @@ from src.utils.context_store import ContextStore
 
 
 class GDBCatalystInput(BaseModel):
-    """催化剂查询输入参数"""
+    """Catalyst Query Input Model"""
     catalyst_name: str = Field(
-        description="催化剂名称，例如: TiO2, ZnO, Fe3O4, g-C3N4"
+        description="Catalyst name, e.g.: TiO2, ZnO, Fe3O4, g-C3N4"
     )
 
 
 class GDBPollutantInput(BaseModel):
-    """污染物查询输入参数"""
+    """Pollutant Query Input Model"""
     pollutant_name: str = Field(
-        description="污染物名称，例如: CIP, BPA, Tetracycline, PFOA"
+        description="Pollutant name, e.g.: CIP, BPA, Tetracycline, PFOA"
     )
 
 
 class CrewAIGDBCatalystTool(BaseTool):
     """
-    催化剂知识图谱查询工具
+    Catalyst Knowledge Graph Query Tool.
     
-    用于查询催化剂的降解能力和活性物种生成信息，
-    帮助Agent了解催化剂的应用范围和反应机理。
+    Query catalyst degradation capabilities and active species generation info,
+    helping Agents understand catalyst application scope and reaction mechanisms.
     
-    知识图谱包含344种催化剂、15种污染物、10种活性物种，
-    以及1713条关系边。
+    Knowledge graph contains 344 catalysts, 15 pollutants, 10 active species,
+    and 1713 relationship edges.
     """
     name: str = "Catalyst Knowledge Graph Query"
     description: str = (
-        "查询水处理材料知识图谱，获取催化剂的相关信息。"
-        "该图谱包含369个节点和1713条关系，涵盖344种催化剂、15种污染物和10种活性物种。"
-        "输入催化剂名称（如TiO2, ZnO），返回该催化剂能降解的污染物列表和生成的活性物种。"
-        "适用于：材料设计时了解催化剂应用范围、机理分析时获取反应途径信息。"
+        "Query water treatment material knowledge graph for catalyst information. "
+        "Graph contains 369 nodes and 1713 relationships: 344 catalysts, 15 pollutants, 10 active species. "
+        "Input catalyst name (e.g. TiO2, ZnO), returns degradable pollutants and generated active species. "
+        "Use for: material design catalyst scope, mechanism analysis reaction pathways."
     )
     args_schema: type[BaseModel] = GDBCatalystInput
     
     def _run(self, catalyst_name: str) -> str:
         """
-        执行催化剂信息查询
+        Execute catalyst information query.
         
         Args:
-            catalyst_name: 催化剂名称
+            catalyst_name: Catalyst name
             
         Returns:
-            JSON格式的催化剂完整信息
+            JSON formatted catalyst full information
         """
-        # 检查缓存
+        # Check cache
         cache_key = f"gdb_catalyst:{catalyst_name}"
         cached_ctx = ContextStore.get(cache_key)
         if cached_ctx is not None:
@@ -63,7 +63,7 @@ class CrewAIGDBCatalystTool(BaseTool):
             tool = get_gdb_tool()
             result = tool.query_catalyst_full_info(catalyst_name)
             
-            # 缓存结果
+            # Cache result
             if result.get('success'):
                 ContextStore.set(cache_key, result)
             
@@ -80,32 +80,32 @@ class CrewAIGDBCatalystTool(BaseTool):
 
 class CrewAIGDBPollutantTool(BaseTool):
     """
-    污染物降解查询工具
+    Pollutant Degradation Query Tool.
     
-    用于查询能够降解特定污染物的催化剂列表，
-    帮助Agent进行材料选型和设计决策。
+    Query catalyst list that can degrade specific pollutants,
+    helping Agents make material selection and design decisions.
     """
     name: str = "Pollutant Degradation Query"
     description: str = (
-        "查询能降解特定污染物的催化剂列表。"
-        "支持的污染物包括: CIP, Atrazine, ibuprofen, PFOA, BPA, "
-        "Sulfamethoxazole, TC, RhB, 4-NP, MO, Tetracycline, MB, Cr(VI), phenol, OTC。"
-        "输入污染物名称，返回能有效降解该污染物的催化剂列表及数量。"
-        "适用于：针对特定污染物选择合适的催化剂材料。"
+        "Query catalysts that can degrade specific pollutants. "
+        "Supported pollutants: CIP, Atrazine, ibuprofen, PFOA, BPA, "
+        "Sulfamethoxazole, TC, RhB, 4-NP, MO, Tetracycline, MB, Cr(VI), phenol, OTC. "
+        "Input pollutant name, returns effective catalyst list and count. "
+        "Use for: selecting suitable catalyst materials for specific pollutants."
     )
     args_schema: type[BaseModel] = GDBPollutantInput
     
     def _run(self, pollutant_name: str) -> str:
         """
-        执行污染物催化剂查询
+        Execute pollutant catalyst query.
         
         Args:
-            pollutant_name: 污染物名称
+            pollutant_name: Pollutant name
             
         Returns:
-            JSON格式的催化剂列表
+            JSON formatted catalyst list
         """
-        # 检查缓存
+        # Check cache
         cache_key = f"gdb_pollutant:{pollutant_name}"
         cached_ctx = ContextStore.get(cache_key)
         if cached_ctx is not None:
@@ -115,7 +115,7 @@ class CrewAIGDBPollutantTool(BaseTool):
             tool = get_gdb_tool()
             result = tool.query_pollutant_catalysts(pollutant_name)
             
-            # 缓存结果
+            # Cache result
             if result.get('success'):
                 ContextStore.set(cache_key, result)
             
@@ -130,6 +130,6 @@ class CrewAIGDBPollutantTool(BaseTool):
             return json.dumps(error_result, ensure_ascii=False, indent=2)
 
 
-# 创建工具实例
+# Create tool instances
 gdb_catalyst_tool = CrewAIGDBCatalystTool()
 gdb_pollutant_tool = CrewAIGDBPollutantTool()

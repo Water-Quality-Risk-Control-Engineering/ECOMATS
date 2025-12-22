@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 最终验证任务 / Final Validation Task
-综合各专家评估结果，进行加权计算并形成最终材料评估报告
 """
 
 from .base_task import BaseTask, load_task_text

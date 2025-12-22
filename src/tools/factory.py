@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-工具工厂
-用于创建和管理各种数据库查询工具
+Tool Factory.
+Create and manage various database query tools.
 """
 
-# CrewAI工具包装器
+# CrewAI tool wrappers
 from src.tools.crewai_materials_project_tool import materials_project_tool
 from src.tools.crewai_pubchem_tool import pubchem_tool
 from src.tools.crewai_name2cas_tool import CrewAIName2CASTool
@@ -24,15 +24,15 @@ from src.tools.crewai_molport_tool import (
 
 
 class ToolFactory:
-    """工具工厂类"""
+    """Tool Factory Class"""
     
     @staticmethod
     def create_all_tools():
         """
-        创建所有工具实例
+        Create all tool instances.
         
         Returns:
-            list: 所有工具实例的列表
+            list: List of all tool instances
         """
         tools = [
             materials_project_tool,
@@ -53,150 +53,148 @@ class ToolFactory:
         
         return tools
     
-    # 已移除 create_enhanced_validation_tools() - 未被使用的方法
-    
     @staticmethod
     def create_final_validation_tools():
         """
-        创建最终验证专用工具实例
-        注意：ASA Final 不需要工具，仅对 A/B/C 输出做综合分析
+        Create final validation tool instances.
+        Note: ASA Final needs no tools, only aggregates A/B/C outputs.
         
         Returns:
-            list: 空列表（无工具）
+            list: Empty list (no tools needed)
         """
-        return []  # 角色收缩：Final 仅做结果聚合，不需要工具
+        return []  # Role reduction: Final only aggregates results
     
     @staticmethod
     def create_operation_guidance_tools():
         """
-        创建操作指导专用工具实例
-        用于 Operation_Suggesting_agent，与任务需求匹配
+        Create operation guidance tool instances.
+        Used by Operation_Suggesting_agent, matches task requirements.
         
         Returns:
-            list: 操作指导工具实例的列表
+            list: List of operation guidance tool instances
         """
         tools = [
-            pubchem_tool,                  # 查询化学品安全数据 (任务需求)
-            materials_project_tool,        # 查询材料成本数据 (任务需求)
-            CrewAIPNECTool(),              # 环境影响评估 (任务需求)
+            pubchem_tool,                  # Chemical safety data (task req)
+            materials_project_tool,        # Material cost data (task req)
+            CrewAIPNECTool(),              # Environmental impact (task req)
         ]
         return tools
     
     @staticmethod
     def create_literature_extraction_tools():
         """
-        创建文献提取专用工具实例
-        用于 Extracting_agent，专注于从文献中提取化学信息
+        Create literature extraction tool instances.
+        Used by Extracting_agent for extracting chemical info from literature.
         
-        优化策略（Less is More）：
-        - 移除 Name2Properties/MaterialSearch（内部调用 MP，冗余）
-        - 保留核心查询 + 本地验证
+        Strategy (Less is More):
+        - Remove Name2Properties/MaterialSearch (calls MP internally, redundant)
+        - Keep core query + local validation
         
         Returns:
-            list: 文献提取工具实例的列表
+            list: List of literature extraction tool instances
         """
         tools = [
-            materials_project_tool,         # 材料结构查询
-            pubchem_tool,                   # 化合物信息查询
-            CrewAIDataValidatorTool()       # 本地数据格式验证（不调用外部 API）
+            materials_project_tool,         # Material structure query
+            pubchem_tool,                   # Compound info query
+            CrewAIDataValidatorTool()       # Local data format validation (no external API)
         ]
         return tools
     
     @staticmethod
     def create_material_design_tools():
         """
-        创建材料设计专用工具实例
+        Create material design tool instances.
         
-        优化策略（Less is More）：
-        - 仅保留 MP 和 PubChem 核心查询工具
-        - 移除冗余工具（MaterialIdentifier/StructureValidator/MaterialSearch 内部都调用 MP+PubChem）
+        Strategy (Less is More):
+        - Keep only MP and PubChem core query tools
+        - Remove redundant tools (MaterialIdentifier/StructureValidator/MaterialSearch all call MP+PubChem)
         
         Returns:
-            list: 材料设计工具实例的列表
+            list: List of material design tool instances
         """
         tools = [
-            materials_project_tool,   # 材料结构和属性查询
-            pubchem_tool,             # 有机化合物信息查询
+            materials_project_tool,   # Material structure and properties
+            pubchem_tool,             # Organic compound info
         ]
         return tools
     
     @staticmethod
     def create_material_assessment_tools():
         """
-        创建材料评估专用工具实例
+        Create material assessment tool instances.
         
-        优化策略（Less is More）：
-        - 移除 MaterialIdentifier/StructureValidator（冗余）
-        - 保留核心数据源 + 独立功能工具
+        Strategy (Less is More):
+        - Remove MaterialIdentifier/StructureValidator (redundant)
+        - Keep core data sources + independent function tools
         
         Returns:
-            list: 材料评估工具实例的列表
+            list: List of material assessment tool instances
         """
         tools = [
-            materials_project_tool,          # 材料结构和属性
-            pubchem_tool,                    # 化合物信息
-            CrewAIPNECTool(),                # 环境风险
-            molport_availability_tool        # 商业可获得性
+            materials_project_tool,          # Material structure and properties
+            pubchem_tool,                    # Compound info
+            CrewAIPNECTool(),                # Environmental risk
+            molport_availability_tool        # Commercial availability
         ]
         return tools
     
     @staticmethod
     def create_material_search_tools():
         """
-        创建材料搜索专用工具实例 (SynthesisGuidingAgent 使用)
+        Create material search tool instances (for SynthesisGuidingAgent).
         
-        优化策略（Less is More）：
-        - 移除 MaterialSearch/StructureValidator（内部调用 MP，冗余）
-        - 直接使用核心工具
+        Strategy (Less is More):
+        - Remove MaterialSearch/StructureValidator (calls MP, redundant)
+        - Use core tools directly
         
         Returns:
-            list: 材料搜索工具实例的列表
+            list: List of material search tool instances
         """
         tools = [
-            materials_project_tool,             # 材料结构和合成信息
-            pubchem_tool,                       # 试剂安全数据
+            materials_project_tool,             # Material structure and synthesis info
+            pubchem_tool,                       # Reagent safety data
         ]
         return tools
     
     @staticmethod
     def create_mechanism_analysis_tools():
         """
-        创建机理分析专用工具实例
-        用于 MechanismMiningAgent，与任务需求匹配
-        注意：优先复用上游结果
+        Create mechanism analysis tool instances.
+        Used by MechanismMiningAgent, matches task requirements.
+        Note: Prioritize reusing upstream results.
         
         Returns:
-            list: 机理分析工具实例的列表
+            list: List of mechanism analysis tool instances
         """
         tools = [
-            materials_project_tool,          # 查询材料结构和电子结构
-            pubchem_tool,                    # 查询化学品反应活性
+            materials_project_tool,          # Material structure and electronic structure
+            pubchem_tool,                    # Chemical reactivity
         ]
         return tools
     
     @staticmethod
     def create_unified_assessment_tools():
         """
-        创建统一的 ASA 评估工具集 (Expert A/B/C 共用)
+        Create unified ASA assessment toolset (shared by Expert A/B/C).
         
-        优化策略（Less is More）：
-        - 移除 MaterialIdentifier/StructureValidator（内部调用 MP+PubChem，严重冗余）
-        - 保留核心数据源 + 独立功能工具
+        Strategy (Less is More):
+        - Remove MaterialIdentifier/StructureValidator (calls MP+PubChem, highly redundant)
+        - Keep core data sources + independent function tools
         
-        评估维度与工具映射：
-        - 催化性能 (50%) → materials_project
-        - 经济可行性 (10%) → molport
-        - 环境友好性 (10%) → PNEC
-        - 技术可行性 (10%) → materials_project
-        - 结构合理性 (20%) → pubchem
+        Assessment dimension to tool mapping:
+        - Catalytic performance (50%) -> materials_project
+        - Economic feasibility (10%) -> molport
+        - Environmental friendliness (10%) -> PNEC
+        - Technical feasibility (10%) -> materials_project
+        - Structural rationality (20%) -> pubchem
         
         Returns:
-            list: 统一的评估工具实例列表
+            list: Unified assessment tool instance list
         """
         tools = [
-            materials_project_tool,          # 材料结构、电子结构、稳定性
-            pubchem_tool,                    # 化学品性质、毒性、结构验证
-            CrewAIPNECTool(),                # 环境风险评估（独立 API）
-            molport_availability_tool,       # 商业可获得性（独立 API）
+            materials_project_tool,          # Material structure, electronic structure, stability
+            pubchem_tool,                    # Chemical properties, toxicity, structure validation
+            CrewAIPNECTool(),                # Environmental risk assessment (independent API)
+            molport_availability_tool,       # Commercial availability (independent API)
         ]
         return tools

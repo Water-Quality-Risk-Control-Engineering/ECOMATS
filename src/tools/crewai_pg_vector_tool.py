@@ -1,6 +1,6 @@
 """
-PostgreSQL向量数据库查询工具的CrewAI包装器
-用于在CrewAI Agent中调用向量数据库查询功能
+CrewAI wrapper for PostgreSQL vector database query tool.
+Used for calling vector database query functions in CrewAI Agents.
 """
 import json
 from typing import Optional
@@ -11,36 +11,35 @@ from src.utils.context_store import ContextStore
 
 
 class PGVectorToolInput(BaseModel):
-    """PGVector工具输入参数"""
-    query: str = Field(description="查询文本，用于语义相似度搜索")
+    """PGVector Tool Input Model"""
+    query: str = Field(description="Query text for semantic similarity search")
     agent_type: Optional[str] = Field(
         default=None, 
-        description="Agent类型过滤: 'design_agent', 'synthesis_agent', 'mechanism_agent'"
+        description="Agent type filter: 'design_agent', 'synthesis_agent', 'mechanism_agent'"
     )
-    top_k: int = Field(default=3, description="返回结果数量，默认3条")
+    top_k: int = Field(default=3, description="Number of results to return, default 3")
     similarity_threshold: float = Field(
         default=0.5, 
-        description="相似度阈值(0-1)，默认0.5"
+        description="Similarity threshold (0-1), default 0.5"
     )
 
 
 class CrewAIPGVectorTool(BaseTool):
     """
-    SFT问答对向量数据库查询工具
+    SFT QA Vector Database Query Tool.
     
-    用于从历史问答对中检索与当前查询最相似的示例，
-    帮助Agent生成更准确、更一致的回复。
+    Retrieves the most similar examples from historical QA pairs for current query,
+    helping Agents generate more accurate and consistent responses.
     
-    数据库包含900条水处理材料相关的问答对，
-    涵盖设计、合成和机理分析三个领域。
+    Database contains 900 water treatment material QA pairs,
+    covering design, synthesis and mechanism analysis domains.
     """
     name: str = "SFT QA Vector Database Query"
     description: str = (
-        "查询SFT问答对向量数据库，检索与查询最相似的历史问答示例。"
-        "该数据库包含900条水处理材料设计、合成和机理分析的问答对。"
-        "输入参数：query(查询文本), agent_type(可选，过滤特定Agent类型), "
-        "top_k(返回数量，默认3), similarity_threshold(相似度阈值，默认0.5)。"
-        "返回相似问答对列表，包含instruction, output, similarity等字段。"
+        "Query SFT QA vector database to retrieve the most similar historical QA examples. "
+        "Database contains 900 water treatment material design, synthesis and mechanism QA pairs. "
+        "Input: query(text), agent_type(optional filter), top_k(default 3), similarity_threshold(default 0.5). "
+        "Returns similar QA pairs with instruction, output, similarity fields."
     )
     args_schema: type[BaseModel] = PGVectorToolInput
     
@@ -52,18 +51,18 @@ class CrewAIPGVectorTool(BaseTool):
         similarity_threshold: float = 0.5
     ) -> str:
         """
-        执行向量数据库查询
+        Execute vector database query.
         
         Args:
-            query: 查询文本
-            agent_type: Agent类型过滤
-            top_k: 返回结果数量
-            similarity_threshold: 相似度阈值
+            query: Query text
+            agent_type: Agent type filter
+            top_k: Number of results
+            similarity_threshold: Similarity threshold
             
         Returns:
-            JSON格式的查询结果
+            JSON formatted query result
         """
-        # 检查缓存
+        # Check cache
         cache_key = f"pgvector:{query}:{agent_type}:{top_k}:{similarity_threshold}"
         cached_ctx = ContextStore.get(cache_key)
         if cached_ctx is not None:
@@ -78,7 +77,7 @@ class CrewAIPGVectorTool(BaseTool):
                 similarity_threshold=similarity_threshold
             )
             
-            # 缓存结果
+            # Cache result
             if result.get('success'):
                 ContextStore.set(cache_key, result)
             
@@ -93,5 +92,5 @@ class CrewAIPGVectorTool(BaseTool):
             return json.dumps(error_result, ensure_ascii=False, indent=2)
 
 
-# 创建工具实例
+# Create tool instance
 pg_vector_tool = CrewAIPGVectorTool()

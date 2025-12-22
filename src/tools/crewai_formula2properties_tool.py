@@ -4,39 +4,33 @@ from pydantic import BaseModel, Field
 from src.tools.formula2properties_tool import get_formula2properties_tool
 
 class Formula2PropertiesToolInput(BaseModel):
-    """Formula2Properties工具输入参数模型"""
-    formula: str = Field(description="化学分子式")
+    """Formula2Properties Tool Input Model"""
+    formula: str = Field(description="Chemical molecular formula")
 
 class CrewAIFormula2PropertiesTool(BaseTool):
-    """CrewAI工具包装器，用于根据化学式预测性质"""
+    """CrewAI tool wrapper for predicting properties by chemical formula"""
     
     name: str = "Formula to Properties Predictor"
     description: str = (
-        "根据化学分子式预测化合物的物理化学性质。"
-        "可以预测分子量、晶体结构、能带隙等信息。"
-        "当需要基于化学式了解可能的材料性质时使用此工具。"
+        "Predict physicochemical properties of compounds by molecular formula. "
+        "Can predict molecular weight, crystal structure, band gap etc. "
+        "Use when you need to understand possible material properties based on formula."
     )
     args_schema: type[BaseModel] = Formula2PropertiesToolInput
     
     def _run(self, formula: str) -> str:
         """
-        执行化学式到性质的预测
+        Execute formula to properties prediction.
         
         Args:
-            formula: 化学分子式
+            formula: Chemical molecular formula
             
         Returns:
-            JSON格式的预测结果
+            JSON formatted prediction result
         """
         try:
-            # 获取工具实例
             tool = get_formula2properties_tool()
-            
-            # 执行查询（包装器统一调用底层 _run 返回JSON字符串）
             result = json.loads(tool._run(formula))
-            
-            # 返回JSON格式的结果
             return json.dumps(result, ensure_ascii=False, indent=2)
-            
         except Exception as e:
-            return json.dumps({"error": f"执行预测时出错: {str(e)}"}, ensure_ascii=False)
+            return json.dumps({"error": f"Prediction error: {str(e)}"}, ensure_ascii=False)

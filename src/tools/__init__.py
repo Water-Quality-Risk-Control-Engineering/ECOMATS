@@ -1,11 +1,11 @@
 """
-Tools module initialization file / 工具模块初始化文件
+Tools module initialization file.
 """
 
-# Import all functional tools / 导入所有功能工具
+# Import all functional tools
 from .materials_project_tool import get_materials_project_tool
 from .pubchem_tool import get_pubchem_tool
-# EvaluationTool 已移除 - 在 ECOMATS 项目中未被使用，仅在 BioCrew 项目中使用
+# EvaluationTool removed - not used in ECOMATS, only in BioCrew
 from .name2cas_tool import get_name2cas_tool
 from .name2properties_tool import get_name2properties_tool
 from .cid2properties_tool import get_cid2properties_tool
@@ -17,13 +17,13 @@ from .data_validator_tool import get_data_validator_tool
 from .structure_validator_tool import get_structure_validator_tool
 from .molport_tool import get_molport_tool
 
-# Import database query tools / 导入数据库查询工具
+# Import database query tools
 from .pg_vector_tool import PGVectorTool, get_pg_vector_tool
 from .gdb_tool import GDBTool, get_gdb_tool
 from .crewai_pg_vector_tool import CrewAIPGVectorTool
 from .crewai_gdb_tool import CrewAIGDBCatalystTool, CrewAIGDBPollutantTool
 
-# Import CrewAI tool wrappers / 导入CrewAI工具包装器
+# Import CrewAI tool wrappers
 from .crewai_materials_project_tool import materials_project_tool
 from .crewai_pubchem_tool import pubchem_tool
 from .crewai_name2cas_tool import CrewAIName2CASTool
@@ -44,20 +44,20 @@ from .crewai_molport_tool import (
     CrewAIMolPortMoleculeInfoTool
 )
 
-# Import tool factory / 导入工具工厂
+# Import tool factory
 from .factory import ToolFactory
 
-# Import assessment tool executor / 导入评估工具执行器
+# Import assessment tool executor
 from src.utils.assessment_tool_executor import AssessmentToolExecutor
 
-# Import assessment scoring logic / 导入评估评分逻辑
+# Import assessment scoring logic
 from src.utils.assessment_scoring_logic import AssessmentScoringLogic
 
-# Define the public interface of this module / 定义此模块的公共接口
+# Define public interface of this module
 __all__ = [
     'get_materials_project_tool',
     'get_pubchem_tool',
-    # 'EvaluationTool',  # 已移除 - 未在 ECOMATS 中使用
+    # 'EvaluationTool',  # Removed - not used in ECOMATS
     'get_name2cas_tool',
     'get_name2properties_tool',
     'get_cid2properties_tool',

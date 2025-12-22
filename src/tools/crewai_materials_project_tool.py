@@ -6,26 +6,24 @@ from src.tools.materials_project_tool import get_materials_project_tool
 from src.utils.context_store import ContextStore
 
 class MaterialsProjectToolInput(BaseModel):
-    """Materials Project工具输入参数模型 / Materials Project Tool Input Model"""
-    action: str = Field(default="search", description="要执行的操作 / Action to perform ('search', 'get_material')")
-    material_id: Optional[str] = Field(default=None, description="材料ID / Material ID (for get_material action)")
-    formula: Optional[str] = Field(default=None, description="化学式 / Chemical formula (for search)")
-    elements: Optional[List[str]] = Field(default=None, description="必须包含的元素列表 / Elements that must be included (for search)")
-    exclude_elements: Optional[List[str]] = Field(default=None, description="必须排除的元素列表 / Elements to exclude (for search)")
-    crystal_system: Optional[str] = Field(default=None, description="晶体系统 / Crystal system (for search)")
-    limit: int = Field(default=100, description="返回结果数量限制 / Result limit (for search)")
-    skip: int = Field(default=0, description="跳过的结果数量 / Results to skip (for search)")
-    fields: Optional[List[str]] = Field(default=None, description="要包含的数据字段列表 / Data fields to include")
+    """Materials Project Tool Input Model"""
+    action: str = Field(default="search", description="Action to perform ('search', 'get_material')")
+    material_id: Optional[str] = Field(default=None, description="Material ID (for get_material action)")
+    formula: Optional[str] = Field(default=None, description="Chemical formula (for search)")
+    elements: Optional[List[str]] = Field(default=None, description="Elements that must be included (for search)")
+    exclude_elements: Optional[List[str]] = Field(default=None, description="Elements to exclude (for search)")
+    crystal_system: Optional[str] = Field(default=None, description="Crystal system (for search)")
+    limit: int = Field(default=100, description="Result limit (for search)")
+    skip: int = Field(default=0, description="Results to skip (for search)")
+    fields: Optional[List[str]] = Field(default=None, description="Data fields to include")
 
 class CrewAIMaterialsProjectTool(BaseTool):
-    """CrewAI工具包装器，用于Materials Project API / CrewAI tool wrapper for Materials Project API"""
+    """CrewAI tool wrapper for Materials Project API"""
     
     name: str = "Materials Project Database Access"
     description: str = (
-        "访问Materials Project材料科学数据库以搜索材料、获取材料属性等。/ "
-        "Access Materials Project database to search materials and get material properties. "
-        "可以搜索具有特定化学式、元素组成、晶体结构或物理性质的材料。/ "
-        "Search materials with specific formula, elements, crystal structure or properties. "
+        "Access Materials Project database to search materials and get properties. "
+        "Search by formula, elements, crystal structure or properties. "
         "Usage: action='search', formula='C3N4'"
     )
     args_schema: type[BaseModel] = MaterialsProjectToolInput
@@ -57,24 +55,23 @@ class CrewAIMaterialsProjectTool(BaseTool):
         fields: Optional[List[str]] = None
     ) -> str:
         """
-        执行Materials Project API操作
+        Execute Materials Project API operation.
         
         Args:
-            action: 要执行的操作 ("search", "get_material", "get_structure", "get_electronic", "get_thermo", "get_elastic", "get_summary")，默认为"search"
-            material_id: 材料ID（用于获取特定材料信息的操作）
-            formula: 化学式（用于搜索）
-            elements: 必须包含的元素列表（用于搜索）
-            exclude_elements: 必须排除的元素列表（用于搜索）
-            crystal_system: 晶体系统（用于搜索）
-            limit: 返回结果数量限制（用于搜索）
-            skip: 跳过的结果数量（用于搜索）
-            fields: 要包含的数据字段列表（用于获取材料详情，注意：必须是API支持的字段）
+            action: Action to perform ("search", "get_material", etc.)
+            material_id: Material ID (for get_material action)
+            formula: Chemical formula (for search)
+            elements: Elements that must be included (for search)
+            exclude_elements: Elements to exclude (for search)
+            crystal_system: Crystal system (for search)
+            limit: Result limit (for search)
+            skip: Results to skip (for search)
+            fields: Data fields to include
             
         Returns:
-            JSON格式的API响应结果
+            JSON formatted API response
         """
         try:
-            # 获取工具实例
             tool = get_materials_project_tool()
             key = (
                 action,
@@ -105,10 +102,10 @@ class CrewAIMaterialsProjectTool(BaseTool):
             if cached and now - cached[0] < self._ttl_seconds:
                 return json.dumps(cached[1], ensure_ascii=False, indent=2)
 
-            # 根据操作类型执行相应功能
+            # Execute operation based on action type
             if action == "search":
                 fields = self._sanitize_fields(fields, action)
-                # 限制元素组合查询的limit，避免大范围拉取
+                # Limit element combination query to avoid large data pulls
                 if elements and (limit is None or limit > 10):
                     limit = 10
                 result = tool.search_materials(
@@ -122,32 +119,32 @@ class CrewAIMaterialsProjectTool(BaseTool):
                 )
             elif action == "get_material":
                 if not material_id:
-                    return json.dumps({"error": "获取材料详情需要提供material_id"})
+                    return json.dumps({"error": "material_id required for get_material action"})
                 fields = self._sanitize_fields(fields, action)
                 result = tool.get_material_by_id(material_id)
                 ContextStore.set(f"materials_project_get:{material_id}", result)
             elif action == "get_structure":
                 if not material_id:
-                    return json.dumps({"error": "获取晶体结构需要提供material_id"})
-                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
+                    return json.dumps({"error": "material_id required for get_structure action"})
+                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             elif action == "get_electronic":
                 if not material_id:
-                    return json.dumps({"error": "获取电子性质需要提供material_id"})
-                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
+                    return json.dumps({"error": "material_id required for get_electronic action"})
+                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             elif action == "get_thermo":
                 if not material_id:
-                    return json.dumps({"error": "获取热力学性质需要提供material_id"})
-                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
+                    return json.dumps({"error": "material_id required for get_thermo action"})
+                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             elif action == "get_elastic":
                 if not material_id:
-                    return json.dumps({"error": "获取弹性性质需要提供material_id"})
-                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
+                    return json.dumps({"error": "material_id required for get_elastic action"})
+                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             elif action == "get_summary":
-                return json.dumps({"error": "此功能尚未实现"}, ensure_ascii=False)
+                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             else:
-                return json.dumps({"error": f"不支持的操作: {action}"})
+                return json.dumps({"error": f"Unsupported action: {action}"})
                 
-            # 缓存并返回
+            # Cache and return
             self._cache[key] = (now, result)
             if action == "search":
                 ContextStore.set("materials_project_search", result)
@@ -156,7 +153,7 @@ class CrewAIMaterialsProjectTool(BaseTool):
             return json.dumps(result, ensure_ascii=False, indent=2)
             
         except Exception as e:
-            return json.dumps({"error": f"执行操作时出错: {str(e)}"}, ensure_ascii=False)
+            return json.dumps({"error": f"Operation error: {str(e)}"}, ensure_ascii=False)
 
-# 创建工具实例供智能体使用
+# Create tool instance for agent use
 materials_project_tool = CrewAIMaterialsProjectTool()

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
+ECOMATS - Multi-Agent System for Water Treatment Material Design Based on CrewAI
 ECOMATS - 基于CrewAI的水处理材料设计多智能体系统
+
+This is the synchronous main program entry point that coordinates multiple AI agents
+to design, evaluate, and optimize water treatment materials through a structured workflow.
+这是同步模式的主程序入口，通过结构化工作流协调多个AI智能体来设计、评估和优化水处理材料。
 """
 
 import sys
@@ -12,22 +17,22 @@ from dotenv import load_dotenv
 from crewai import Crew, Process
 import dashscope
 
-# 添加项目路径以便导入监控模块
+# Add project path to import monitoring module / 添加项目路径以便导入监控模块
 project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, os.path.abspath(project_root))
 
 from src.utils.workflow_monitor import WorkflowMonitor, create_monitor, get_monitor
 
-# Windows 兼容性补丁：SIGHUP 信号支持
+# Windows compatibility patch: SIGHUP signal support / Windows 兼容性补丁：SIGHUP 信号支持
 if sys.platform == 'win32':
     if not hasattr(signal, 'SIGHUP'):
-        signal.SIGHUP = None  # Windows 不支持 SIGHUP，创建占位符
-    # 设置控制台编码为 UTF-8，避免中文乱码
+        signal.SIGHUP = None  # Windows doesn't support SIGHUP, create placeholder / Windows 不支持 SIGHUP，创建占位符
+    # Set console encoding to UTF-8 to avoid Chinese garbled text / 设置控制台编码为 UTF-8，避免中文乱码
     try:
         sys.stdout.reconfigure(encoding='utf-8')
         sys.stderr.reconfigure(encoding='utf-8')
     except Exception:
-        pass  # Python < 3.7 不支持 reconfigure
+        pass  # Python < 3.7 doesn't support reconfigure / Python < 3.7 不支持 reconfigure
 
 def get_user_input():
     """获取用户自定义的材料设计需求 / Get user-defined material design requirements"""
@@ -52,7 +57,13 @@ def get_workflow_mode():
             print("无效选项，请输入 1 或 2 / Invalid option, please enter 1 or 2")
 
 def check_environment_variables():
-    """检查必要的环境变量是否已设置"""
+    """
+    Check if required environment variables are set / 检查必要的环境变量是否已设置
+    
+    Returns:
+        bool: True if all required variables are set, False otherwise
+              如果所有必需的变量都已设置则返回True，否则返回False
+    """
     from src.config.config import Config
     required_vars = {
         "QWEN_API_KEY": Config.QWEN_API_KEY,
@@ -77,7 +88,16 @@ def check_environment_variables():
     return True
 
 def create_all_agents(llm):
-    """创建所有智能体的公共函数 / Public function to create all agents"""
+    """
+    Create all agents used in the workflow / 创建所有智能体的公共函数
+    
+    Args:
+        llm: Language model instance / 语言模型实例
+    
+    Returns:
+        dict: Dictionary mapping agent names to agent instances
+              将智能体名称映射到智能体实例的字典
+    """
     from src.agents.task_organizing_agent import TaskOrganizingAgent
     from src.agents.Creative_Designing_agent import CreativeDesigningAgent
     from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
@@ -113,7 +133,15 @@ def create_all_agents(llm):
     }
 
 def extract_feedback_from_result(result):
-    """从结果中提取反馈信息 / Extract feedback information from results"""
+    """
+    Extract feedback information from task results for iterative improvement / 从结果中提取反馈信息用于迭代改进
+    
+    Args:
+        result: Task execution result (string or dict) / 任务执行结果（字符串或字典）
+    
+    Returns:
+        str: Extracted feedback text / 提取的反馈文本
+    """
     try:
         # 尝试解析JSON结果 / Try to parse JSON results
         if isinstance(result, str):
@@ -144,7 +172,15 @@ def extract_feedback_from_result(result):
         return "无法提取具体反馈信息，请重新设计材料方案。/ Unable to extract specific feedback information, please redesign the material solution."
 
 def check_if_iteration_needed(result):
-    """检查是否需要迭代设计 / Check if iterative design is needed"""
+    """
+    Check if the design needs iteration based on evaluation scores / 根据评估分数检查是否需要迭代设计
+    
+    Args:
+        result: Evaluation result containing scores and rankings / 包含分数和排名的评估结果
+    
+    Returns:
+        bool: True if iteration is needed, False otherwise / 如需迭代返回True，否则返回False
+    """
     from src.config.config import Config
     try:
         # 尝试解析JSON结果 / Try to parse JSON results
@@ -179,7 +215,17 @@ def check_if_iteration_needed(result):
         return False
 
 def run_design_iteration(user_requirement, llm, iteration_count=0):
-    """运行设计迭代 / Run design iteration"""
+    """
+    Run iterative design process until acceptable results or max iterations / 运行迭代设计过程直到获得可接受的结果或达到最大迭代次数
+    
+    Args:
+        user_requirement: User's material design requirements / 用户的材料设计需求
+        llm: Language model instance / 语言模型实例
+        iteration_count: Current iteration count (default: 0) / 当前迭代次数（默认：0）
+    
+    Returns:
+        str: Final design result or max iteration message / 最终设计结果或最大迭代次数消息
+    """
     from src.config.config import Config
     if iteration_count >= Config.MAX_DESIGN_ITERATIONS:
         return "已达到最大迭代次数，停止迭代设计。"
@@ -205,12 +251,24 @@ def run_design_iteration(user_requirement, llm, iteration_count=0):
         return result
 
 def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
-    """运行预设工作流模式 / Run preset workflow mode
+    """
+    Run preset workflow mode with fixed task sequence / 运行预设工作流模式，按固定任务序列执行
+    
+    This mode executes all tasks in a predefined order:
+    1. Material Design / 材料设计
+    2. Evaluation (3 experts in parallel) / 评估（3个专家）
+    3. Final Validation / 最终验证
+    4. Synthesis Method / 合成方法
+    5. Mechanism Analysis / 机理分析
+    6. Operation Suggestion / 操作建议
     
     Args:
-        user_requirement: 用户需求
-        llm: LLM实例
-        monitor: 工作流监控器实例（可选）
+        user_requirement: User's material design requirements / 用户需求
+        llm: Language model instance / LLM实例
+        monitor: Workflow monitor instance (optional) / 工作流监控器实例（可选）
+    
+    Returns:
+        Result from crew execution / Crew执行结果
     """
     print("启动预设工作流模式...")
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -230,37 +288,36 @@ def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
     # 设置监控器信息
     monitor.set_workflow_info(user_requirement, "preset", is_async=False)
     
-    # 创建所有智能体 / Create all agents
+    # Create all agents for the workflow / 创建所有智能体
     agents = create_all_agents(llm)
     
-    # 创建任务，将用户需求传递给任务 / Create tasks and pass user requirements to tasks
-    # 1. 首先创建材料设计任务 / First create material design task
+    # Create tasks and pass user requirements to each task / 创建任务，将用户需求传递给任务
+    # 1. First create material design task / 首先创建材料设计任务
     design_task = DesignTask(llm).create_task(agents['material_designer'], user_requirement=user_requirement)
     
-    # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
-    # 移除了预执行调用以避免冗余 / Removed pre-execution to avoid redundancy
+    # Tools are called by Agents on-demand and cached via ContextStore / 工具由 Agent 按需调用，通过 ContextStore 缓存结果
+    # Pre-execution removed to avoid redundancy / 移除了预执行调用以避免冗余
     
-    # 2. 为每个评估专家创建评估任务，都依赖于设计任务 / Create evaluation tasks for each evaluation expert, all dependent on design task
-    # 明确传递用户需求给评估任务，以确保工具调用策略得到执行
+    # 2. Create evaluation tasks for each expert, all dependent on design task / 为每个评估专家创建评估任务，都依赖于设计任务
+    # Explicitly pass user requirements to ensure tool calling strategy is executed / 明确传递用户需求给评估任务，以确保工具调用策略得到执行
     evaluation_task_a = EvaluationTask(llm).create_task(agents['expert_a'], design_task, user_requirement=user_requirement)
     evaluation_task_b = EvaluationTask(llm).create_task(agents['expert_b'], design_task, user_requirement=user_requirement)
     evaluation_task_c = EvaluationTask(llm).create_task(agents['expert_c'], design_task, user_requirement=user_requirement)
     
-    # 3. 创建最终验证任务，依赖于所有评估任务 / Create final validation task, dependent on all evaluation tasks
+    # 3. Create final validation task that synthesizes all evaluation results / 创建最终验证任务，依赖于所有评估任务
     final_validation_task = FinalValidationTask(llm).create_task(agents['final_validator'], 
                                                            [design_task, evaluation_task_a, evaluation_task_b, evaluation_task_c], user_requirement=user_requirement)
     
-    # 4. 创建合成方法任务，依赖于最终验证任务 / Create synthesis method task, dependent on final validation task
+    # 4. Create synthesis method task for material preparation guidance / 创建合成方法任务，依赖于最终验证任务
     synthesis_method_task = SynthesisMethodTask(llm).create_task(agents['synthesis_expert'], final_validation_task, user_requirement=user_requirement)
     
-    # 5. 创建机理分析任务，依赖于最终验证任务 / Create mechanism analysis task, dependent on final validation task
+    # 5. Create mechanism analysis task to understand material properties / 创建机理分析任务，依赖于最终验证任务
     mechanism_analysis_task = MechanismAnalysisTask(llm).create_task(agents['mechanism_expert'], final_validation_task, user_requirement=user_requirement)
     
-    # 6. 创建操作建议任务，依赖于最终验证任务 / Create operation suggestion task, dependent on final validation task
+    # 6. Create operation suggestion task for practical application guidance / 创建操作建议任务，依赖于最终验证任务
     operation_suggesting_task = OperationSuggestingTask(llm).create_task(agents['operation_suggesting'], final_validation_task, user_requirement=user_requirement)
     
-    # 创建任务列表和 Agent 映射（用于监控器）
-    # Create task list and Agent mapping (for monitor)
+    # Create task list and Agent mapping for monitoring and tracking / 创建任务列表和 Agent 映射（用于监控器）
     task_agent_map = [
         (design_task, agents['material_designer'], 'Creative_Designing_agent'),
         (evaluation_task_a, agents['expert_a'], 'Assessment_Screening_agent_A'),
@@ -272,10 +329,10 @@ def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
         (operation_suggesting_task, agents['operation_suggesting'], 'Operation_Suggesting_agent'),
     ]
     
-    # 创建任务描述到 Agent 的映射
+    # Create mapping from task description to Agent for callback tracking / 创建任务描述到 Agent 的映射
     task_desc_to_agent = {}
     for task, agent, role_name in task_agent_map:
-        desc_key = str(task.description)[:100]  # 使用描述前100字符作为键
+        desc_key = str(task.description)[:100]  # Use first 100 chars of description as key / 使用描述前100字符作为键
         task_desc_to_agent[desc_key] = (agent, role_name)
 
     # 定义任务回调函数，用于保存整体流程结果和监控数据
@@ -363,7 +420,7 @@ def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
                 json.dump(json_output, f, ensure_ascii=False, indent=2)
             f.write(f"\n{'='*60}\n")
     
-    # 创建Crew / Create Crew
+    # Create Crew with all agents and tasks / 创建Crew包含所有智能体和任务
     ecomats_crew = Crew(
         agents=[
             agents['coordinator'], 
@@ -386,10 +443,10 @@ def run_preset_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
             synthesis_method_task,
             mechanism_analysis_task,
             operation_suggesting_task
-        ],  # 任务按顺序执行 / Tasks executed in order
-        process=Process.sequential,  # 使用顺序流程执行任务 / Use sequential process to execute tasks
+        ],  # Tasks executed in sequential order / 任务按顺序执行
+        process=Process.sequential,  # Use sequential process for task execution / 使用顺序流程执行任务
         verbose=Config.VERBOSE,
-        task_callback=task_callback  # 添加任务回调函数
+        task_callback=task_callback  # Add task callback for monitoring / 添加任务回调函数
     )
     
     # 执行 / Execute
@@ -425,15 +482,20 @@ def _execute_material_tools(user_requirement: str, project_root: str):
 
 
 def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = None):
-    """运行智能体自主调度模式 / Run agent autonomous scheduling mode
+    """
+    Run agent autonomous scheduling mode based on TOA intent recognition / 运行智能体自主调度模式，基于TOA意图识别
     
-    基于 TOA 意图识别的全新架构，直接使用 intent 对象控制流程
-    New architecture based on TOA intent recognition, directly using intent object to control workflow
+    New architecture based on TOA (Task Organizing Agent) that analyzes user intent
+    and dynamically creates only necessary tasks instead of executing all tasks.
+    基于TOA（任务组织代理）的全新架构，分析用户意图并动态创建必要的任务，而不是执行所有任务。
     
     Args:
-        user_requirement: 用户需求
-        llm: LLM实例
-        monitor: 工作流监控器实例（可选）
+        user_requirement: User's material design requirements / 用户需求
+        llm: Language model instance / LLM实例
+        monitor: Workflow monitor instance (optional) / 工作流监控器实例（可选）
+    
+    Returns:
+        Crew execution result / Crew执行结果
     """
     print("启动智能体自主调度模式... / Starting autonomous scheduling mode...")
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -470,13 +532,13 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
     monitor.set_workflow_info(user_requirement, "autonomous", is_async=False)
     
     # ============================================================
-    # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
+    # ✨ TOA Intent-Driven Workflow / TOA 意图驱动流程
     # ============================================================
     print("\n🧠 TOA 正在分析用户意图... / TOA analyzing user intent...")
     intent = coordinator.analyze_user_intent(user_requirement)
     print(f"✅ 意图分析完成 / Intent analysis complete: {intent['reasoning']}")
     
-    # 打印意图详情 / Print intent details
+    # Print detailed intent information / 打印意图详情
     print(f"\n📊 意图详情 / Intent Details:")
     print(f"   • 需要设计 / Needs Design: {intent.get('needs_design', False)}")
     print(f"   • 需要评估 / Needs Evaluation: {intent.get('needs_evaluation', False)}")
@@ -486,7 +548,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
     print(f"   • 需要操作指导 / Needs Operation: {intent.get('needs_operation', False)}")
     print(f"   • 提供的材料 / Material Provided: {intent.get('material_provided', None)}")
     
-    # 初始化任务和智能体列表 / Initialize task and agent lists
+    # Initialize task and agent lists / 初始化任务和智能体列表
     required_tasks = []
     required_agents = []
     seen_roles = set()
@@ -494,7 +556,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
     final_validation_task = None
     
     # ============================================================
-    # Step 1: 处理材料设计 / Handle Material Design
+    # Step 1: Handle Material Design / 处理材料设计
     # ============================================================
     if intent.get('needs_design', False):
         print("\n🛠️ 创建材料设计任务 / Creating material design task...")
@@ -506,31 +568,29 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
         required_tasks.append(design_task)
         
-        # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
+        # Tools are called by Agents on-demand and cached via ContextStore / 工具由 Agent 按需调用，通过 ContextStore 缓存结果
         
     elif intent.get('needs_evaluation', False) or intent.get('needs_mechanism', False) or intent.get('needs_synthesis', False) or intent.get('needs_operation', False):
-        # 用户提供了材料，创建虚拟上下文任务（不实际执行）
-        # User provided material, create virtual context task (not executed)
+        # User provided material, create virtual context task (not executed) / 用户提供了材料，创建虚拟上下文任务（不实际执行）
         material_info = intent.get('material_provided') or user_requirement
         print(f"\n📝 使用用户提供的材料信息 / Using user-provided material info: {material_info[:50]}...")
         
-        # 创建虚拟上下文任务，仅用于传递材料信息，不添加到任务列表
-        # Create virtual context task, only for passing material info, not added to task list
+        # Create virtual context task for passing material info, not added to task list / 创建虚拟上下文任务，仅用于传递材料信息，不添加到任务列表
         design_task = Task(
             description=f"Existing material provided by user:\n{user_requirement}",
             expected_output="Material information for downstream tasks",
-            agent=coordinator_agent  # 使用协调员作为占位符 / Use coordinator as placeholder
+            agent=coordinator_agent  # Use coordinator as placeholder / 使用协调员作为占位符
         )
-        # 注意：虚拟任务不添加到 required_tasks / Note: Virtual task NOT added to required_tasks
-        # 工具由 Agent 按需调用，通过 ContextStore 缓存结果 / Tools called by Agent as needed, cached via ContextStore
+        # Note: Virtual task NOT added to required_tasks / 注意：虚拟任务不添加到 required_tasks
+        # Tools are called by Agents on-demand and cached via ContextStore / 工具由 Agent 按需调用，通过 ContextStore 缓存结果
     
     # ============================================================
-    # Step 2: 处理评估任务 / Handle Evaluation Tasks
+    # Step 2: Handle Evaluation Tasks / 处理评估任务
     # ============================================================
     if intent.get('needs_evaluation', False):
         evaluation_mode = intent.get('evaluation_mode', 'with_summary')
         
-        # 获取评估智能体 / Get evaluation agents
+        # Get all evaluation agents (3 experts: A, B, C) / 获取评估智能体
         evaluation_agents = coordinator.get_all_agents_for_task("evaluation")
         evaluation_tasks = []
         
@@ -544,11 +604,11 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         required_tasks.extend(evaluation_tasks)
         
         if evaluation_mode == 'experts_only':
-            # 仅专家评分模式 / Experts-only mode
+            # Experts-only mode: 3 ASA experts scoring, no final summary / 仅专家评分模式
             print(f"\n✅ 仅评估模式：三个 ASA 专家评分，不进行最终总结")
             print(f"   Experts-only mode: 3 ASA experts scoring, no final summary")
         else:
-            # 完整评估模式（包含最终总结） / Full evaluation mode (with summary)
+            # Full evaluation mode (with final summary) / 完整评估模式（包含最终总结）
             print(f"\n📊 完整评估模式：三个 ASA 专家评分 + 最终总结")
             print(f"   Full evaluation mode: 3 ASA experts + final summary")
             
@@ -565,7 +625,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
             required_tasks.append(final_validation_task)
     
     # ============================================================
-    # Step 3: 处理机理分析任务 / Handle Mechanism Analysis Task
+    # Step 3: Handle Mechanism Analysis Task / 处理机理分析任务
     # ============================================================
     if intent.get('needs_mechanism', False):
         print(f"\n🔬 创建机理分析任务 / Creating mechanism analysis task...")
@@ -581,7 +641,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         required_tasks.append(mechanism_task)
     
     # ============================================================
-    # Step 4: 处理合成方法任务 / Handle Synthesis Method Task
+    # Step 4: Handle Synthesis Method Task / 处理合成方法任务
     # ============================================================
     if intent.get('needs_synthesis', False):
         print(f"\n🧪 创建合成方法任务 / Creating synthesis method task...")
@@ -597,7 +657,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         required_tasks.append(synthesis_task)
     
     # ============================================================
-    # Step 5: 处理操作指导任务 / Handle Operation Guidance Task
+    # Step 5: Handle Operation Guidance Task / 处理操作指导任务
     # ============================================================
     if intent.get('needs_operation', False):
         print(f"\n📖 创建操作指导任务 / Creating operation guidance task...")
@@ -613,7 +673,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         required_tasks.append(operation_task)
     
     # ============================================================
-    # 检查是否有任务 / Check if there are any tasks
+    # Check if there are any tasks / 检查是否有任务
     # ============================================================
     if not required_tasks:
         print("\n⚠️ 未识别出任何任务，默认执行材料设计 / No tasks identified, defaulting to material design")
@@ -625,7 +685,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         required_tasks.append(design_task)
     
     # ============================================================
-    # 打印任务摘要 / Print task summary
+    # Print task summary / 打印任务摘要
     # ============================================================
     print(f"\n{'='*60}")
     print(f"📝 任务摘要 / Task Summary")
@@ -637,7 +697,7 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         print(f"   {i}. {agent_role}")
     print(f"{'='*60}\n")
     
-    # 创建任务描述到 Agent 的映射（用于监控器）
+    # Create mapping from task description to Agent for callback tracking / 创建任务描述到 Agent 的映射（用于监控器）
     task_desc_to_agent = {}
     for task in required_tasks:
         if task and task.agent:
@@ -729,16 +789,15 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
                 json.dump(json_output, f, ensure_ascii=False, indent=2)
             f.write(f"\n{'='*60}\n")
     
-    # 创建Crew / Create Crew
-    # 基于 intent 判断是否需要设计任务 / Based on intent to determine if design task is needed
+    # Create Crew based on intent-driven task selection / 创建Crew
+    # Based on intent to determine if design task is needed / 基于 intent 判断是否需要设计任务
     all_tasks = required_tasks
     if design_task and intent.get('needs_design', False):
-        # 如果需要设计，将设计任务放在最前面 / If design needed, put design task first
-        # 注意：design_task 已经在 Step 1 中添加到 required_tasks，无需重复添加
+        # If design needed, design task is already in required_tasks / 如果需要设计，design_task 已经在 required_tasks中
+        # Note: design_task already added to required_tasks in Step 1, no need to re-add / 注意：design_task 已经在 Step 1 中添加到 required_tasks，无需重复添加
         all_tasks = required_tasks
     elif design_task:
-        # 如果是虚拟上下文任务（用户提供材料），不将其添加到任务列表中
-        # If virtual context task (user provided material), don't add to task list
+        # If virtual context task (user provided material), don't add to task list / 如果是虚拟上下文任务（用户提供材料），不将其添加到任务列表中
         all_tasks = required_tasks
     
     ecomats_crew = Crew(
@@ -770,16 +829,26 @@ def run_autonomous_workflow(user_requirement, llm, monitor: WorkflowMonitor = No
         return run_tool_only_summary(user_requirement)
 
 def main():
+    """
+    Main entry point for synchronous mode / 同步模式主入口
+    
+    This function:
+    1. Loads environment variables / 加载环境变量
+    2. Gets user input for material design requirements / 获取用户输入的材料设计需求
+    3. Selects workflow mode (preset or autonomous) / 选择工作流模式（预设或自主）
+    4. Creates LLM instance / 创建LLM实例
+    5. Executes selected workflow / 执行选定的工作流
+    """
     print("基于CrewAI的ecomats多智能体系统 / ECOMATS Multi-Agent System Based on CrewAI")
     print("=" * 50)
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     sys.path.insert(0, os.path.abspath(project_root))
-    # 强制从项目根目录加载 .env 并覆盖，确保与独立测试一致
+    # Force load .env from project root and override to ensure consistency with standalone tests / 强制从项目根目录加载 .env 并覆盖，确保与独立测试一致
     from dotenv import load_dotenv, dotenv_values
     import os as _os
     _dotenv_path = os.path.join(project_root, '.env')
     load_dotenv(_dotenv_path, override=True)
-    # 再次将 .env 的值写入环境，避免IDE/任务运行器覆盖
+    # Write .env values to environment again to avoid IDE/task runner override / 再次将 .env 的值写入环境，避免IDE/任务运行器覆盖
     try:
         _vals = dotenv_values(_dotenv_path)
         for k, v in (_vals or {}).items():
@@ -792,19 +861,19 @@ def main():
     if not check_environment_variables():
         return
 
-    # 获取用户自定义输入 / Get user custom input
+    # Get user-defined input for material design requirements / 获取用户自定义输入
     user_requirement = get_user_input()
     
-    # 获取用户选择的工作模式 / Get user-selected workflow mode
+    # Get user-selected workflow mode / 获取用户选择的工作模式
     workflow_mode = get_workflow_mode()
     
     if not Config.is_api_key_valid(Config.QWEN_API_KEY):
-        print("错误：API密钥未正确设置")
+        print("错误：API密钥未正确设置 / Error: API key not set correctly")
         return
     
-    # 设置dashscope的API密钥
+    # Set dashscope API key / 设置dashscope的API密钥
     dashscope.api_key = Config.QWEN_API_KEY
-    # 显式设置 OPENAI 兼容环境，确保底层Provider不读取旧变量
+    # Explicitly set OPENAI compatible environment to ensure underlying Provider doesn't read old variables / 显式设置 OPENAI 兼容环境，确保底层Provider不读取旧变量
     import os as _os
     _os.environ["OPENAI_API_KEY"] = Config.QWEN_API_KEY or ""
     _os.environ["OPENAI_API_BASE"] = Config.QWEN_API_BASE or ""
@@ -812,23 +881,32 @@ def main():
     
     from src.utils.llm_config import create_llm
     llm = create_llm()
-    print("成功创建Qwen3 LLM实例用于主程序")
+    print("成功创建Qwen3 LLM实例用于主程序 / Successfully created Qwen3 LLM instance for main program")
     
-    # 创建监控器 / Create monitor
+    # Create monitor for tracking workflow execution / 创建监控器
     monitor = create_monitor()
-    print("📊 工作流监控器已初始化")
+    print("📊 工作流监控器已初始化 / Workflow monitor initialized")
     
-    # 根据用户选择的工作模式执行相应的流程 / Execute corresponding process based on user-selected workflow mode
+    # Execute corresponding workflow based on user-selected mode / 根据用户选择的工作模式执行相应的流程
     if workflow_mode == "preset":
         run_design_iteration(user_requirement, llm)
     else:
         run_autonomous_workflow(user_requirement, llm, monitor)
     
-    # 工作流结果和监控报告已经通过task_callback保存到outputs文件夹中
-    print("\n工作流执行完成，结果已保存到 outputs 文件夹")
-    print("📊 监控报告包括：JSON格式 (monitor_report_*.json) 和 可读格式 (monitor_report_*.txt)")
+    # Workflow results and monitoring reports have been saved to outputs folder via task_callback / 工作流结果和监控报告已经通过task_callback保存到outputs文件夹中
+    print("\n工作流执行完成，结果已保存到 outputs 文件夹 / Workflow execution completed, results saved to outputs folder")
+    print("📊 监控报告包括：JSON格式 (monitor_report_*.json) 和 可读格式 (monitor_report_*.txt) / Monitoring reports include: JSON format (monitor_report_*.json) and readable format (monitor_report_*.txt)")
 
 def run_tool_only_summary(user_requirement):
+    """
+    Fallback function when crew execution fails - executes only mandatory tool calls / 当crew执行失败时的回退函数 - 仅执行必要的工具调用
+    
+    Args:
+        user_requirement: User's requirement containing material formula / 用户需求，包含材料化学式
+    
+    Returns:
+        dict: Tool execution results / 工具执行结果
+    """
     project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     sys.path.insert(0, os.path.abspath(project_root))
     from src.utils.assessment_tool_executor import AssessmentToolExecutor

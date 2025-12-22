@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 """
-ECOMATS - CrewAI 1.7.0异步版本
-支持异步Crew执行,显著提升性能
+ECOMATS - CrewAI 1.7.0 Async Version / ECOMATS - CrewAI 1.7.0异步版本
+
+Supports async Crew execution with 2-3x performance improvement through:
+- Parallel task execution (evaluation agents run simultaneously)
+- Async crew kickoff (akickoff)
+- Memory system with DashScope embeddings
+
+支持异步Crew执行，通过以下方式显著提升2-3倍性能：
+- 并行任务执行（评估智能体同时运行）
+- 异步crew启动（akickoff）
+- 使用DashScope嵌入的记忆系统
 """
 
 import sys
@@ -13,53 +22,63 @@ import signal
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Windows 兼容性补丁：SIGHUP 信号支持
+# Windows compatibility patch: SIGHUP signal support / Windows 兼容性补丁：SIGHUP 信号支持
 if sys.platform == 'win32':
     if not hasattr(signal, 'SIGHUP'):
-        signal.SIGHUP = None  # Windows 不支持 SIGHUP，创建占位符
-    # 设置控制台编码为 UTF-8，避免中文乱码
+        signal.SIGHUP = None  # Windows doesn't support SIGHUP, create placeholder / Windows 不支持 SIGHUP，创建占位符
+    # Set console encoding to UTF-8 to avoid Chinese garbled text / 设置控制台编码为 UTF-8，避免中文乱码
     try:
         sys.stdout.reconfigure(encoding='utf-8')
         sys.stderr.reconfigure(encoding='utf-8')
     except Exception:
-        pass  # Python < 3.7 不支持 reconfigure
+        pass  # Python < 3.7 doesn't support reconfigure / Python < 3.7 不支持 reconfigure
 
-# 关键:在导入CrewAI之前设置环境变量!
-load_dotenv()  # 先加载.env
+# Critical: Set environment variables BEFORE importing CrewAI! / 关键：在导入CrewAI之前设置环境变量！
+load_dotenv()  # Load .env first / 先加载.env
 
-# 设置 OpenAI 兼容的环境变量（CrewAI 异步模式需要）
+# Set OpenAI-compatible environment variables (required for CrewAI async mode) / 设置 OpenAI 兼容的环境变量（CrewAI 异步模式需要）
 _api_key = os.getenv('QWEN_API_KEY') or 'dummy'
 _api_base = os.getenv('QWEN_API_BASE') or 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 os.environ['OPENAI_API_KEY'] = _api_key
 os.environ['OPENAI_API_BASE'] = _api_base
-os.environ['OPENAI_BASE_URL'] = _api_base  # CrewAI 异步客户端可能使用此变量
+os.environ['OPENAI_BASE_URL'] = _api_base  # CrewAI async client may use this variable / CrewAI 异步客户端可能使用此变量
 
-# Monkey patch: 修复CrewAI异步memory的bug
-# CrewAI 1.7.0的memory在异步模式下会调用asearch(),但ChromaDB客户端是同步的
-# 这个patch直接使用同步搜索,避免异步错误
+# Monkey patch: Fix CrewAI async memory bug / Monkey patch：修复CrewAI异步memory的bug
+# CrewAI 1.7.0's memory calls asearch() in async mode, but ChromaDB client is synchronous
+# This patch uses sync search directly to avoid async errors
+# CrewAI 1.7.0的memory在异步模式下会调用asearch()，但ChromaDB客户端是同步的
+# 这个patch直接使用同步搜索，避免异步错误
 
-# Patch 1: 修复 ChromaDBClient.asearch()
+# Patch 1: Fix ChromaDBClient.asearch() / 修复 ChromaDBClient.asearch()
 import crewai.rag.chromadb.client as chromadb_client_module
 original_ChromaDBClient = chromadb_client_module.ChromaDBClient
 
 class PatchedChromaDBClient(original_ChromaDBClient):
-    """修复异步搜索的ChromaDBClient - 在异步方法中调用同步实现"""
+    """
+    Patched ChromaDBClient - calls sync implementation in async method / 修复异步搜索的ChromaDBClient - 在异步方法中调用同步实现
+    """
     async def asearch(self, **kwargs):
-        """异步搜索直接使用同步search()"""
-        # 直接调用同步方法,跳过异步客户端检查
+        """
+        Async search directly uses synchronous search() / 异步搜索直接使用同步search()
+        """
+        # Call sync method directly, skip async client check / 直接调用同步方法，跳过异步客户端检查
         return self.search(**kwargs)
 
 chromadb_client_module.ChromaDBClient = PatchedChromaDBClient
 
-# Patch 2: 修复 RAGStorage.asearch()
+# Patch 2: Fix RAGStorage.asearch() / 修复 RAGStorage.asearch()
 import crewai.memory.storage.rag_storage as rag_storage_module
 original_RAGStorage = rag_storage_module.RAGStorage
 
 class PatchedRAGStorage(original_RAGStorage):
-    """修复异步搜索的RAGStorage - 直接使用同步方法"""
+    """
+    Patched RAGStorage - directly uses sync method / 修复异步搜索的RAGStorage - 直接使用同步方法
+    """
     async def asearch(self, query: str, limit: int = 5, filter = None, score_threshold: float = 0.6):
-        """异步搜索直接使用同步search()"""
-        # 直接调用同步方法,跳过异步调用
+        """
+        Async search directly uses synchronous search() / 异步搜索直接使用同步search()
+        """
+        # Call sync method directly, skip async call / 直接调用同步方法，跳过异步调用
         return self.search(query, limit, filter, score_threshold)
 
 rag_storage_module.RAGStorage = PatchedRAGStorage
@@ -68,9 +87,9 @@ print("✅ CrewAI 异步内存兼容性补丁已应用 / Async memory compatibil
 
 from crewai import Crew, Process
 
-# 配置日志,抑制EAS相关的ERROR提示
+# Configure logging to suppress EAS-related ERROR messages / 配置日志，抑制EAS相关的ERROR提示
 logging.basicConfig(level=logging.WARNING)
-# 将src.agents的日志级别设为CRITICAL,避免EAS错误提示
+# Set src.agents log level to CRITICAL to avoid EAS error messages / 将src.agents的日志级别设为CRITICAL，避免EAS错误提示
 for logger_name in ['src.agents.Creative_Designing_agent',
                      'src.agents.Assessment_Screening_agent_A',
                      'src.agents.Assessment_Screening_agent_B', 
@@ -91,13 +110,17 @@ from src.utils.workflow_monitor import WorkflowMonitor, create_monitor, get_moni
 
 
 def create_dashscope_embedder():
-    """创建DashScope Embedding类 - 用于CrewAI记忆系统
-    
-    关键点:
-    1. 必须同时继承ChromaDB和CrewAI的EmbeddingFunction
-    2. 返回类型必须是list[np.ndarray]
     """
-    # 导入两个基类
+    Create DashScope Embedding class for CrewAI memory system / 创建DashScope Embedding类 - 用于CrewAI记忆系统
+    
+    Key points / 关键点:
+    1. Must inherit from both ChromaDB and CrewAI's EmbeddingFunction / 必须同时继承ChromaDB和CrewAI的EmbeddingFunction
+    2. Return type must be list[np.ndarray] / 返回类型必须是list[np.ndarray]
+    
+    Returns:
+        class: DashScopeEmbeddingFunction class (not instance) / DashScopeEmbeddingFunction类（不是实例）
+    """
+    # Import both base classes / 导入两个基类
     from chromadb.api.types import EmbeddingFunction as ChromaEmbeddingFunction
     from crewai.rag.embeddings.providers.custom.embedding_callable import CustomEmbeddingFunction
     from crewai.rag.core.types import Documents, Embeddings
@@ -106,8 +129,10 @@ def create_dashscope_embedder():
     import os
     
     class DashScopeEmbeddingFunction(CustomEmbeddingFunction, ChromaEmbeddingFunction):
-        """使用OpenAI SDK调用DashScope Embedding API
+        """
+        Use OpenAI SDK to call DashScope Embedding API / 使用OpenAI SDK调用DashScope Embedding API
         
+        Inherits from both ChromaDB and CrewAI base classes to satisfy Pydantic validation
         同时继承ChromaDB和CrewAI的基类以满足Pydantic验证
         """
         
@@ -120,18 +145,18 @@ def create_dashscope_embedder():
             
         def __call__(self, input: Documents) -> Embeddings:
             """
-            将文本转换为嵌入向量
+            Convert text to embedding vectors / 将文本转换为嵌入向量
             
             Args:
-                input: 字符串列表 (Documents = list[str])
+                input: List of strings (Documents = list[str]) / 字符串列表 (Documents = list[str])
                 
             Returns:
-                Embeddings: numpy数组列表 (list[np.ndarray])
+                Embeddings: List of numpy arrays (list[np.ndarray]) / numpy数组列表 (list[np.ndarray])
             """
             try:
-                # DashScope text-embedding-v2 限制: 1-2048 字符
-                # 截断超长文本
-                MAX_LENGTH = 2048  # 留一些余量
+                # DashScope text-embedding-v2 limit: 1-2048 characters / DashScope text-embedding-v2 限制：1-2048 字符
+                # Truncate overly long text / 截断超长文本
+                MAX_LENGTH = 2048  # Leave some margin / 留一些余量
                 truncated_input = [
                     text[:MAX_LENGTH] if len(text) > MAX_LENGTH else text
                     for text in input
@@ -141,23 +166,39 @@ def create_dashscope_embedder():
                     model=self.model,
                     input=truncated_input
                 )
-                # 关键: 返回numpy数组列表!
+                # Critical: Return list of numpy arrays! / 关键：返回numpy数组列表！
                 embeddings = [
                     np.array(item.embedding, dtype=np.float32) 
                     for item in response.data
                 ]
                 return embeddings
             except Exception as e:
-                print(f"⚠️ DashScope Embedding错误: {e}")
-                # 返回空向量作为默认值(维度1536,与v2一致)
+                print(f"⚠️ DashScope Embedding Error / DashScope Embedding错误: {e}")
+                # Return zero vectors as default (dimension 1536, consistent with v2) / 返回空向量作为默认值（维度1536，与v2一致）
                 return [np.zeros(1536, dtype=np.float32) for _ in range(len(input))]
     
-    return DashScopeEmbeddingFunction  # 返回类而不是实例!
+    return DashScopeEmbeddingFunction  # Return class, not instance! / 返回类而不是实例！
 
 
-# 通用 task_callback 创建器 (模块级别) / Generic task_callback creator (module level)
+# Generic task_callback creator (module level) / 通用 task_callback 创建器（模块级别）
 def create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent):
-    """创建支持并行任务的 task_callback 工厂函数"""
+    """
+    Create task_callback factory function that supports parallel tasks / 创建支持并行任务的 task_callback 工厂函数
+    
+    This factory handles:
+    - Parallel task timing (evaluation agents A/B/C share start time) / 并行任务计时（评估智能体A/B/C共享开始时间）
+    - Agent interaction tracking / 智能体交互追踪
+    - Monitoring data collection / 监控数据收集
+    
+    Args:
+        monitor: Workflow monitor instance / 工作流监控器实例
+        task_start_times: Dict to store task start times / 存储任务开始时间的字典
+        current_agent_context: Thread-local storage for current agent / 当前智能体的线程本地存储
+        last_completed_agent: List containing last completed agent role / 包含最后完成的智能体角色的列表
+    
+    Returns:
+        function: Factory function that creates task_callback / 创建task_callback的工厂函数
+    """
     import time
     
     def create_task_callback(task_completion_times, crew_start_time, task_counter, suffix=""):
@@ -228,7 +269,15 @@ def create_task_callback_factory(monitor, task_start_times, current_agent_contex
 
 
 def get_ui_text(key):
-    """获取UI文本 / Get UI text"""
+    """
+    Get UI text in user's language / 获取用户语言的UI文本
+    
+    Args:
+        key: Text key to look up / 要查找的文本键
+    
+    Returns:
+        str: Localized text or key if not found / 本地化文本，如果未找到则返回键
+    """
     try:
         from src.locales.texts import TEXTS
         lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
@@ -238,7 +287,12 @@ def get_ui_text(key):
 
 
 def select_language():
-    """选择语言 / Select language"""
+    """
+    Interactive language selection for user interface / 交互式选择用户界面语言
+    
+    Returns:
+        str: Selected language code ('zh' or 'en') / 选择的语言代码（'zh'或'en'）
+    """
     from src.locales import set_language
     
     print("\n" + "="*70)
@@ -264,7 +318,12 @@ def select_language():
 
 
 def get_user_input():
-    """获取用户材料设计需求 / Get user material design requirements"""
+    """
+    Get user material design requirements with bilingual prompts / 获取用户材料设计需求，使用双语提示
+    
+    Returns:
+        str: User's material design requirement / 用户的材料设计需求
+    """
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     
     print("\n" + "="*70)
@@ -284,7 +343,13 @@ def get_user_input():
 
 
 def get_workflow_mode():
-    """获取工作模式 / Get workflow mode"""
+    """
+    Get workflow mode selection from user / 获取用户选择的工作模式
+    
+    Returns:
+        tuple: (mode_str, is_async) where mode is 'preset' or 'autonomous', and is_async is bool
+               (模式字符串，是否异步) 其中模式为'preset'或'autonomous'，is_async为布尔值
+    """
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     
     if lang == 'en':
@@ -317,7 +382,15 @@ def get_workflow_mode():
 
 
 def create_all_agents(llm):
-    """创建所有智能体"""
+    """
+    Create all agents for the workflow / 创建所有智能体
+    
+    Args:
+        llm: Language model instance / 语言模型实例
+    
+    Returns:
+        dict: Dictionary mapping agent names to agent instances / 将智能体名称映射到智能体实例的字典
+    """
     from src.agents.task_organizing_agent import TaskOrganizingAgent
     from src.agents.Creative_Designing_agent import CreativeDesigningAgent
     from src.agents.Assessment_Screening_agent_A import AssessmentScreeningAgentA
@@ -342,13 +415,21 @@ def create_all_agents(llm):
 
 
 async def run_autonomous_workflow_async(user_requirement, llm, monitor: WorkflowMonitor = None):
-    """异步自主调度工作流 - 基于 TOA 意图驱动架构
-    Async autonomous workflow - based on TOA intent-driven architecture
+    """
+    Async autonomous workflow based on TOA intent-driven architecture / 异步自主调度工作流 - 基于 TOA 意图驱动架构
+    
+    This mode analyzes user intent and dynamically creates only necessary tasks,
+    then executes them asynchronously for maximum performance.
+    该模式分析用户意图并动态创建必要的任务，
+    然后异步执行以获得最大性能。
     
     Args:
-        user_requirement: 用户需求
-        llm: LLM实例
-        monitor: 工作流监控器实例（可选）
+        user_requirement: User's material design requirements / 用户需求
+        llm: Language model instance / LLM实例
+        monitor: Workflow monitor instance (optional) / 工作流监控器实例（可选）
+    
+    Returns:
+        Crew execution result / Crew执行结果
     """
     from src.agents.task_organizing_agent import TaskOrganizingAgent
     from src.tasks.design_task import DesignTask
@@ -369,11 +450,11 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     
     agents = create_all_agents(llm)
     
-    # 创建 TOA 实例 / Create TOA instance
+    # Create TOA instance and register all agents / 创建 TOA 实例
     coordinator = TaskOrganizingAgent(llm)
     coordinator_agent = coordinator.create_agent()
     
-    # 注册所有智能体到 TOA / Register all agents to TOA
+    # Register all agents to TOA for dynamic task allocation / 注册所有智能体到 TOA
     coordinator.register_agent("TaskOrganizingAgent", coordinator_agent)
     coordinator.register_agent("CreativeDesigningAgent", agents['material_designer'])
     coordinator.register_agent("AssessmentScreeningAgent", [agents['expert_a'], agents['expert_b'], agents['expert_c']])
@@ -382,17 +463,17 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     coordinator.register_agent("SynthesisGuidingAgent", agents['synthesis_expert'])
     coordinator.register_agent("OperationSuggestingAgent", agents['operation_suggesting'])
     
-    # 初始化监控器 / Initialize monitor
+    # Initialize monitor / 初始化监控器
     if monitor is None:
         monitor = create_monitor()
     monitor.set_workflow_info(user_requirement, "autonomous", is_async=True)
     
-    # 任务开始时间记录 / Task start time tracking
+    # Task start time tracking / 任务开始时间记录
     import time
     task_start_times = {}
     
     # ============================================================
-    # ✨ TOA 意图驱动流程 / TOA Intent-Driven Workflow
+    # ✨ TOA Intent-Driven Workflow / TOA 意图驱动流程
     # ============================================================
     if lang == 'en':
         print("\n🧠 TOA analyzing user intent...")
@@ -427,7 +508,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     design_task = None
     final_validation_task = None
     
-    # Step 1: 处理材料设计 / Handle Material Design
+    # Step 1: Handle Material Design / 处理材料设计
     if intent.get('needs_design', False):
         if lang == 'en':
             print("\n🛠️ Creating material design task...")
@@ -440,7 +521,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
         required_tasks.append(design_task)
     elif intent.get('needs_evaluation', False) or intent.get('needs_mechanism', False) or intent.get('needs_synthesis', False) or intent.get('needs_operation', False):
-        # 创建虚拟上下文任务 / Create virtual context task
+        # Create virtual context task for user-provided material / 创建虚拟上下文任务
         material_info = intent.get('material_provided') or user_requirement
         if lang == 'en':
             print(f"\n📝 Using user-provided material: {material_info[:50]}...")
@@ -452,11 +533,11 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
             agent=coordinator_agent
         )
     
-    # Step 2: 处理评估任务 / Handle Evaluation Tasks
+    # Step 2: Handle Evaluation Tasks / 处理评估任务
     if intent.get('needs_evaluation', False):
         evaluation_mode = intent.get('evaluation_mode', 'with_summary')
         evaluation_agents = coordinator.get_all_agents_for_task("evaluation")
-        print(f"\n🔍 评估专家数量: {len(evaluation_agents)} - {[a.role for a in evaluation_agents]}")
+        print(f"\n🔍 评估专家数量 / Number of evaluation experts: {len(evaluation_agents)} - {[a.role for a in evaluation_agents]}")
         evaluation_tasks = []
         
         for agent in evaluation_agents:
@@ -464,7 +545,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
                 required_agents.append(agent)
                 seen_roles.add(agent.role)
             task = EvaluationTask(llm).create_task(agent, design_task, user_requirement)
-            task.async_execution = True  # 启用异步并行! / Enable async parallel!
+            task.async_execution = True  # Enable async parallel execution! / 启用异步并行！
             evaluation_tasks.append(task)
         
         required_tasks.extend(evaluation_tasks)
@@ -484,12 +565,12 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
             if final_validation_agent and final_validation_agent.role not in seen_roles:
                 required_agents.append(final_validation_agent)
                 seen_roles.add(final_validation_agent.role)
-                # 验证 ASA Overall 没有工具 / Verify ASA Overall has no tools
+                # Verify ASA Overall has no tools / 验证 ASA Overall 没有工具
                 agent_tools = getattr(final_validation_agent, 'tools', None)
                 if agent_tools:
-                    print(f"  ⚠️ ASA Overall 意外包含 {len(agent_tools)} 个工具: {[t.name if hasattr(t, 'name') else str(t) for t in agent_tools]}")
+                    print(f"  ⚠️ ASA Overall unexpectedly contains {len(agent_tools)} tools / ASA Overall 意外包含 {len(agent_tools)} 个工具: {[t.name if hasattr(t, 'name') else str(t) for t in agent_tools]}")
                 else:
-                    print(f"  ✅ ASA Overall 无工具（仅综合分析）")
+                    print(f"  ✅ ASA Overall has no tools (analysis only) / ASA Overall 无工具（仅综合分析）")
             final_validation_task = FinalValidationTask(llm).create_task(
                 final_validation_agent,
                 [design_task] + evaluation_tasks if design_task else evaluation_tasks,
@@ -497,7 +578,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
             )
             required_tasks.append(final_validation_task)
     
-    # Step 3: 处理机理分析任务 / Handle Mechanism Analysis Task
+    # Step 3: Handle Mechanism Analysis Task / 处理机理分析任务
     if intent.get('needs_mechanism', False):
         if lang == 'en':
             print(f"\n🔬 Creating mechanism analysis task...")
@@ -511,10 +592,10 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         mechanism_task = MechanismAnalysisTask(llm).create_task(
             mechanism_agent, context_task, user_requirement=user_requirement
         )
-        mechanism_task.async_execution = True  # 启用异步! / Enable async!
+        mechanism_task.async_execution = True  # Enable async! / 启用异步！
         required_tasks.append(mechanism_task)
     
-    # Step 4: 处理合成方法任务 / Handle Synthesis Method Task
+    # Step 4: Handle Synthesis Method Task / 处理合成方法任务
     if intent.get('needs_synthesis', False):
         if lang == 'en':
             print(f"\n🧪 Creating synthesis method task...")
@@ -528,10 +609,10 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         synthesis_task = SynthesisMethodTask(llm).create_task(
             synthesis_agent, context_task, user_requirement=user_requirement
         )
-        synthesis_task.async_execution = True  # 启用异步! / Enable async!
+        synthesis_task.async_execution = True  # Enable async! / 启用异步！
         required_tasks.append(synthesis_task)
     
-    # Step 5: 处理操作指导任务 / Handle Operation Guidance Task
+    # Step 5: Handle Operation Guidance Task / 处理操作指导任务
     if intent.get('needs_operation', False):
         if lang == 'en':
             print(f"\n📖 Creating operation guidance task...")
@@ -547,7 +628,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         )
         required_tasks.append(operation_task)
     
-    # 检查是否有任务 / Check if there are any tasks
+    # Check if there are any tasks / 检查是否有任务
     if not required_tasks:
         if lang == 'en':
             print("\n⚠️ No tasks identified, defaulting to material design")
@@ -560,7 +641,7 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         design_task = DesignTask(llm).create_task(design_agent, user_requirement=user_requirement)
         required_tasks.append(design_task)
     
-    # 打印任务摘要 / Print task summary
+    # Print task summary with async indicators / 打印任务摘要
     print(f"\n{'='*60}")
     if lang == 'en':
         print(f"📝 Task Summary")
@@ -578,28 +659,30 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
         print(f"   {i}. {agent_role} {async_flag}")
     print(f"{'='*60}\n")
     
-    # 创建 Crew 并异步执行 / Create Crew and execute async
+    # Create Crew and execute async / 创建 Crew 并异步执行
     DashScopeEmbedder = create_dashscope_embedder()
     
-    # 工具调用追踪器 - 按 Agent 分组记录 / Tool call tracker - grouped by Agent
+    # Tool call tracker grouped by Agent / 工具调用追踪器 - 按 Agent 分组记录
     import threading
     tool_calls_by_agent = {}  # {agent_role: [(tool_name, count)]}
     tool_call_lock = threading.Lock()
-    current_agent_context = threading.local()  # 线程本地存储当前 Agent
-    last_completed_agent = [None]  # 记录上一个完成的 Agent
+    current_agent_context = threading.local()  # Thread-local storage for current Agent / 线程本地存储当前 Agent
+    last_completed_agent = [None]  # Record last completed Agent / 记录上一个完成的 Agent
     
-    # 使用模块级别的工厂函数创建 task_callback
+    # Use module-level factory function to create task_callback / 使用模块级别的工厂函数创廻 task_callback
     create_task_callback = create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent)
     
-    # 创建步骤回调函数，用于追踪工具调用 / Create step callback for tracking tool calls
+    # Create step callback function to track tool calls / 创建步骤回调函数，用于追踪工具调用
     def step_callback(step_output):
-        """捕获每一步执行，包括工具调用 / Capture each step including tool calls"""
+        """
+        Capture each step execution including tool calls / 捕获每一步执行，包括工具调用
+        """
         try:
-            # 尝试从 step_output 获取当前 Agent
-            # CrewAI step_output 可能包含 agent 属性或 agent_name
+            # Try to get current Agent from step_output / 尝试从 step_output 获取当前 Agent
+            # CrewAI step_output may contain agent attribute or agent_name / CrewAI step_output 可能包含 agent 属性或 agent_name
             agent_role = 'Unknown'
             
-            # 方法1: 从 step_output.agent 获取
+            # Method 1: Get from step_output.agent / 方法1：从 step_output.agent 获取
             if hasattr(step_output, 'agent'):
                 agent = step_output.agent
                 if hasattr(agent, 'role'):
@@ -607,19 +690,19 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
                 elif isinstance(agent, str):
                     agent_role = agent
             
-            # 方法2: 从 step_output 的其他属性获取
+            # Method 2: Get from other attributes of step_output / 方法2：从 step_output 的其他属性获取
             if agent_role == 'Unknown' and hasattr(step_output, 'agent_name'):
                 agent_role = step_output.agent_name
             
-            # 方法3: 从线程本地存储获取（备用）
+            # Method 3: Get from thread-local storage (fallback) / 方法3：从线程本地存储获取（备用）
             if agent_role == 'Unknown':
                 agent_role = getattr(current_agent_context, 'role', 'Unknown')
             
-            # 更新线程本地存储
+            # Update thread-local storage / 更新线程本地存储
             if agent_role != 'Unknown':
                 current_agent_context.role = agent_role
             
-            # 检查是否是工具调用 (AgentAction)
+            # Check if this is a tool call (AgentAction) / 检查是否是工具调用 (AgentAction)
             if hasattr(step_output, 'tool'):
                 tool_name = step_output.tool
                 with tool_call_lock:
@@ -629,32 +712,32 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
                         tool_calls_by_agent[agent_role][tool_name] = 0
                     tool_calls_by_agent[agent_role][tool_name] += 1
                     count = tool_calls_by_agent[agent_role][tool_name]
-                    # 实时输出，带 Agent 标识
+                    # Real-time output with Agent label / 实时输出，带 Agent 标识
                     print(f"  🔧 [{agent_role[:15]}] {tool_name} (#{count})")
         except Exception:
-            pass  # 忽略追踪错误
+            pass  # Ignore tracking errors / 忽略追踪错误
     
-    # 为每个 Agent 设置 step_callback 并注入上下文
+    # Set step_callback for each Agent / 为每个 Agent 设置 step_callback 并注入上下文
     for agent in required_agents:
         original_execute = None
         agent_role = getattr(agent, 'role', 'Unknown')
         agent.step_callback = step_callback
     
-    # 创建任务回调函数 / Create task callback for monitoring
+    # Create task callback for monitoring / 创建任务回调函数
     task_completion_times = []
     crew_start_time = [None]
     task_counter = [0]
     task_callback = create_task_callback(task_completion_times, crew_start_time, task_counter, suffix="")
     
     crew = Crew(
-        name="ECOMATS",  # 设置 Crew 名称
+        name="ECOMATS",  # Set Crew name / 设置 Crew 名称
         agents=required_agents,
         tasks=required_tasks,
         process=Process.sequential,
-        verbose=Config.VERBOSE,  # 从配置读取，.env 中 VERBOSE=False 可禁用 CrewAI 树状显示
-        memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
-        task_callback=task_callback,  # 添加任务回调
-        step_callback=step_callback,  # 步骤回调追踪工具调用
+        verbose=Config.VERBOSE,  # Read from config, can be disabled via .env VERBOSE=False / 从配置读取，.env 中 VERBOSE=False 可禁用 CrewAI 树状显示
+        memory=False,  # Disable memory system - each task causes 7 Embedding API calls, affecting performance / 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
+        task_callback=task_callback,  # Add task callback / 添加任务回调
+        step_callback=step_callback,  # Step callback to track tool calls / 步骤回调追踪工具调用
         embedder={
             "provider": "custom",
             "config": {
@@ -668,10 +751,10 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
     else:
         print("⚡ 使用异步执行模式...")
     
-    # 记录 Crew 开始时间
+    # Record Crew start time / 记录 Crew 开始时间
     crew_start_time[0] = time.time()
     
-    # 异步执行 Crew! / Execute Crew async!
+    # Execute Crew asynchronously! / 异步执行 Crew！
     result = await crew.akickoff(inputs={'requirement': user_requirement})
     
     # 保存监控报告 / Save monitor report
@@ -685,24 +768,35 @@ async def run_autonomous_workflow_async(user_requirement, llm, monitor: Workflow
 
 
 async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMonitor = None):
-    """异步预设工作流 - 使用CrewAI 1.7.0异步功能
+    """
+    Async preset workflow using CrewAI 1.7.0 async features / 异步预设工作流 - 使用CrewAI 1.7.0异步功能
+    
+    This mode executes all tasks in a fixed order with parallel execution where possible:
+    1. Material Design (sequential) / 材料设计（顺序）
+    2. Evaluation (3 experts in parallel) / 评估（3个专家并行）
+    3. Final Validation (sequential) / 最终验证（顺序）
+    4. Mechanism Analysis + Synthesis Method (parallel) / 机理分析 + 合成方法（并行）
+    5. Operation Suggestion (sequential) / 操作建议（顺序）
     
     Args:
-        user_requirement: 用户需求
-        llm: LLM实例
-        monitor: 工作流监控器实例（可选）
+        user_requirement: User's material design requirements / 用户需求
+        llm: Language model instance / LLM实例
+        monitor: Workflow monitor instance (optional) / 工作流监控器实例（可选）
+    
+    Returns:
+        Crew execution result / Crew执行结果
     """
     import time
     
     print("\n🚀 启动异步预设工作流...")
     print("-" * 70)
     
-    # 初始化监控器 / Initialize monitor
+    # Initialize monitor / 初始化监控器
     if monitor is None:
         monitor = create_monitor()
     monitor.set_workflow_info(user_requirement, "preset", is_async=True)
     
-    # 任务开始时间记录 / Task start time tracking
+    # Task start time tracking / 任务开始时间记录
     task_start_times = {}
     
     from src.tasks.design_task import DesignTask
@@ -712,10 +806,10 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
     from src.tasks.synthesis_method_task import SynthesisMethodTask
     from src.tasks.operation_suggesting_task import OperationSuggestingTask
     
-    # 创建所有agent
+    # Create all agents / 创建所有agent
     agents = create_all_agents(llm)
     
-    # 1. 材料设计任务
+    # 1. Material design task / 材料设计任务
     design_task = DesignTask(
         agent=agents['material_designer']
     ).create_task(
@@ -723,14 +817,14 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         user_requirement=user_requirement
     )
     
-    # 2. 三个评估任务(可并行)
+    # 2. Three evaluation tasks (can run in parallel) / 三个评估任务（可并行）
     eval_a_task = EvaluationTask(
         agent=agents['expert_a']
     ).create_task(
         agent=agents['expert_a'],
         context_task=design_task
     )
-    eval_a_task.async_execution = True  # 启用异步!
+    eval_a_task.async_execution = True  # Enable async! / 启用异步！
     
     eval_b_task = EvaluationTask(
         agent=agents['expert_b']
@@ -738,7 +832,7 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         agent=agents['expert_b'],
         context_task=design_task
     )
-    eval_b_task.async_execution = True  # 启用异步!
+    eval_b_task.async_execution = True  # Enable async! / 启用异步！
     
     eval_c_task = EvaluationTask(
         agent=agents['expert_c']
@@ -746,9 +840,9 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         agent=agents['expert_c'],
         context_task=design_task
     )
-    eval_c_task.async_execution = True  # 启用异步!
+    eval_c_task.async_execution = True  # Enable async! / 启用异步！
     
-    # 3. 最终验证
+    # 3. Final validation / 最终验证
     final_validation_task = FinalValidationTask(
         agent=agents['final_validator']
     ).create_task(
@@ -756,25 +850,25 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         context_task=[eval_a_task, eval_b_task, eval_c_task]
     )
     
-    # 4. 机制分析(可与合成并行)
+    # 4. Mechanism analysis (can run in parallel with synthesis) / 机制分析（可与合成并行）
     mechanism_task = MechanismAnalysisTask(
         agent=agents['mechanism_expert']
     ).create_task(
         agent=agents['mechanism_expert'],
         context_task=final_validation_task
     )
-    mechanism_task.async_execution = True  # 启用异步!
+    mechanism_task.async_execution = True  # Enable async! / 启用异步！
     
-    # 5. 合成方法
+    # 5. Synthesis method / 合成方法
     synthesis_task = SynthesisMethodTask(
         agent=agents['synthesis_expert']
     ).create_task(
         agent=agents['synthesis_expert'],
         context_task=final_validation_task
     )
-    synthesis_task.async_execution = True  # 启用异步!
+    synthesis_task.async_execution = True  # Enable async! / 启用异步！
     
-    # 6. 操作建议
+    # 6. Operation suggestion / 操作建议
     operation_task = OperationSuggestingTask(
         agent=agents['operation_suggesting']
     ).create_task(
@@ -782,11 +876,11 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         context_task=[mechanism_task, synthesis_task]
     )
     
-    # 创建Crew (使用自定义DashScope Embedding)
-    # 注意: 传入类而不是实例!
+    # Create Crew with custom DashScope Embedding / 创建Crew（使用自定义DashScope Embedding）
+    # Note: Pass class not instance! / 注意：传入类而不是实例！
     DashScopeEmbedder = create_dashscope_embedder()
     
-    # 创建任务回调函数 / Create task callback for monitoring
+    # Create task callback for monitoring / 创建任务回调函数
     import threading
     current_agent_context = threading.local()
     last_completed_agent = [None]
@@ -798,23 +892,23 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
     task_callback = create_task_callback(task_completion_times_2, crew_start_time_2, task_counter_2, suffix="_2")
     
     crew = Crew(
-        name="ECOMATS",  # 设置 Crew 名称
+        name="ECOMATS",  # Set Crew name / 设置 Crew 名称
         agents=list(agents.values()),
         tasks=[
             design_task,
-            eval_a_task, eval_b_task, eval_c_task,  # 并行评估
+            eval_a_task, eval_b_task, eval_c_task,  # Parallel evaluation / 并行评估
             final_validation_task,
-            mechanism_task, synthesis_task,  # 并行分析
+            mechanism_task, synthesis_task,  # Parallel analysis / 并行分析
             operation_task
         ],
         process=Process.sequential,
-        verbose=Config.VERBOSE,  # 从配置读取，.env 中 VERBOSE=False 可禁用
-        memory=False,  # 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
-        task_callback=task_callback,  # 添加任务回调
+        verbose=Config.VERBOSE,  # Read from config, can be disabled via .env / 从配置读取，.env 中 VERBOSE=False 可禁用
+        memory=False,  # Disable memory system - each task causes 7 Embedding API calls, affecting performance / 禁用记忆系统 - 每个任务会导致7次Embedding API调用,影响性能
+        task_callback=task_callback,  # Add task callback / 添加任务回调
         embedder={
             "provider": "custom",
             "config": {
-                "embedding_callable": DashScopeEmbedder  # 传入类
+                "embedding_callable": DashScopeEmbedder  # Pass class / 传入类
             }
         }
     )
@@ -842,10 +936,10 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
         print("  - 实体记忆: 提取关键实体信息")
         print("  - 存储位置: ./.crewai/memory/\n")
     
-    # 记录 Crew 开始时间
+    # Record Crew start time / 记录 Crew 开始时间
     crew_start_time_2[0] = time.time()
     
-    # 异步执行Crew!
+    # Execute Crew asynchronously! / 异步执行Crew！
     result = await crew.akickoff(inputs={'requirement': user_requirement})
     
     # 保存监控报告 / Save monitor report
@@ -859,70 +953,83 @@ async def run_preset_workflow_async(user_requirement, llm, monitor: WorkflowMoni
 
 
 def run_preset_workflow_sync(user_requirement, llm, monitor: WorkflowMonitor = None):
-    """同步预设工作流 - 保持向后兼容
+    """
+    Synchronous preset workflow for backward compatibility / 同步预设工作流 - 保持向后兼容
     
     Args:
-        user_requirement: 用户需求
-        llm: LLM实例
-        monitor: 工作流监控器实例（可选）
+        user_requirement: User's material design requirements / 用户需求
+        llm: Language model instance / LLM实例
+        monitor: Workflow monitor instance (optional) / 工作流监控器实例（可选）
+    
+    Returns:
+        Workflow execution result / 工作流执行结果
     """
     print("\n📌 启动同步预设工作流...")
     print("-" * 70)
     
-    # 导入原始main.py的run_preset_workflow
+    # Import original run_preset_workflow from main.py / 导入原始main.py的run_preset_workflow
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from main import run_preset_workflow
     
-    # 传递监控器到同步工作流
+    # Pass monitor to sync workflow / 传递监控器到同步工作流
     return run_preset_workflow(user_requirement, llm, monitor)
 
 
 async def main_async():
-    """异步主函数 / Async main function"""
+    """
+    Main async entry point for the program / 异步主入口
+    
+    This function:
+    1. Loads environment variables / 加载环境变量
+    2. Selects UI language / 选择UI语言
+    3. Creates LLM instance / 创建LLM实例
+    4. Gets user input / 获取用户输入
+    5. Executes selected workflow (sync or async) / 执行选定的工作流（同步或异步）
+    """
     load_dotenv()
     
-    # 再次确保EAS日志被抑制
+    # Suppress EAS logs again / 再次确保EAS日志被抑制
     logging.getLogger('src.agents').setLevel(logging.CRITICAL)
     
-    # 检查环境变量
+    # Check environment variables / 检查环境变量
     if not Config.QWEN_API_KEY:
         print("❌ 错误: 未设置QWEN_API_KEY / Error: QWEN_API_KEY not set")
         return
     
-    # 选择语言 / Select language
+    # Select language / 选择语言
     select_language()
     
-    # 创建LLM
+    # Create LLM / 创建LLM
     llm = create_llm()
     
-    # 获取用户输入
+    # Get user input / 获取用户输入
     user_requirement = get_user_input()
     
-    # 获取工作模式
+    # Get workflow mode / 获取工作模式
     mode, use_async = get_workflow_mode()
     
-    # 创建监控器 / Create monitor
+    # Create monitor for tracking workflow execution / 创建监控器
     monitor = create_monitor()
     print("📊 工作流监控器已初始化 / Workflow monitor initialized")
     
     if mode == "preset":
         if use_async:
-            # 异步预设工作流
+            # Async preset workflow / 异步预设工作流
             result = await run_preset_workflow_async(user_requirement, llm, monitor)
         else:
-            # 同步预设工作流 - 传递监控器
+            # Sync preset workflow - pass monitor / 同步预设工作流 - 传递监控器
             result = run_preset_workflow_sync(user_requirement, llm, monitor)
     else:
-        # 自主调度模式 / Autonomous scheduling mode
+        # Autonomous scheduling mode / 自主调度模式
         if use_async:
-            # 异步自主调度 / Async autonomous
+            # Async autonomous / 异步自主调度
             result = await run_autonomous_workflow_async(user_requirement, llm, monitor)
         else:
-            # 同步自主调度 / Sync autonomous - 传递监控器
+            # Sync autonomous - pass monitor / 同步自主调度 - 传递监控器
             from main import run_autonomous_workflow
             result = run_autonomous_workflow(user_requirement, llm, monitor)
     
-    # 输出结果 / Output result
+    # Output result / 输出结果
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     print("\n" + "="*70)
     if lang == 'en':
@@ -931,11 +1038,10 @@ async def main_async():
         print("执行完成!")
     print("="*70)
     
-    # 保存结果到outputs目录（不在终端打印完整结果）
-    # Save result to outputs directory (without printing full result to terminal)
+    # Save result to outputs directory (without printing full result to terminal) / 保存结果到outputs目录（不在终端打印完整结果）
     save_result(result, user_requirement, mode, use_async, workflow_id=monitor.workflow_id)
     
-    # 输出监控报告信息 / Output monitor report info
+    # Output monitor report info / 输出监控报告信息
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     if lang == 'en':
         print(f"\n📊 Monitor reports saved to outputs folder:")
@@ -950,7 +1056,16 @@ async def main_async():
 
 
 def save_result(result, user_requirement, mode, use_async, workflow_id=None):
-    """保存执行结果到outputs目录 / Save execution result to outputs directory"""
+    """
+    Save execution result to outputs directory / 保存执行结果到outputs目录
+    
+    Args:
+        result: Workflow execution result / 工作流执行结果
+        user_requirement: User's original requirement / 用户原始需求
+        mode: Workflow mode ('preset' or 'autonomous') / 工作流模式
+        use_async: Whether async mode was used / 是否使用了异步模式
+        workflow_id: Workflow ID from monitor (optional) / 监控器的工作流ID（可选）
+    """
     lang = Config.LANGUAGE if hasattr(Config, 'LANGUAGE') else 'zh'
     
     # 确保outputs目录存在 / Ensure outputs directory exists

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-工具调用规范模块
-定义各Agent的工具调用规范和验证逻辑
+Tool Call Specification Module.
+Defines tool call specifications and validation logic for each Agent.
 """
 
 import logging
 from typing import Dict, Any, List
 
-# 延迟导入以避免循环导入
+# Delayed import to avoid circular import
 def get_material_identifier_tool():
     from src.tools.material_identifier_tool import get_material_identifier_tool as _get_material_identifier_tool
     return _get_material_identifier_tool()
@@ -24,37 +24,37 @@ def get_pubchem_tool():
     from src.tools.pubchem_tool import get_pubchem_tool as _get_pubchem_tool
     return _get_pubchem_tool()
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class ToolCallSpec:
-    """工具调用规范类"""
+    """Tool Call Specification Class."""
     
     @staticmethod
     def validate_material_identifier_result(result: Dict[str, Any]) -> bool:
         """
-        验证材料标识符工具结果
+        Validate material identifier tool result.
         
         Args:
-            result (Dict[str, Any]): 材料标识符工具返回的结果
+            result (Dict[str, Any]): Result returned by material identifier tool
             
         Returns:
-            bool: 验证是否通过
+            bool: Whether validation passed
         """
         if not isinstance(result, dict):
             return False
             
-        # 检查必需字段
+        # Check required fields
         required_fields = ["query", "material_type", "identifier", "identifier_type", "validation_status", "is_verified"]
         for field in required_fields:
             if field not in result:
-                logger.warning(f"材料标识符结果缺少必需字段: {field}")
+                logger.warning(f"Material identifier result missing required field: {field}")
                 return False
         
-        # 检查验证状态
+        # Check validation status
         if result.get("is_verified", False) is not True:
-            logger.warning(f"材料标识符未通过验证: {result.get('query', 'Unknown')}")
+            logger.warning(f"Material identifier validation failed: {result.get('query', 'Unknown')}")
             return False
             
         return True
@@ -62,32 +62,32 @@ class ToolCallSpec:
     @staticmethod
     def validate_structure_validator_result(result: Dict[str, Any]) -> bool:
         """
-        验证结构验证工具结果
+        Validate structure validator tool result.
         
         Args:
-            result (Dict[str, Any]): 结构验证工具返回的结果
+            result (Dict[str, Any]): Result returned by structure validator tool
             
         Returns:
-            bool: 验证是否通过
+            bool: Whether validation passed
         """
         if not isinstance(result, dict):
             return False
             
-        # 检查必需字段
+        # Check required fields
         required_fields = ["query", "valid", "type", "source", "reason", "validation_confidence"]
         for field in required_fields:
             if field not in result:
-                logger.warning(f"结构验证结果缺少必需字段: {field}")
+                logger.warning(f"Structure validation result missing required field: {field}")
                 return False
         
-        # 检查验证结果
+        # Check validation result
         if result.get("valid", False) is not True:
-            logger.warning(f"材料结构验证失败: {result.get('query', 'Unknown')}")
+            logger.warning(f"Material structure validation failed: {result.get('query', 'Unknown')}")
             return False
             
-        # 检查置信度
+        # Check confidence level
         if result.get("validation_confidence", "low") != "high":
-            logger.warning(f"材料结构验证置信度不足: {result.get('query', 'Unknown')}")
+            logger.warning(f"Material structure validation confidence insufficient: {result.get('query', 'Unknown')}")
             return False
             
         return True
@@ -95,30 +95,30 @@ class ToolCallSpec:
     @staticmethod
     def validate_materials_project_result(result: Dict[str, Any]) -> bool:
         """
-        验证Materials Project工具结果
+        Validate Materials Project tool result.
         
         Args:
-            result (Dict[str, Any]): Materials Project工具返回的结果
+            result (Dict[str, Any]): Result returned by Materials Project tool
             
         Returns:
-            bool: 验证是否通过
+            bool: Whether validation passed
         """
         if not isinstance(result, dict):
             return False
             
-        # 检查是否有错误
+        # Check if there are errors
         if "error" in result:
-            logger.warning(f"Materials Project工具返回错误: {result['error']}")
+            logger.warning(f"Materials Project tool returned error: {result['error']}")
             return False
             
-        # 检查数据字段
+        # Check data field
         if "data" not in result:
-            logger.warning("Materials Project结果缺少data字段")
+            logger.warning("Materials Project result missing data field")
             return False
             
-        # 检查数据是否为空
+        # Check if data is empty
         if not result["data"]:
-            logger.warning("Materials Project返回空数据")
+            logger.warning("Materials Project returned empty data")
             return False
             
         return True
@@ -126,49 +126,49 @@ class ToolCallSpec:
     @staticmethod
     def validate_pubchem_result(result: Dict[str, Any]) -> bool:
         """
-        验证PubChem工具结果
+        Validate PubChem tool result.
         
         Args:
-            result (Dict[str, Any]): PubChem工具返回的结果
+            result (Dict[str, Any]): Result returned by PubChem tool
             
         Returns:
-            bool: 验证是否通过
+            bool: Whether validation passed
         """
         if not isinstance(result, dict):
             return False
             
-        # 检查是否有错误
+        # Check if there are errors
         if "error" in result:
-            logger.warning(f"PubChem工具返回错误: {result['error']}")
+            logger.warning(f"PubChem tool returned error: {result['error']}")
             return False
             
-        # 检查PropertyTable字段
+        # Check PropertyTable field
         if "PropertyTable" not in result:
-            logger.warning("PubChem结果缺少PropertyTable字段")
+            logger.warning("PubChem result missing PropertyTable field")
             return False
             
-        # 检查Properties字段
+        # Check Properties field
         if "Properties" not in result["PropertyTable"]:
-            logger.warning("PubChem结果缺少Properties字段")
+            logger.warning("PubChem result missing Properties field")
             return False
             
-        # 检查Properties是否为空
+        # Check if Properties is empty
         if not result["PropertyTable"]["Properties"]:
-            logger.warning("PubChem返回空Properties数据")
+            logger.warning("PubChem returned empty Properties data")
             return False
             
         return True
 
 class MaterialDesignerToolSpec(ToolCallSpec):
-    """材料设计专家工具调用规范"""
+    """Material Designer Expert Tool Call Specification."""
     
     @staticmethod
     def get_required_tools() -> List[str]:
         """
-        获取材料设计专家必需的工具列表
+        Get list of tools required by material designer expert.
         
         Returns:
-            List[str]: 工具名称列表
+            List[str]: List of tool names
         """
         return [
             "Materials Project Tool",
@@ -180,13 +180,13 @@ class MaterialDesignerToolSpec(ToolCallSpec):
     @staticmethod
     def validate_tool_usage(material_formula: str) -> Dict[str, Any]:
         """
-        验证材料设计专家的工具调用
+        Validate tool calls by material designer expert.
         
         Args:
-            material_formula (str): 材料化学式
+            material_formula (str): Material chemical formula
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation result
         """
         result = {
             "material_formula": material_formula,
@@ -196,7 +196,7 @@ class MaterialDesignerToolSpec(ToolCallSpec):
         }
         
         try:
-            # 优先从全局上下文读取，缺失再调用工具
+            # Prioritize reading from global context, call tool if missing
             try:
                 from src.utils.context_store import ContextStore
                 cached_identifier = ContextStore.get("material_identifier")
@@ -207,34 +207,34 @@ class MaterialDesignerToolSpec(ToolCallSpec):
                 cached_validator = None
                 cached_mp = None
 
-            # 调用材料标识符工具（或复用缓存）
+            # Call material identifier tool (or reuse cache)
             identifier_tool = get_material_identifier_tool()
             identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
-            # 验证材料标识符结果
+            # Validate material identifier result
             if not ToolCallSpec.validate_material_identifier_result(identifier_result):
                 result["validation_passed"] = False
-                result["errors"].append("材料标识符验证失败")
+                result["errors"].append("Material identifier validation failed")
             
-            # 调用结构验证工具（或复用缓存）
+            # Call structure validator tool (or reuse cache)
             validator_tool = get_structure_validator_tool()
             validator_result = cached_validator or validator_tool.validate_structure_exists(material_formula)
             result["tool_calls"]["structure_validator"] = validator_result
             
-            # 验证结构验证结果
+            # Validate structure validator result
             if not ToolCallSpec.validate_structure_validator_result(validator_result):
                 result["validation_passed"] = False
-                result["errors"].append("结构验证失败")
+                result["errors"].append("Structure validation failed")
             
-            # 根据材料类型调用相应的数据库工具
+            # Call appropriate database tool based on material type
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
                 mp_tool = get_materials_project_tool()
                 if cached_mp and isinstance(cached_mp, dict) and cached_mp.get("data"):
                     mp_result = cached_mp
                 else:
-                    # 优先复用结构验证的结果，避免重复查询
+                    # Prioritize reusing structure validation results to avoid duplicate queries
                     validator_data = result["tool_calls"].get("structure_validator", {})
                     if isinstance(validator_data, dict) and validator_data.get("valid") and validator_data.get("source") == "Materials Project" and validator_data.get("data"):
                         mp_result = {
@@ -242,7 +242,7 @@ class MaterialDesignerToolSpec(ToolCallSpec):
                             "meta": {"total_count": 1, "limit": 1}
                         }
                     else:
-                        # 其次复用标识符的material_id进行详情查询
+                        # Secondly, reuse material_id from identifier for detail query
                         add_info = identifier_result.get("additional_info") or {}
                         material_id = add_info.get("material_id")
                         if material_id and mp_tool.validate_material_id(material_id):
@@ -253,35 +253,35 @@ class MaterialDesignerToolSpec(ToolCallSpec):
                 result["tool_calls"]["materials_project"] = mp_result
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
-                    result["errors"].append("Materials Project数据验证失败")
+                    result["errors"].append("Materials Project data validation failed")
             elif material_type == "organic":
-                # 调用PubChem工具
+                # Call PubChem tool
                 pubchem_tool = get_pubchem_tool()
                 pubchem_result = pubchem_tool.search_compound(material_formula)
                 result["tool_calls"]["pubchem"] = pubchem_result
                 
-                # 验证PubChem结果
+                # Validate PubChem result
                 if not ToolCallSpec.validate_pubchem_result(pubchem_result):
                     result["validation_passed"] = False
-                    result["errors"].append("PubChem数据验证失败")
+                    result["errors"].append("PubChem data validation failed")
             
         except Exception as e:
             result["validation_passed"] = False
-            result["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"材料设计专家工具调用验证失败: {e}")
+            result["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Material designer expert tool call validation failed: {e}")
         
         return result
 
 class AssessmentExpertToolSpec(ToolCallSpec):
-    """评估专家工具调用规范"""
+    """Assessment Expert Tool Call Specification."""
     
     @staticmethod
     def get_required_tools() -> List[str]:
         """
-        获取评估专家必需的工具列表
+        Get list of tools required by assessment expert.
         
         Returns:
-            List[str]: 工具名称列表
+            List[str]: List of tool names
         """
         return [
             "Materials Project Tool",
@@ -295,13 +295,13 @@ class AssessmentExpertToolSpec(ToolCallSpec):
     @staticmethod
     def validate_tool_usage(material_formula: str) -> Dict[str, Any]:
         """
-        验证评估专家的工具调用
+        Validate tool calls by assessment expert.
         
         Args:
-            material_formula (str): 材料化学式
+            material_formula (str): Material chemical formula
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation result
         """
         result = {
             "material_formula": material_formula,
@@ -311,7 +311,7 @@ class AssessmentExpertToolSpec(ToolCallSpec):
         }
         
         try:
-            # 优先复用上下文
+            # Prioritize reusing context
             try:
                 from src.utils.context_store import ContextStore
                 cached_identifier = ContextStore.get("material_identifier")
@@ -326,21 +326,21 @@ class AssessmentExpertToolSpec(ToolCallSpec):
             identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
-            # 验证材料标识符结果
+            # Validate material identifier result
             if not ToolCallSpec.validate_material_identifier_result(identifier_result):
                 result["validation_passed"] = False
-                result["errors"].append("材料标识符验证失败")
+                result["errors"].append("Material identifier validation failed")
             
             validator_tool = get_structure_validator_tool()
             validator_result = cached_validator or validator_tool.validate_structure_exists(material_formula)
             result["tool_calls"]["structure_validator"] = validator_result
             
-            # 验证结构验证结果
+            # Validate structure validator result
             if not ToolCallSpec.validate_structure_validator_result(validator_result):
                 result["validation_passed"] = False
-                result["errors"].append("结构验证失败")
+                result["errors"].append("Structure validation failed")
             
-            # 根据材料类型调用相应的数据库工具
+            # Call appropriate database tool based on material type
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
                 mp_tool = get_materials_project_tool()
@@ -364,35 +364,35 @@ class AssessmentExpertToolSpec(ToolCallSpec):
                 result["tool_calls"]["materials_project"] = mp_result
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
-                    result["errors"].append("Materials Project数据验证失败")
+                    result["errors"].append("Materials Project data validation failed")
             elif material_type == "organic":
-                # 调用PubChem工具
+                # Call PubChem tool
                 pubchem_tool = get_pubchem_tool()
                 pubchem_result = pubchem_tool.search_compound(material_formula)
                 result["tool_calls"]["pubchem"] = pubchem_result
                 
-                # 验证PubChem结果
+                # Validate PubChem result
                 if not ToolCallSpec.validate_pubchem_result(pubchem_result):
                     result["validation_passed"] = False
-                    result["errors"].append("PubChem数据验证失败")
+                    result["errors"].append("PubChem data validation failed")
             
         except Exception as e:
             result["validation_passed"] = False
-            result["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"评估专家工具调用验证失败: {e}")
+            result["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Assessment expert tool call validation failed: {e}")
         
         return result
 
 class FinalValidatorToolSpec(ToolCallSpec):
-    """最终验证专家工具调用规范"""
+    """Final Validator Expert Tool Call Specification."""
     
     @staticmethod
     def get_required_tools() -> List[str]:
         """
-        获取最终验证专家必需的工具列表
+        Get list of tools required by final validator expert.
         
         Returns:
-            List[str]: 工具名称列表
+            List[str]: List of tool names
         """
         return [
             "Materials Project Tool",
@@ -410,13 +410,13 @@ class FinalValidatorToolSpec(ToolCallSpec):
     @staticmethod
     def validate_tool_usage(material_formula: str) -> Dict[str, Any]:
         """
-        验证最终验证专家的工具调用
+        Validate tool calls by final validator expert.
         
         Args:
-            material_formula (str): 材料化学式
+            material_formula (str): Material chemical formula
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation result
         """
         result = {
             "material_formula": material_formula,
@@ -426,27 +426,27 @@ class FinalValidatorToolSpec(ToolCallSpec):
         }
         
         try:
-            # 调用材料标识符工具
+            # Call material identifier tool
             identifier_tool = get_material_identifier_tool()
             identifier_result = identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
-            # 验证材料标识符结果
+            # Validate material identifier result
             if not ToolCallSpec.validate_material_identifier_result(identifier_result):
                 result["validation_passed"] = False
-                result["errors"].append("材料标识符验证失败")
+                result["errors"].append("Material identifier validation failed")
             
-            # 调用结构验证工具
+            # Call structure validator tool
             validator_tool = get_structure_validator_tool()
             validator_result = validator_tool.validate_structure_exists(material_formula)
             result["tool_calls"]["structure_validator"] = validator_result
             
-            # 验证结构验证结果
+            # Validate structure validator result
             if not ToolCallSpec.validate_structure_validator_result(validator_result):
                 result["validation_passed"] = False
-                result["errors"].append("结构验证失败")
+                result["errors"].append("Structure validation failed")
             
-            # 根据材料类型调用相应的数据库工具
+            # Call appropriate database tool based on material type
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
                 mp_tool = get_materials_project_tool()
@@ -467,35 +467,35 @@ class FinalValidatorToolSpec(ToolCallSpec):
                 result["tool_calls"]["materials_project"] = mp_result
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
-                    result["errors"].append("Materials Project数据验证失败")
+                    result["errors"].append("Materials Project data validation failed")
             elif material_type == "organic":
-                # 调用PubChem工具
+                # Call PubChem tool
                 pubchem_tool = get_pubchem_tool()
                 pubchem_result = pubchem_tool.search_compound(material_formula)
                 result["tool_calls"]["pubchem"] = pubchem_result
                 
-                # 验证PubChem结果
+                # Validate PubChem result
                 if not ToolCallSpec.validate_pubchem_result(pubchem_result):
                     result["validation_passed"] = False
-                    result["errors"].append("PubChem数据验证失败")
+                    result["errors"].append("PubChem data validation failed")
             
         except Exception as e:
             result["validation_passed"] = False
-            result["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"最终验证专家工具调用验证失败: {e}")
+            result["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Final validator expert tool call validation failed: {e}")
         
         return result
 
 class MechanismExpertToolSpec(ToolCallSpec):
-    """机理分析专家工具调用规范"""
+    """Mechanism Analysis Expert Tool Call Specification."""
     
     @staticmethod
     def get_required_tools() -> List[str]:
         """
-        获取机理分析专家必需的工具列表
+        Get list of tools required by mechanism analysis expert.
         
         Returns:
-            List[str]: 工具名称列表
+            List[str]: List of tool names
         """
         return [
             "Materials Project Tool",
@@ -505,13 +505,13 @@ class MechanismExpertToolSpec(ToolCallSpec):
     @staticmethod
     def validate_tool_usage(material_formula: str) -> Dict[str, Any]:
         """
-        验证机理分析专家的工具调用
+        Validate tool calls by mechanism analysis expert.
         
         Args:
-            material_formula (str): 材料化学式
+            material_formula (str): Material chemical formula
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation result
         """
         result = {
             "material_formula": material_formula,
@@ -521,7 +521,7 @@ class MechanismExpertToolSpec(ToolCallSpec):
         }
         
         try:
-            # 优先复用上下文
+            # Prioritize reusing context
             try:
                 from src.utils.context_store import ContextStore
                 cached_identifier = ContextStore.get("material_identifier")
@@ -534,7 +534,7 @@ class MechanismExpertToolSpec(ToolCallSpec):
             identifier_result = cached_identifier or identifier_tool.identify_material(material_formula)
             result["tool_calls"]["material_identifier"] = identifier_result
             
-            # 根据材料类型调用相应的数据库工具
+            # Call appropriate database tool based on material type
             material_type = identifier_result.get("material_type", "unknown")
             if material_type == "metal":
                 mp_tool = get_materials_project_tool()
@@ -552,35 +552,35 @@ class MechanismExpertToolSpec(ToolCallSpec):
                 result["tool_calls"]["materials_project"] = mp_result
                 if not ToolCallSpec.validate_materials_project_result(mp_result):
                     result["validation_passed"] = False
-                    result["errors"].append("Materials Project数据验证失败")
+                    result["errors"].append("Materials Project data validation failed")
             elif material_type == "organic":
-                # 调用PubChem工具
+                # Call PubChem tool
                 pubchem_tool = get_pubchem_tool()
                 pubchem_result = pubchem_tool.search_compound(material_formula)
                 result["tool_calls"]["pubchem"] = pubchem_result
                 
-                # 验证PubChem结果
+                # Validate PubChem result
                 if not ToolCallSpec.validate_pubchem_result(pubchem_result):
                     result["validation_passed"] = False
-                    result["errors"].append("PubChem数据验证失败")
+                    result["errors"].append("PubChem data validation failed")
             
         except Exception as e:
             result["validation_passed"] = False
-            result["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"机理分析专家工具调用验证失败: {e}")
+            result["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Mechanism analysis expert tool call validation failed: {e}")
         
         return result
 
 class SynthesisExpertToolSpec(ToolCallSpec):
-    """合成指导专家工具调用规范"""
+    """Synthesis Guidance Expert Tool Call Specification."""
     
     @staticmethod
     def get_required_tools() -> List[str]:
         """
-        获取合成指导专家必需的工具列表
+        Get list of tools required by synthesis guidance expert.
         
         Returns:
-            List[str]: 工具名称列表
+            List[str]: List of tool names
         """
         return [
             "PubChem Tool",
@@ -591,13 +591,13 @@ class SynthesisExpertToolSpec(ToolCallSpec):
     @staticmethod
     def validate_tool_usage(chemical_reagents: List[str]) -> Dict[str, Any]:
         """
-        验证合成指导专家的工具调用
+        Validate tool calls by synthesis guidance expert.
         
         Args:
-            chemical_reagents (List[str]): 化学试剂列表
+            chemical_reagents (List[str]): List of chemical reagents
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation result
         """
         result = {
             "chemical_reagents": chemical_reagents,
@@ -607,7 +607,7 @@ class SynthesisExpertToolSpec(ToolCallSpec):
         }
         
         try:
-            # 为每个化学试剂调用PubChem工具
+            # Call PubChem tool for each chemical reagent
             pubchem_results = []
             for reagent in chemical_reagents:
                 pubchem_tool = get_pubchem_tool()
@@ -617,19 +617,19 @@ class SynthesisExpertToolSpec(ToolCallSpec):
                     "result": pubchem_result
                 })
                 
-                # 验证PubChem结果
+                # Validate PubChem result
                 if not ToolCallSpec.validate_pubchem_result(pubchem_result):
                     result["validation_passed"] = False
-                    result["errors"].append(f"试剂 {reagent} 的PubChem数据验证失败")
+                    result["errors"].append(f"PubChem data validation failed for reagent {reagent}")
             
             result["tool_calls"]["pubchem"] = pubchem_results
             
-            # 如果有材料信息，也调用Materials Project工具
-            # 这里简化处理，实际应用中可能需要更复杂的逻辑
+            # If there is material information, also call Materials Project tool
+            # Simplified handling here, actual application may require more complex logic
             
         except Exception as e:
             result["validation_passed"] = False
-            result["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"合成指导专家工具调用验证失败: {e}")
+            result["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Synthesis guidance expert tool call validation failed: {e}")
         
         return result

@@ -1,55 +1,55 @@
 #!/usr/bin/env python3
 """
-评估评分逻辑模块
-提供统一的评分逻辑，确保评估代理的主体评判基于模型自身理性判断
+Assessment Scoring Logic Module.
+Provides unified scoring logic to ensure assessment agent evaluations are based on the model's own rational judgment.
 """
 
 import logging
 from typing import Dict, Any, List, Tuple
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class AssessmentScoringLogic:
-    """评估评分逻辑类 - 提供统一的评分逻辑"""
+    """Assessment Scoring Logic Class - Provides unified scoring logic."""
     
-    # 评分维度权重
+    # Dimension weights
     DIMENSION_WEIGHTS = {
-        "catalytic": 0.50,      # 催化性能
-        "economic": 0.10,       # 经济可行性
-        "environmental": 0.10,  # 环境友好性
-        "technical": 0.10,      # 技术可行性
-        "structural": 0.20      # 结构合理性
+        "catalytic": 0.50,      # Catalytic performance
+        "economic": 0.10,       # Economic feasibility
+        "environmental": 0.10,  # Environmental friendliness
+        "technical": 0.10,      # Technical feasibility
+        "structural": 0.20      # Structural rationality
     }
     
-    # 评分标准
+    # Scoring criteria
     SCORE_CRITERIA = {
-        10: "Exceptional - 突出性能，全面验证",
-        9: "Excellent - 强科学价值，结构设计良好",
-        8: "Very Good - 性能稳定，需要少量改进",
-        7: "Good - 高于平均水平，有一些限制",
-        6: "Average - 可接受的性能，有明显限制",
-        5: "Below Average - 中等性能，有重大问题",
-        4: "Poor - 低性能，有主要缺陷",
-        3: "Very Poor - 最低性能，有关键性缺陷",
-        2: "Invalid - 严重问题，根本性错误",
-        1: "Completely Invalid - 化学上不可能或不存在"
+        10: "Exceptional - Outstanding performance, fully validated",
+        9: "Excellent - Strong scientific value, well-designed structure",
+        8: "Very Good - Stable performance, minor improvements needed",
+        7: "Good - Above average, some limitations",
+        6: "Average - Acceptable performance, noticeable limitations",
+        5: "Below Average - Moderate performance, major issues",
+        4: "Poor - Low performance, major defects",
+        3: "Very Poor - Minimal performance, critical defects",
+        2: "Invalid - Serious issues, fundamental errors",
+        1: "Completely Invalid - Chemically impossible or non-existent"
     }
     
     @staticmethod
     def calculate_weighted_score(scores: List[int]) -> float:
         """
-        计算加权总分
+        Calculate weighted total score.
         
         Args:
-            scores (List[int]): 五个维度的评分 [催化性能, 经济可行性, 环境友好性, 技术可行性, 结构合理性]
+            scores (List[int]): Five dimension scores [catalytic performance, economic feasibility, environmental friendliness, technical feasibility, structural rationality]
             
         Returns:
-            float: 加权总分
+            float: Weighted total score
         """
         if len(scores) != 5:
-            raise ValueError("评分必须包含五个维度")
+            raise ValueError("Scores must include five dimensions")
         
         weighted_total = (
             scores[0] * AssessmentScoringLogic.DIMENSION_WEIGHTS["catalytic"] +
@@ -64,20 +64,20 @@ class AssessmentScoringLogic:
     @staticmethod
     def validate_chemically_impossible(formula: str) -> bool:
         """
-        验证化学式是否化学上不可能
+        Validate if chemical formula is chemically impossible.
         
         Args:
-            formula (str): 材料化学式
+            formula (str): Material chemical formula
             
         Returns:
-            bool: 如果化学上不可能返回True，否则返回False
+            bool: True if chemically impossible, False otherwise
         """
-        # 检查一些明显的化学上不可能的情况
+        # Check for obviously chemically impossible cases
         impossible_patterns = [
-            "IrO7",      # Ir +14 不可能
-            "Ru(SO4)9",  # Ru +18 不可能
-            "FeO4",      # Fe +8 不可能
-            "Hg(Cl)5"    # Hg +5 不可能
+            "IrO7",      # Ir +14 impossible
+            "Ru(SO4)9",  # Ru +18 impossible
+            "FeO4",      # Fe +8 impossible
+            "Hg(Cl)5"    # Hg +5 impossible
         ]
         
         return any(pattern in formula for pattern in impossible_patterns)
@@ -85,17 +85,17 @@ class AssessmentScoringLogic:
     @staticmethod
     def validate_ambiguous_formula(formula: str) -> bool:
         """
-        验证化学式是否不明确
+        Validate if chemical formula is ambiguous.
         
         Args:
-            formula (str): 材料化学式
+            formula (str): Material chemical formula
             
         Returns:
-            bool: 如果化学式不明确返回True，否则返回False
+            bool: True if formula is ambiguous, False otherwise
         """
-        # 检查不明确的化学式表示
+        # Check for ambiguous chemical formula representations
         ambiguous_patterns = [
-            "Pd/Au",     # 没有比例
+            "Pd/Au",     # No ratio specified
         ]
         
         return any(pattern in formula for pattern in ambiguous_patterns)
@@ -103,48 +103,48 @@ class AssessmentScoringLogic:
     @staticmethod
     def adjust_scores_based_on_tool_validation(scores: List[int], tool_validation_result: Dict[str, Any]) -> List[int]:
         """
-        根据工具验证结果调整评分
+        Adjust scores based on tool validation results.
         
         Args:
-            scores (List[int]): 原始评分
-            tool_validation_result (Dict[str, Any]): 工具验证结果
+            scores (List[int]): Original scores
+            tool_validation_result (Dict[str, Any]): Tool validation results
             
         Returns:
-            List[int]: 调整后的评分
+            List[int]: Adjusted scores
         """
         adjusted_scores = scores.copy()
         
-        # 如果工具验证失败，适当降低评分
+        # If tool validation fails, reduce scores appropriately
         if not tool_validation_result.get("all_valid", True):
-            # 降低所有维度的评分，但不低于1
+            # Reduce scores for all dimensions, but not below 1
             adjusted_scores = [max(1, score - 1) for score in scores]
-            logger.warning(f"工具验证失败，评分已调整: {scores} -> {adjusted_scores}")
+            logger.warning(f"Tool validation failed, scores adjusted: {scores} -> {adjusted_scores}")
         
         return adjusted_scores
     
     @staticmethod
     def ensure_consistent_scoring(expert_a_scores: List[int], expert_b_scores: List[int], expert_c_scores: List[int]) -> Tuple[List[int], List[int], List[int]]:
         """
-        确保三个评估代理的评分一致性
+        Ensure consistency among three assessment agent scores.
         
         Args:
-            expert_a_scores (List[int]): 专家A的评分
-            expert_b_scores (List[int]): 专家B的评分
-            expert_c_scores (List[int]): 专家C的评分
+            expert_a_scores (List[int]): Expert A's scores
+            expert_b_scores (List[int]): Expert B's scores
+            expert_c_scores (List[int]): Expert C's scores
             
         Returns:
-            Tuple[List[int], List[int], List[int]]: 调整后的评分
+            Tuple[List[int], List[int], List[int]]: Adjusted scores
         """
-        # 计算每个维度的平均分
+        # Calculate average score for each dimension
         avg_scores = []
         for i in range(5):
             avg = (expert_a_scores[i] + expert_b_scores[i] + expert_c_scores[i]) / 3
             avg_scores.append(round(avg))
         
-        # 如果某个专家的评分与平均分相差太大（超过2分），则进行调整
+        # If an expert's score differs too much from average (more than 2 points), adjust it
         def adjust_score(score, avg):
             if abs(score - avg) > 2:
-                # 调整评分为向平均分靠近1分
+                # Adjust score to move closer to average by 1 point
                 if score > avg:
                     return score - 1
                 else:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-评估工具执行器
-提供统一的工具调用逻辑，确保所有评估代理使用相同的工具调用流程
+Assessment Tool Executor.
+Provides unified tool invocation logic to ensure all assessment agents use the same tool invocation process.
 """
 
 import logging
@@ -9,7 +9,7 @@ from typing import Dict, Any
 from src.utils.tool_call_spec import ToolCallSpec
 from src.utils.context_store import ContextStore
 
-# 延迟导入以避免循环导入
+# Delayed import to avoid circular import
 def get_material_identifier_tool():
     from src.tools.material_identifier_tool import get_material_identifier_tool as _get_material_identifier_tool
     return _get_material_identifier_tool()
@@ -40,15 +40,15 @@ def get_material_search_tool():
 
  
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class AssessmentToolExecutor:
-    """评估工具执行器类 - 提供统一的工具调用逻辑"""
+    """Assessment Tool Executor Class - Provides unified tool invocation logic."""
     
     def __init__(self):
-        """初始化评估工具执行器"""
+        """Initialize assessment tool executor."""
         self.material_identifier_tool = get_material_identifier_tool()
         self.structure_validator_tool = get_structure_validator_tool()
         self.materials_project_tool = get_materials_project_tool()
@@ -59,13 +59,13 @@ class AssessmentToolExecutor:
     
     def execute_mandatory_tool_calls(self, material_formula: str) -> Dict[str, Any]:
         """
-        执行评估代理的强制工具调用序列
+        Execute mandatory tool invocation sequence for assessment agents.
         
         Args:
-            material_formula (str): 材料化学式
+            material_formula (str): Material chemical formula
             
         Returns:
-            Dict[str, Any]: 所有工具调用的结果
+            Dict[str, Any]: Results of all tool invocations
         """
         results = {
             "material_identifier": None,
@@ -79,13 +79,13 @@ class AssessmentToolExecutor:
         }
         
         try:
-            # 1. 材料标识符工具调用
+            # 1. Material identifier tool invocation
             results["material_identifier"] = self.material_identifier_tool.identify_material(material_formula)
             
-            # 2. 结构验证工具调用
+            # 2. Structure validator tool invocation
             results["structure_validator"] = self.structure_validator_tool.validate_structure_exists(material_formula)
             
-            # 3. 根据材料类型调用相应的数据库工具（仅在验证通过时）
+            # 3. Invoke appropriate database tool based on material type (only when validation passes)
             material_type = results["material_identifier"].get("material_type", "unknown")
             if results["material_identifier"].get("is_verified"):
                 if material_type == "metal":
@@ -97,30 +97,30 @@ class AssessmentToolExecutor:
                 elif material_type == "organic":
                     results["pubchem"] = self.pubchem_tool.search_compound(material_formula)
             
-            # 4. 调用PNEC工具（环境风险评估）：仅在通过验证或解析出有效名称时尝试
+            # 4. Invoke PNEC tool (environmental risk assessment): only attempt when validated or valid name parsed
             try:
                 if results["material_identifier"].get("is_verified"):
                     results["pnec"] = self.pnec_tool.get_pnec_by_name(material_formula)
                 else:
-                    results["pnec"] = {"warning": "材料未验证，跳过PNEC查询"}
+                    results["pnec"] = {"warning": "Material not validated, skipping PNEC query"}
             except Exception:
-                results["pnec"] = {"error": "PNEC查询失败"}
+                results["pnec"] = {"error": "PNEC query failed"}
             
-            # 5. 调用数据验证工具
-            # 创建一个包含材料信息的数据字典用于验证
+            # 5. Invoke data validator tool
+            # Create a data dictionary containing material information for validation
             material_data = {
                 "molecular_formula": material_formula,
                 "material_name": material_formula
             }
             results["data_validator"] = self.data_validator_tool.validate_chemical_data(material_data)
             
-            # 6. 调用材料搜索工具：该工具为 BaseTool，使用其 _run 接口
+            # 6. Invoke material search tool: this tool is BaseTool, use its _run interface
             try:
                 results["material_search"] = self.material_search_tool._run(material_formula, limit=10)
             except Exception:
-                results["material_search"] = {"error": "材料搜索工具调用失败"}
+                results["material_search"] = {"error": "Material search tool invocation failed"}
             
-            # 写入全局上下文，供后续复用，避免重复查询
+            # Write to global context for reuse to avoid duplicate queries
             try:
                 ContextStore.set("material_identifier", results.get("material_identifier"))
                 if results.get("materials_project"):
@@ -133,20 +133,20 @@ class AssessmentToolExecutor:
                 pass
             
         except Exception as e:
-            results["errors"].append(f"工具调用过程中出现错误: {str(e)}")
-            logger.error(f"评估工具调用失败: {e}")
+            results["errors"].append(f"Error occurred during tool invocation: {str(e)}")
+            logger.error(f"Assessment tool invocation failed: {e}")
         
         return results
     
     def validate_tool_results(self, tool_results: Dict[str, Any]) -> Dict[str, Any]:
         """
-        验证所有工具调用结果
+        Validate all tool invocation results.
         
         Args:
-            tool_results (Dict[str, Any]): 工具调用结果
+            tool_results (Dict[str, Any]): Tool invocation results
             
         Returns:
-            Dict[str, Any]: 验证结果
+            Dict[str, Any]: Validation results
         """
         validation_result = {
             "all_valid": True,
@@ -154,36 +154,36 @@ class AssessmentToolExecutor:
             "errors": []
         }
         
-        # 验证材料标识符结果
+        # Validate material identifier results
         if tool_results.get("material_identifier"):
             is_valid = ToolCallSpec.validate_material_identifier_result(tool_results["material_identifier"])
             validation_result["validation_details"]["material_identifier"] = is_valid
             if not is_valid:
                 validation_result["all_valid"] = False
-                validation_result["errors"].append("材料标识符验证失败")
+                validation_result["errors"].append("Material identifier validation failed")
         
-        # 验证结构验证结果
+        # Validate structure validator results
         if tool_results.get("structure_validator"):
             is_valid = ToolCallSpec.validate_structure_validator_result(tool_results["structure_validator"])
             validation_result["validation_details"]["structure_validator"] = is_valid
             if not is_valid:
                 validation_result["all_valid"] = False
-                validation_result["errors"].append("结构验证失败")
+                validation_result["errors"].append("Structure validation failed")
         
-        # 验证Materials Project结果
+        # Validate Materials Project results
         if tool_results.get("materials_project"):
             is_valid = ToolCallSpec.validate_materials_project_result(tool_results["materials_project"])
             validation_result["validation_details"]["materials_project"] = is_valid
             if not is_valid:
                 validation_result["all_valid"] = False
-                validation_result["errors"].append("Materials Project数据验证失败")
+                validation_result["errors"].append("Materials Project data validation failed")
         
-        # 验证PubChem结果
+        # Validate PubChem results
         if tool_results.get("pubchem"):
             is_valid = ToolCallSpec.validate_pubchem_result(tool_results["pubchem"])
             validation_result["validation_details"]["pubchem"] = is_valid
             if not is_valid:
                 validation_result["all_valid"] = False
-                validation_result["errors"].append("PubChem数据验证失败")
+                validation_result["errors"].append("PubChem data validation failed")
         
         return validation_result

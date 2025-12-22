@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-工作流监控模块 / Workflow Monitor Module
+Workflow Monitor Module.
 
-功能：
-1. 记录整体链路执行结果
-2. 追踪每个Agent/Task的执行时间
-3. 保存完整的Agent交互记录
+Features:
+1. Record overall process execution results
+2. Track execution time of each Agent/Task
+3. Save complete Agent interaction records
 """
 
 import os
@@ -18,7 +18,7 @@ from dataclasses import dataclass, field, asdict
 
 @dataclass
 class AgentExecution:
-    """Agent执行记录"""
+    """Agent execution record."""
     agent_name: str
     agent_role: str
     task_name: str
@@ -48,7 +48,7 @@ class AgentExecution:
         }
     
     def _format_duration(self) -> str:
-        """格式化持续时间"""
+        """Format duration."""
         if self.duration_seconds < 60:
             return f"{self.duration_seconds:.2f}s"
         elif self.duration_seconds < 3600:
@@ -64,7 +64,7 @@ class AgentExecution:
 
 @dataclass  
 class InteractionRecord:
-    """Agent交互记录"""
+    """Agent interaction record."""
     timestamp: float
     from_agent: str
     to_agent: str
@@ -82,64 +82,64 @@ class InteractionRecord:
 
 
 class WorkflowMonitor:
-    """工作流监控器
+    """Workflow Monitor.
     
-    用于跟踪和记录整个工作流的执行情况，包括：
-    - 每个Agent/Task的执行时间
-    - Agent之间的交互记录
-    - 整体工作流的结果和统计
+    Used to track and record the execution of the entire workflow, including:
+    - Execution time of each Agent/Task
+    - Interaction records between Agents
+    - Overall workflow results and statistics
     """
     
     def __init__(self, workflow_id: str = None, output_dir: str = None):
-        """初始化监控器
+        """Initialize monitor.
         
         Args:
-            workflow_id: 工作流唯一标识，默认使用时间戳
-            output_dir: 输出目录，默认为项目根目录的outputs文件夹
+            workflow_id: Unique workflow identifier, defaults to timestamp
+            output_dir: Output directory, defaults to outputs folder in project root
         """
         self.workflow_id = workflow_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self.start_time = time.time()
         self.end_time: float = 0.0
         
-        # 设置输出目录
+        # Set output directory
         if output_dir:
             self.output_dir = output_dir
         else:
-            # 自动检测项目根目录
+            # Automatically detect project root
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(os.path.dirname(current_dir))
             self.output_dir = os.path.join(project_root, "outputs")
         
         os.makedirs(self.output_dir, exist_ok=True)
         
-        # 工作流元数据
+        # Workflow metadata
         self.user_requirement: str = ""
         self.workflow_mode: str = ""
         self.is_async: bool = False
         
-        # Agent执行记录
+        # Agent execution records
         self.agent_executions: List[AgentExecution] = []
         self._current_execution: Optional[AgentExecution] = None
-        self._execution_map: Dict[str, AgentExecution] = {}  # 支持并行任务
+        self._execution_map: Dict[str, AgentExecution] = {}  # Support parallel tasks
         
-        # 交互记录
+        # Interaction records
         self.interactions: List[InteractionRecord] = []
         
-        # 最终结果
+        # Final result
         self.final_result: Any = None
         self.workflow_status: str = "running"  # running, completed, error
         self.error_message: str = ""
         
-        # 任务计数器
+        # Task counter
         self._task_counter = 0
     
     def set_workflow_info(self, user_requirement: str, workflow_mode: str, is_async: bool = False):
-        """设置工作流基本信息
+        """Set basic workflow information.
         
         Args:
-            user_requirement: 用户需求
-            workflow_mode: 工作模式 (preset/autonomous)
-            is_async: 是否异步执行
+            user_requirement: User requirement
+            workflow_mode: Workflow mode (preset/autonomous)
+            is_async: Whether to execute asynchronously
         """
         self.user_requirement = user_requirement
         self.workflow_mode = workflow_mode
@@ -147,13 +147,13 @@ class WorkflowMonitor:
     
     def start_agent_execution(self, agent_name: str, agent_role: str, 
                               task_name: str, task_description: str) -> None:
-        """开始记录Agent执行
+        """Start recording Agent execution.
         
         Args:
-            agent_name: Agent名称
-            agent_role: Agent角色
-            task_name: 任务名称
-            task_description: 任务描述
+            agent_name: Agent name
+            agent_role: Agent role
+            task_name: Task name
+            task_description: Task description
         """
         self._task_counter += 1
         
@@ -166,25 +166,25 @@ class WorkflowMonitor:
             status="running"
         )
         
-        # 支持并行任务：用 agent_role 作为 key
+        # Support parallel tasks: use agent_role as key
         self._execution_map[agent_role] = execution
         self._current_execution = execution
         self.agent_executions.append(execution)
         
-        # 静默模式：不在控制台输出监控信息，仅记录到报告
+        # Silent mode: do not output monitoring info to console, only record to report
         # print(f"📊 [Monitor] Agent开始执行: {agent_role} - {task_name}")
     
     def end_agent_execution(self, output: str = "", json_output: Dict = None, 
                            error: str = "", agent_role: str = None) -> None:
-        """结束指定或当前Agent执行记录
+        """End specified or current Agent execution record.
         
         Args:
-            output: 执行输出
-            json_output: JSON格式输出
-            error: 错误信息
-            agent_role: 指定的Agent角色（用于并行任务）
+            output: Execution output
+            json_output: JSON format output
+            error: Error message
+            agent_role: Specified Agent role (for parallel tasks)
         """
-        # 优先使用指定的 agent_role，否则使用 _current_execution
+        # Prioritize using specified agent_role, otherwise use _current_execution
         if agent_role and agent_role in self._execution_map:
             execution = self._execution_map[agent_role]
         else:
@@ -204,11 +204,11 @@ class WorkflowMonitor:
             else:
                 execution.status = "completed"
             
-            # 从 map 中移除已完成的执行
+            # Remove completed execution from map
             if agent_role and agent_role in self._execution_map:
                 del self._execution_map[agent_role]
             
-            # 静默模式
+            # Silent mode
             # duration = execution._format_duration()
             # print(f"✅ [Monitor] Agent执行完成: {execution.agent_role} - 耗时: {duration}")
             
@@ -217,13 +217,13 @@ class WorkflowMonitor:
     
     def record_interaction(self, from_agent: str, to_agent: str, 
                           interaction_type: str, content: str) -> None:
-        """记录Agent之间的交互
+        """Record interaction between Agents.
         
         Args:
-            from_agent: 源Agent
-            to_agent: 目标Agent  
-            interaction_type: 交互类型 (task_handoff/context_sharing/result_passing)
-            content: 交互内容
+            from_agent: Source Agent
+            to_agent: Target Agent  
+            interaction_type: Interaction type (task_handoff/context_sharing/result_passing)
+            content: Interaction content
         """
         interaction = InteractionRecord(
             timestamp=time.time(),
@@ -235,36 +235,36 @@ class WorkflowMonitor:
         self.interactions.append(interaction)
     
     def create_task_callback(self):
-        """创建用于CrewAI的任务回调函数
+        """Create task callback function for CrewAI.
         
         Returns:
-            可用于Crew task_callback参数的函数
+            Function usable for Crew task_callback parameter
         """
         def task_callback(task_output):
-            """任务完成时的回调函数"""
-            # 获取任务信息
+            """Callback function when task is completed."""
+            # Get task information
             task_name = getattr(task_output, 'name', None) or f"Task_{self._task_counter + 1}"
             task_description = getattr(task_output, 'description', 'N/A')
             
-            # 尝试获取Agent信息
+            # Try to get Agent information
             agent = getattr(task_output, 'agent', None)
             agent_name = getattr(agent, 'name', 'Unknown') if agent else 'Unknown'
             agent_role = getattr(agent, 'role', 'Unknown') if agent else 'Unknown'
             
-            # 获取输出
+            # Get output
             output_str = str(task_output)
             json_output = None
             if hasattr(task_output, 'json_dict') and task_output.json_dict:
                 json_output = task_output.json_dict
             
-            # 如果没有正在进行的执行记录，创建一个（用于处理没有显式start的情况）
+            # If no current execution record, create one (for handling cases without explicit start)
             if not self._current_execution:
                 self.start_agent_execution(agent_name, agent_role, task_name, task_description)
             
-            # 结束执行记录
+            # End execution record
             self.end_agent_execution(output=output_str, json_output=json_output)
             
-            # 记录交互（任务完成 -> 下一个任务）
+            # Record interaction (task completed -> next task)
             if len(self.agent_executions) > 1:
                 prev_agent = self.agent_executions[-2].agent_role
                 curr_agent = agent_role
@@ -279,12 +279,12 @@ class WorkflowMonitor:
     
     def set_final_result(self, result: Any, status: str = "completed", 
                         error: str = "") -> None:
-        """设置最终结果
+        """Set final result.
         
         Args:
-            result: 最终结果
-            status: 状态 (completed/error)
-            error: 错误信息
+            result: Final result
+            status: Status (completed/error)
+            error: Error message
         """
         self.end_time = time.time()
         self.final_result = result
@@ -292,14 +292,14 @@ class WorkflowMonitor:
         self.error_message = error
     
     def get_summary(self) -> Dict:
-        """获取工作流执行摘要
+        """Get workflow execution summary.
         
         Returns:
-            包含所有监控数据的字典
+            Dictionary containing all monitoring data
         """
         total_duration = self.end_time - self.start_time if self.end_time else time.time() - self.start_time
         
-        # 计算每个Agent的总耗时
+        # Calculate total time for each Agent
         agent_durations = {}
         for execution in self.agent_executions:
             role = execution.agent_role
@@ -333,7 +333,7 @@ class WorkflowMonitor:
         }
     
     def _format_duration(self, seconds: float) -> str:
-        """格式化持续时间"""
+        """Format duration."""
         if seconds < 60:
             return f"{seconds:.2f}s"
         elif seconds < 3600:
@@ -347,13 +347,13 @@ class WorkflowMonitor:
             return f"{hours}h {minutes}m {secs:.2f}s"
     
     def save_report(self, filename: str = None) -> str:
-        """保存监控报告
+        """Save monitoring report.
         
         Args:
-            filename: 文件名，默认自动生成
+            filename: Filename, defaults to auto-generated
             
         Returns:
-            保存的文件路径
+            Path to saved file
         """
         if not filename:
             mode_str = f"{self.workflow_mode}_{'async' if self.is_async else 'sync'}"
@@ -370,13 +370,13 @@ class WorkflowMonitor:
         return filepath
     
     def save_readable_report(self, filename: str = None) -> str:
-        """保存可读的文本格式监控报告
+        """Save readable text format monitoring report.
         
         Args:
-            filename: 文件名，默认自动生成
+            filename: Filename, defaults to auto-generated
             
         Returns:
-            保存的文件路径
+            Path to saved file
         """
         if not filename:
             mode_str = f"{self.workflow_mode}_{'async' if self.is_async else 'sync'}"
@@ -390,7 +390,7 @@ class WorkflowMonitor:
             f.write("ECOMATS 工作流监控报告 / Workflow Monitor Report\n")
             f.write("=" * 80 + "\n\n")
             
-            # 1. 工作流基本信息
+            # 1. Workflow basic information
             f.write("📋 工作流信息 / Workflow Info\n")
             f.write("-" * 40 + "\n")
             info = summary["workflow_info"]
@@ -405,7 +405,7 @@ class WorkflowMonitor:
                 f.write(f"  错误: {info['error_message']}\n")
             f.write("\n")
             
-            # 2. Agent统计信息
+            # 2. Agent statistics
             f.write("📊 Agent统计 / Agent Statistics\n")
             f.write("-" * 40 + "\n")
             stats = summary["agent_statistics"]
@@ -415,7 +415,7 @@ class WorkflowMonitor:
             f.write(f"  最快Agent: {stats['fastest_agent']}\n")
             f.write("\n")
             
-            # 3. 各Agent耗时详情
+            # 3. Detailed Agent durations
             f.write("⏱️ Agent耗时详情 / Agent Duration Details\n")
             f.write("-" * 40 + "\n")
             if stats['agent_durations'] and max(stats['agent_durations'].values()) > 0:
@@ -428,7 +428,7 @@ class WorkflowMonitor:
                 f.write("  (无Agent耗时数据 / No agent duration data)\n")
             f.write("\n")
             
-            # 4. 任务执行时间线
+            # 4. Task execution timeline
             f.write("📜 任务执行时间线 / Task Execution Timeline\n")
             f.write("-" * 40 + "\n")
             for i, execution in enumerate(summary["agent_executions"], 1):
@@ -441,7 +441,7 @@ class WorkflowMonitor:
                     f.write(f"     错误: {execution['error_message']}\n")
                 f.write("\n")
             
-            # 5. Agent交互记录
+            # 5. Agent interaction records
             if summary["interactions"]:
                 f.write("🔗 Agent交互记录 / Agent Interactions\n")
                 f.write("-" * 40 + "\n")
@@ -452,7 +452,7 @@ class WorkflowMonitor:
                     f.write(f"     内容: {interaction['content'][:100]}...\n" if len(interaction['content']) > 100 else f"     内容: {interaction['content']}\n")
                     f.write("\n")
             
-            # 6. 最终结果摘要
+            # 6. Final result summary
             f.write("📝 最终结果摘要 / Final Result Summary\n")
             f.write("-" * 40 + "\n")
             if summary["final_result"]:
@@ -468,23 +468,23 @@ class WorkflowMonitor:
         return filepath
     
     def print_summary(self) -> None:
-        """在终端打印执行摘要"""
+        """Print execution summary in terminal."""
         summary = self.get_summary()
         
         print("\n" + "=" * 70)
         print("📊 工作流执行摘要 / Workflow Execution Summary")
         print("=" * 70)
         
-        # 基本信息
+        # Basic information
         info = summary["workflow_info"]
         print(f"\n⏱️ 总耗时: {info['total_duration_formatted']}")
         print(f"📌 状态: {info['status']}")
         
-        # Agent统计
+        # Agent statistics
         stats = summary["agent_statistics"]
         print(f"\n📋 执行了 {stats['total_tasks']} 个任务，涉及 {stats['total_agents']} 个Agent")
         
-        # 耗时排行
+        # Duration ranking
         print("\n⏱️ Agent耗时排行:")
         for i, (role, duration) in enumerate(sorted(stats['agent_durations'].items(), 
                                                       key=lambda x: x[1], reverse=True), 1):
@@ -493,15 +493,15 @@ class WorkflowMonitor:
         print("\n" + "=" * 70)
 
 
-# 全局监控器实例（可选使用）
+# Global monitor instance (optional usage)
 _global_monitor: Optional[WorkflowMonitor] = None
 
 def get_monitor() -> Optional[WorkflowMonitor]:
-    """获取全局监控器实例"""
+    """Get global monitor instance."""
     return _global_monitor
 
 def create_monitor(workflow_id: str = None, output_dir: str = None) -> WorkflowMonitor:
-    """创建并设置全局监控器"""
+    """Create and set global monitor."""
     global _global_monitor
     _global_monitor = WorkflowMonitor(workflow_id, output_dir)
     return _global_monitor

@@ -1,7 +1,7 @@
 # ECOMATS - Multi-Agent System for Water Treatment Material Design Based on CrewAI
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](#)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
 [![Async](https://img.shields.io/badge/Async-Enabled-orange)](#)
 
@@ -183,6 +183,12 @@ The coordinator dynamically determines task execution order for more flexible ta
 - Structural Rationality (20% weight)
 
 ## Usage Instructions
+
+### Requirements
+
+- **Python 3.11 or 3.12** (Recommended)
+  - ⚠️ Python 3.13 has known compatibility issues with `chromadb` on Windows
+  - Python 3.10 may work but is not tested
 
 ### Platform Compatibility
 

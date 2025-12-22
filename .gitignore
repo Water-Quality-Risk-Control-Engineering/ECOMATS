@@ -70,3 +70,18 @@ sft_datasets_converted/
 SFT_Generation_Package/
 README_SFT_GENERATION.md
 .venv312/
+
+# Non-core scripts and local tools (do not upload)
+docs/
+scripts/*
+!scripts/main.py
+!scripts/main_async.py
+
+# Project-specific files (local only)
+CHANGELOG.md
+batch_generate.sh
+ASA评分李克特量表docx.docx
+Revision Notes.docx
+
+# Example files (local only)
+examples/

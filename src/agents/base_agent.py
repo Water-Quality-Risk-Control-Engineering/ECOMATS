@@ -81,5 +81,5 @@ class BaseAgent:
             verbose=False,
             allow_delegation=False,
             llm=agent_llm,
-            max_iter=self.max_iter  # 限制迭代次数防止工具过度调用
+            max_iter=self.max_iter  
         )

@@ -61,18 +61,17 @@ class CreativeDesigningAgent(BaseAgent):
         except Exception:
             agent.tools = ToolFactory.create_material_design_tools()
         
-        # 增强提示词，强调复用上下文、最小字段与限流
         # Enhance prompt to require context reuse, minimal fields and rate-limited calls
         agent.backstory += (
-            "\n\n在输出设计结果时，应尽可能包含以下详细信息：\n"
-            "- Materials Project ID (mp-xxx)（如该材料已在数据库中）\n"
-            "- 化学式和晶体结构描述\n"
-            "- 关键物理性质（如带隙、密度）\n"
-            "- 热力学稳定性（能量凸包上的高度）\n"
-            "\n工具使用策略（限流与复用）：\n"
-            "- 优先复用已获取的结构验证或材料标识符结果，不重复发起数据库搜索\n"
-            "- 仅当缺失必要信息时再调用Materials Project搜索，并使用最小字段集合\n"
-            "- 元素组合查询限制返回数量，避免大范围拉取\n"
+            "\n\nWhen outputting design results, include the following detailed information whenever possible:\n"
+            "- Materials Project ID (mp-xxx) (if the material exists in the database)\n"
+            "- Chemical formula and crystal structure description\n"
+            "- Key physical properties (e.g., band gap, density)\n"
+            "- Thermodynamic stability (height above convex hull)\n"
+            "\nTool Usage Strategy (Rate Limiting & Reuse):\n"
+            "- Prioritize reusing already-obtained structure validation or material identifier results; avoid duplicate database searches\n"
+            "- Only call Materials Project search when essential information is missing, using minimal field sets\n"
+            "- Limit result count for element combination queries to avoid large-scale data retrieval\n"
         )
         
         return agent

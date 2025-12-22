@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # ECOMATS - Water Treatment Material Design Multi-Agent System
-# Requirements File - Updated 2025-12-13
-# CrewAI 1.7.0 with Async Support
+# Requirements File - Updated 2025-12-22
+# Python 3.11 / 3.12 | CrewAI 1.7.0 with Async Support
 # ═══════════════════════════════════════════════════════════════
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -39,8 +39,15 @@ requests>=2.32.0        # HTTP library for sync tools
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 python-dotenv>=1.0.0    # Environment variable management
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Optional: Database Tools (install if needed)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# psycopg2-binary>=2.9.9  # PostgreSQL driver (for pg_vector_tool)
+# gremlinpython>=3.7.0    # Gremlin driver (for gdb_tool)
+
 # ═══════════════════════════════════════════════════════════════
-# Performance Notes:
+# Notes:
+# - Python 3.11 / 3.12 recommended (3.13 has chromadb issues on Windows)
 # - CrewAI 1.7.0: Async execution support (2-10x faster)
 # - httpx: Non-blocking API calls
 # - Batch processing: Up to 7.5x performance boost

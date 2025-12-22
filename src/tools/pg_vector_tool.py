@@ -1,6 +1,6 @@
 """
-PostgreSQL向量数据库查询工具
-用于从SFT数据向量数据库中检索相似的问答对
+PostgreSQL Vector Database Query Tool.
+Retrieve similar QA pairs from SFT data vector database.
 """
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -13,10 +13,10 @@ load_dotenv()
 
 
 class PGVectorTool:
-    """PostgreSQL向量数据库查询工具"""
+    """PostgreSQL Vector Database Query Tool"""
     
     def __init__(self):
-        """初始化数据库连接"""
+        """Initialize database connection"""
         self.host = os.getenv('PG_HOST', '')
         self.port = int(os.getenv('PG_PORT', '5432'))
         self.database = os.getenv('PG_DATABASE', '')
@@ -26,7 +26,7 @@ class PGVectorTool:
         self._conn = None
     
     def _get_connection(self):
-        """获取数据库连接"""
+        """Get database connection"""
         if self._conn is None or self._conn.closed:
             self._conn = psycopg2.connect(
                 host=self.host,
@@ -39,19 +39,18 @@ class PGVectorTool:
     
     def _get_embedding(self, text: str) -> List[float]:
         """
-        获取文本的向量表示
-        使用Ollama的qwen3-embedding模型生成1024维向量
+        Get text vector representation.
+        Use Ollama qwen3-embedding model to generate 1024-dim vector.
         
         Args:
-            text: 输入文本
+            text: Input text
             
         Returns:
-            1024维向量列表
+            1024-dim vector list
         """
         try:
             import requests
             
-            # 调用Ollama API生成向量
             response = requests.post(
                 'http://localhost:11434/api/embeddings',
                 json={
@@ -66,7 +65,6 @@ class PGVectorTool:
                 raise Exception(f"Embedding API error: {response.status_code}")
                 
         except Exception as e:
-            # 如果Ollama不可用，返回零向量
             print(f"Warning: Could not generate embedding: {e}")
             return [0.0] * 1024
     
@@ -78,27 +76,23 @@ class PGVectorTool:
         similarity_threshold: float = 0.0
     ) -> Dict[str, Any]:
         """
-        搜索与查询最相似的问答对
+        Search for most similar QA pairs.
         
         Args:
-            query: 查询文本
-            agent_type: 指定agent类型 ('design_agent', 'synthesis_agent', 'mechanism_agent')
-            top_k: 返回结果数量
-            similarity_threshold: 相似度阈值 (0-1)
+            query: Query text
+            agent_type: Agent type ('design_agent', 'synthesis_agent', 'mechanism_agent')
+            top_k: Number of results
+            similarity_threshold: Similarity threshold (0-1)
             
         Returns:
-            包含相似问答对的字典
+            Dict containing similar QA pairs
         """
         cur = None
         try:
-            # 生成查询向量
             query_vector = self._get_embedding(query)
-            
-            # 构建SQL查询
             conn = self._get_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
-            # 基础查询
             sql = """
                 SELECT 
                     id,
@@ -116,7 +110,6 @@ class PGVectorTool:
             
             params = [query_vector, query_vector, similarity_threshold]
             
-            # 如果指定了agent类型，添加过滤条件
             if agent_type:
                 sql += " AND agent_type = %s"
                 params.append(agent_type)
@@ -127,7 +120,6 @@ class PGVectorTool:
             cur.execute(sql, params)
             results = cur.fetchall()
             
-            # 格式化结果
             formatted_results = []
             for row in results:
                 formatted_results.append({
@@ -166,14 +158,14 @@ class PGVectorTool:
         limit: int = 10
     ) -> Dict[str, Any]:
         """
-        获取指定agent类型的所有问答对
+        Get all QA pairs for specified agent type.
         
         Args:
-            agent_type: agent类型
-            limit: 返回数量限制
+            agent_type: Agent type
+            limit: Result limit
             
         Returns:
-            问答对列表
+            QA pair list
         """
         cur = None
         try:
@@ -206,12 +198,12 @@ class PGVectorTool:
                 cur.close()
     
     def close(self):
-        """关闭数据库连接"""
+        """Close database connection"""
         if self._conn and not self._conn.closed:
             self._conn.close()
 
 
-# 创建全局实例
+# Create global instance
 def get_pg_vector_tool() -> PGVectorTool:
-    """获取PGVector工具实例"""
+    """Get PGVector tool instance"""
     return PGVectorTool()

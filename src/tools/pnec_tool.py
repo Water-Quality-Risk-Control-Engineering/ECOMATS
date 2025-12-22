@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 """
-PNEC工具 / PNEC Tool
-PNEC (Predicted No Effect Concentration) 数据库查询工具 / PNEC (Predicted No Effect Concentration) database query tool
-用于查询化学物质的预测无效应浓度数据 / Used to query predicted no effect concentration data of chemical substances
+PNEC Tool.
+PNEC (Predicted No Effect Concentration) database query tool.
+Used to query predicted no effect concentration data of chemical substances.
 """
 
 import logging
 import requests
 from typing import Dict, Any, List
 
-# 配置日志 / Configure logging
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class PNECTool:
-    """PNEC工具类 - 查询化学物质的预测无效应浓度数据 / PNEC Tool Class - Query predicted no effect concentration data of chemical substances"""
+    """PNEC Tool Class - Query predicted no effect concentration data of chemical substances."""
     
     def __init__(self):
-        """初始化PNEC工具 / Initialize PNEC tool"""
-        # PNEC数据通常来自多个来源，这里我们模拟一个综合查询工具
+        """Initialize PNEC tool."""
         # PNEC data usually comes from multiple sources, here we simulate a comprehensive query tool
         self.base_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
         self.session = requests.Session()
@@ -26,7 +25,6 @@ class PNECTool:
             "User-Agent": "ECOMATS-PNEC-Tool/1.0"
         })
         
-        # PNEC相关参数的参考范围（用于模拟数据）
         # Reference range of PNEC-related parameters (used for simulated data)
         self.pnec_reference_data = {
             "toxicity_reference": {
@@ -34,64 +32,63 @@ class PNECTool:
                 "chronic_toxicity": "NOEC, LOEC, or similar"
             },
             "assessment_factors": {
-                "acute": 100,  # 急性毒性默认评估因子
-                "chronic": 1000  # 慢性毒性默认评估因子
+                "acute": 100,  # Default acute toxicity assessment factor
+                "chronic": 1000  # Default chronic toxicity assessment factor
             }
         }
         
-        # 常见金属元素及其价态对应的毒性数据
         # Common metal elements and their toxicity data corresponding to valence states
         self.metal_toxicity_data = {
             "Ni": {
                 "valences": ["Ni²⁺"],
                 "cas_numbers": ["7440-02-0"],
                 "freshwater_pnec": {
-                    "Ni²⁺": {"value": 0.02, "unit": "mg/L", "description": "Ni²⁺离子在淡水中的预测无效应浓度"}
+                    "Ni²⁺": {"value": 0.02, "unit": "mg/L", "description": "Predicted no effect concentration of Ni²⁺ ion in freshwater"}
                 }
             },
             "W": {
                 "valences": ["W⁶⁺"],
                 "cas_numbers": ["7440-07-5"],
                 "freshwater_pnec": {
-                    "W⁶⁺": {"value": 0.1, "unit": "mg/L", "description": "W⁶⁺离子在淡水中的预测无效应浓度"}
+                    "W⁶⁺": {"value": 0.1, "unit": "mg/L", "description": "Predicted no effect concentration of W⁶⁺ ion in freshwater"}
                 }
             },
             "Co": {
                 "valences": ["Co²⁺"],
                 "cas_numbers": ["7440-48-4"],
                 "freshwater_pnec": {
-                    "Co²⁺": {"value": 0.01, "unit": "mg/L", "description": "Co²⁺离子在淡水中的预测无效应浓度"}
+                    "Co²⁺": {"value": 0.01, "unit": "mg/L", "description": "Predicted no effect concentration of Co²⁺ ion in freshwater"}
                 }
             },
             "Mo": {
                 "valences": ["Mo⁶⁺"],
                 "cas_numbers": ["7439-98-7"],
                 "freshwater_pnec": {
-                    "Mo⁶⁺": {"value": 0.05, "unit": "mg/L", "description": "Mo⁶⁺离子在淡水中的预测无效应浓度"}
+                    "Mo⁶⁺": {"value": 0.05, "unit": "mg/L", "description": "Predicted no effect concentration of Mo⁶⁺ ion in freshwater"}
                 }
             },
             "Fe": {
                 "valences": ["Fe²⁺", "Fe³⁺"],
                 "cas_numbers": ["7439-89-6"],
                 "freshwater_pnec": {
-                    "Fe²⁺": {"value": 0.5, "unit": "mg/L", "description": "Fe²⁺离子在淡水中的预测无效应浓度"},
-                    "Fe³⁺": {"value": 0.3, "unit": "mg/L", "description": "Fe³⁺离子在淡水中的预测无效应浓度"}
+                    "Fe²⁺": {"value": 0.5, "unit": "mg/L", "description": "Predicted no effect concentration of Fe²⁺ ion in freshwater"},
+                    "Fe³⁺": {"value": 0.3, "unit": "mg/L", "description": "Predicted no effect concentration of Fe³⁺ ion in freshwater"}
                 }
             }
         }
     
     def get_pnec_by_cas(self, cas_number: str) -> Dict[str, Any]:
         """
-        根据CAS号查询PNEC数据
+        Query PNEC data by CAS number.
         
         Args:
-            cas_number (str): 化学物质的CAS号
+            cas_number (str): CAS number of the chemical substance
             
         Returns:
-            Dict[str, Any]: 包含PNEC数据的字典
+            Dict[str, Any]: Dictionary containing PNEC data
         """
         try:
-            # 首先通过CAS号获取化合物基本信息
+            # First get compound basic info by CAS number
             compound_info = self._get_compound_info_by_cas(cas_number)
             
             if "error" in compound_info:
@@ -101,10 +98,10 @@ class PNECTool:
                     "error": compound_info["error"]
                 }
             
-            # 分析化合物中金属元素的价态
+            # Analyze valence states of metal elements in compound
             valence_analysis = self._analyze_element_valences(compound_info)
             
-            # 模拟PNEC计算（在实际应用中，这需要连接到专门的PNEC数据库）
+            # Simulate PNEC calculation (in real applications, need to connect to specialized PNEC database)
             pnec_data = self._calculate_pnec(compound_info)
             
             return {
@@ -118,25 +115,25 @@ class PNECTool:
             }
             
         except Exception as e:
-            logger.error(f"根据CAS号查询PNEC时出错: {e}")
+            logger.error(f"Error querying PNEC by CAS number: {e}")
             return {
                 "success": False,
                 "cas_number": cas_number,
-                "error": f"查询失败: {str(e)}"
+                "error": f"Query failed: {str(e)}"
             }
     
     def get_pnec_by_name(self, compound_name: str) -> Dict[str, Any]:
         """
-        根据化合物名称查询PNEC数据
+        Query PNEC data by compound name.
         
         Args:
-            compound_name (str): 化学物质名称
+            compound_name (str): Chemical substance name
             
         Returns:
-            Dict[str, Any]: 包含PNEC数据的字典
+            Dict[str, Any]: Dictionary containing PNEC data
         """
         try:
-            # 首先获取化合物的CAS号
+            # First get CAS number for the compound
             cas_result = self._get_cas_by_name(compound_name)
             
             if "error" in cas_result:
@@ -151,32 +148,32 @@ class PNECTool:
                 return {
                     "success": False,
                     "compound_name": compound_name,
-                    "error": "无法获取化合物的CAS号"
+                    "error": "Could not get CAS number for the compound"
                 }
             
-            # 然后通过CAS号查询PNEC数据
+            # Then query PNEC data by CAS number
             return self.get_pnec_by_cas(cas_number)
             
         except Exception as e:
-            logger.error(f"根据化合物名称查询PNEC时出错: {e}")
+            logger.error(f"Error querying PNEC by compound name: {e}")
             return {
                 "success": False,
                 "compound_name": compound_name,
-                "error": f"查询失败: {str(e)}"
+                "error": f"Query failed: {str(e)}"
             }
     
     def _get_compound_info_by_cas(self, cas_number: str) -> Dict[str, Any]:
         """
-        根据CAS号获取化合物基本信息
+        Get compound basic info by CAS number.
         
         Args:
-            cas_number (str): CAS号
+            cas_number (str): CAS number
             
         Returns:
-            Dict[str, Any]: 化合物基本信息
+            Dict[str, Any]: Compound basic info
         """
         try:
-            # 使用PubChem API通过CAS号查询化合物
+            # Query compound via PubChem API by CAS number
             url = f"{self.base_url}/compound/cid/{cas_number}/json"
             response = self.session.get(url, timeout=30)
             response.raise_for_status()
@@ -186,33 +183,33 @@ class PNECTool:
                 compound = data["PC_Compounds"][0]
                 cid = compound["id"]["id"]
                 
-                # 获取更多详细信息
+                # Get more detailed info
                 details = self._get_compound_details(cid)
-                # 添加CAS号到详细信息中
+                # Add CAS number to details
                 details["cas_number"] = cas_number
                 return details
             else:
-                return {"error": "未找到该CAS号对应的化合物"}
+                return {"error": "Compound not found for this CAS number"}
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"PubChem API请求失败: {e}")
-            return {"error": f"API请求失败: {str(e)}"}
+            logger.error(f"PubChem API request failed: {e}")
+            return {"error": f"API request failed: {str(e)}"}
         except Exception as e:
-            logger.error(f"处理响应时出错: {e}")
-            return {"error": f"处理响应时出错: {str(e)}"}
+            logger.error(f"Error processing response: {e}")
+            return {"error": f"Error processing response: {str(e)}"}
     
     def _get_cas_by_name(self, compound_name: str) -> Dict[str, Any]:
         """
-        根据化合物名称获取CAS号
+        Get CAS number by compound name.
         
         Args:
-            compound_name (str): 化合物名称
+            compound_name (str): Compound name
             
         Returns:
-            Dict[str, Any]: 包含CAS号的信息
+            Dict[str, Any]: Info containing CAS number
         """
         try:
-            # 使用PubChem API通过名称查询化合物
+            # Query compound via PubChem API by name
             url = f"{self.base_url}/compound/name/{compound_name}/json"
             response = self.session.get(url, timeout=30)
             response.raise_for_status()
@@ -222,34 +219,34 @@ class PNECTool:
                 compound = data["PC_Compounds"][0]
                 cid = compound["id"]["id"]
                 
-                # 获取CAS号
+                # Get CAS number
                 details = self._get_compound_details(cid)
                 return {
                     "cas_number": details.get("cas_number", ""),
                     "name": details.get("name", compound_name)
                 }
             else:
-                return {"error": "未找到该化合物名称对应的信息"}
+                return {"error": "Info not found for this compound name"}
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"PubChem API请求失败: {e}")
-            return {"error": f"API请求失败: {str(e)}"}
+            logger.error(f"PubChem API request failed: {e}")
+            return {"error": f"API request failed: {str(e)}"}
         except Exception as e:
-            logger.error(f"处理响应时出错: {e}")
-            return {"error": f"处理响应时出错: {str(e)}"}
+            logger.error(f"Error processing response: {e}")
+            return {"error": f"Error processing response: {str(e)}"}
     
     def _get_compound_details(self, cid: str) -> Dict[str, Any]:
         """
-        获取化合物详细信息
+        Get compound detailed info.
         
         Args:
-            cid (str): PubChem化合物ID
+            cid (str): PubChem compound ID
             
         Returns:
-            Dict[str, Any]: 化合物详细信息
+            Dict[str, Any]: Compound detailed info
         """
         try:
-            # 查询化合物的详细属性
+            # Query compound detailed properties
             url = f"{self.base_url}/compound/cid/{cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES/JSON"
             response = self.session.get(url, timeout=30)
             response.raise_for_status()
@@ -266,34 +263,34 @@ class PNECTool:
                     "isomeric_smiles": properties.get("IsomericSMILES", "")
                 }
             else:
-                return {"error": "无法获取化合物详细信息"}
+                return {"error": "Could not get compound detailed info"}
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"PubChem API请求失败: {e}")
-            return {"error": f"API请求失败: {str(e)}"}
+            logger.error(f"PubChem API request failed: {e}")
+            return {"error": f"API request failed: {str(e)}"}
         except Exception as e:
-            logger.error(f"处理响应时出错: {e}")
-            return {"error": f"处理响应时出错: {str(e)}"}
+            logger.error(f"Error processing response: {e}")
+            return {"error": f"Error processing response: {str(e)}"}
     
     def _analyze_element_valences(self, compound_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        分析化合物中金属元素的价态信息
+        Analyze valence states of metal elements in compound.
         
         Args:
-            compound_info (Dict[str, Any]): 化合物信息
+            compound_info (Dict[str, Any]): Compound info
             
         Returns:
-            Dict[str, Any]: 元素价态分析结果
+            Dict[str, Any]: Element valence analysis result
         """
         try:
-            # 获取化合物名称和化学式
+            # Get compound name and formula
             compound_name = compound_info.get("name", "")
             molecular_formula = compound_info.get("molecular_formula", "")
             
-            # 从化合物信息中提取元素
+            # Extract elements from compound info
             elements = self._extract_elements_from_formula(molecular_formula)
             
-            # 分析金属元素的价态
+            # Analyze valence states of metal elements
             metal_valences = {}
             for element in elements:
                 if element in self.metal_toxicity_data:
@@ -312,28 +309,28 @@ class PNECTool:
             }
             
         except Exception as e:
-            logger.error(f"分析元素价态时出错: {e}")
+            logger.error(f"Error analyzing element valences: {e}")
             return {
                 "success": False,
-                "error": f"分析元素价态时出错: {str(e)}"
+                "error": f"Error analyzing element valences: {str(e)}"
             }
     
     def _extract_elements_from_formula(self, formula: str) -> List[str]:
         """
-        从化学式中提取元素符号
+        Extract element symbols from chemical formula.
         
         Args:
-            formula (str): 化学式
+            formula (str): Chemical formula
             
         Returns:
-            List[str]: 元素符号列表
+            List[str]: List of element symbols
         """
         import re
-        # 匹配常见的元素符号（1-2个字母，首字母大写）
+        # Match common element symbols (1-2 letters, first uppercase)
         elements = re.findall(r'[A-Z][a-z]?', formula)
-        # 过滤掉可能不是元素的字符串
+        # Filter out strings that may not be elements
         valid_elements = []
-        # 常见元素列表（简化版）
+        # Common elements list (simplified)
         common_elements = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
                           'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
                           'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',
@@ -344,21 +341,19 @@ class PNECTool:
             if element in common_elements:
                 valid_elements.append(element)
         
-        return list(set(valid_elements))  # 去重
+        return list(set(valid_elements))  # Deduplicate
     
     def _calculate_pnec(self, compound_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        模拟PNEC计算（在实际应用中需要连接到专门的PNEC数据库）
+        Simulate PNEC calculation (in real applications, need to connect to specialized PNEC database).
         
         Args:
-            compound_info (Dict[str, Any]): 化合物信息
+            compound_info (Dict[str, Any]): Compound info
             
         Returns:
-            Dict[str, Any]: PNEC计算结果
+            Dict[str, Any]: PNEC calculation result
         """
-        # 这是一个简化的PNEC计算模型
         # This is a simplified PNEC calculation model
-        # 在实际应用中，应该使用专业的PNEC数据库和计算方法
         # In actual applications, professional PNEC databases and calculation methods should be used
         
         molecular_weight = compound_info.get("molecular_weight", 0)
@@ -367,45 +362,42 @@ class PNECTool:
         except ValueError:
             mw = 0
         
-        # 简化的PNEC计算（仅用于演示）
         # Simplified PNEC calculation (for demonstration purposes only)
-        # 实际的PNEC计算需要考虑毒性数据、评估因子等多种因素
         # Actual PNEC calculation needs to consider toxicity data, assessment factors, and other factors
         if mw > 0:
-            # 基于分子量的简化估算（仅用于演示，非真实计算）
             # Simplified estimation based on molecular weight (for demonstration purposes only, not real calculation)
             acute_pnec = 1000 / (mw ** 0.5)  # μg/L
-            chronic_pnec = acute_pnec / 10  # 通常慢性毒性比急性毒性低一个数量级
+            chronic_pnec = acute_pnec / 10  # Chronic toxicity is usually an order of magnitude lower than acute
         else:
-            acute_pnec = 10.0  # 默认值
-            chronic_pnec = 1.0  # 默认值
+            acute_pnec = 10.0  # Default value
+            chronic_pnec = 1.0  # Default value
         
         return {
             "acute_pnec": {
                 "value": round(acute_pnec, 3),
                 "unit": "μg/L",
-                "description": "基于急性毒性数据计算的预测无效应浓度",
+                "description": "Predicted no effect concentration calculated from acute toxicity data",
                 "assessment_factor": self.pnec_reference_data["assessment_factors"]["acute"]
             },
             "chronic_pnec": {
                 "value": round(chronic_pnec, 3),
                 "unit": "μg/L",
-                "description": "基于慢性毒性数据计算的预测无效应浓度",
+                "description": "Predicted no effect concentration calculated from chronic toxicity data",
                 "assessment_factor": self.pnec_reference_data["assessment_factors"]["chronic"]
             },
-            "methodology": "简化估算方法（仅用于演示）",
-            "note": "实际PNEC计算需要专业的毒性数据库和评估方法"
+            "methodology": "Simplified estimation method (for demonstration only)",
+            "note": "Actual PNEC calculation requires professional toxicity database and assessment methods"
         }
 
-# 全局实例
+# Global instance
 _pnec_tool = None
 
 def get_pnec_tool() -> PNECTool:
     """
-    获取PNEC工具实例
+    Get PNEC tool instance.
     
     Returns:
-        PNECTool: PNEC工具实例
+        PNECTool: PNEC tool instance
     """
     global _pnec_tool
     if _pnec_tool is None:

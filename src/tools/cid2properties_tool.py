@@ -1,41 +1,41 @@
 #!/usr/bin/env python3
 """
-CID2Properties工具
-根据PubChem CID查询性质
+CID2Properties Tool.
+Query compound properties by PubChem CID.
 """
 
 import logging
 from typing import Dict, Any
 from src.tools.pubchem_tool import get_pubchem_tool
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class CID2PropertiesTool:
-    """CID2Properties工具类 - 根据PubChem CID查询性质"""
+    """CID2Properties Tool Class - Query compound properties by PubChem CID."""
     
     def __init__(self):
-        """初始化CID2Properties工具"""
+        """Initialize CID2Properties tool."""
         self.pubchem_tool = get_pubchem_tool()
     
     def get_properties_by_cid(self, cid: str) -> Dict[str, Any]:
         """
-        根据PubChem CID查询化合物性质
+        Query compound properties by PubChem CID.
         
         Args:
-            cid (str): PubChem化合物ID
+            cid (str): PubChem compound ID
             
         Returns:
-            Dict[str, Any]: 包含化合物性质的字典
+            Dict[str, Any]: Dictionary containing compound properties
         """
         try:
-            # 使用PubChem工具通过CID查询化合物信息
+            # Use PubChem tool to query compound information by CID
             result = self.pubchem_tool.get_properties_by_cid(int(cid))
             
-            # 如果查询成功，整理返回结果
+            # If query successful, organize return result
             if "error" not in result:
-                # 提取属性数据
+                # Extract property data
                 if "PropertyTable" in result and "Properties" in result["PropertyTable"]:
                     properties = result["PropertyTable"]["Properties"][0]
                     return {
@@ -53,32 +53,32 @@ class CID2PropertiesTool:
                     return {
                         "success": False,
                         "cid": cid,
-                        "error": "无法解析返回数据"
+                        "error": "Unable to parse return data"
                     }
             else:
                 return {
                     "success": False,
                     "cid": cid,
-                    "error": result.get("error", "查询失败")
+                    "error": result.get("error", "Query failed")
                 }
                 
         except Exception as e:
-            logger.error(f"根据CID查询化合物性质时出错: {e}")
+            logger.error(f"Error querying compound properties by CID: {e}")
             return {
                 "success": False,
                 "cid": cid,
-                "error": f"查询失败: {str(e)}"
+                "error": f"Query failed: {str(e)}"
             }
 
-# 全局实例
+# Global instance
 _cid2properties_tool = None
 
 def get_cid2properties_tool() -> CID2PropertiesTool:
     """
-    获取CID2Properties工具实例
+    Get CID2Properties tool instance.
     
     Returns:
-        CID2PropertiesTool: CID2Properties工具实例
+        CID2PropertiesTool: CID2Properties tool instance
     """
     global _cid2properties_tool
     if _cid2properties_tool is None:

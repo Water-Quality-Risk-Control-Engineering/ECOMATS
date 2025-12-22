@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Materials Project API 工具 / Materials Project API Tool
-提供对Materials Project材料数据库的访问功能 / Provides access to Materials Project materials database
-使用官方mp-api客户端 / Uses official mp-api client
+Materials Project API Tool.
+Provides access to Materials Project materials database.
+Uses official mp-api client.
 """
 
 import os
@@ -10,51 +10,50 @@ import logging
 import time
 from typing import Dict, List, Optional, Any
 
-# 配置日志 / Configure logging
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# 添加调用间隔控制
+# Add call interval control
 _last_call_time = 0
-_call_interval = 2.0  # 增加到2秒间隔，避免频繁调用
-_max_retries = 3  # 最大重试次数
+_call_interval = 2.0  # Increased to 2 seconds interval to avoid frequent calls
+_max_retries = 3  # Maximum retry attempts
 
 try:
     from mp_api.client import MPRester
     MP_API_AVAILABLE = True
 except ImportError:
-    # mp-api客户端未安装，Materials Project工具将不可用
     # mp-api client not installed, Materials Project tool will be unavailable
     MP_API_AVAILABLE = False
-    logger.warning("mp-api客户端未安装，Materials Project工具将不可用 / mp-api client not installed, Materials Project tool will be unavailable")
+    logger.warning("mp-api client not installed, Materials Project tool will be unavailable")
 
 class MaterialsProjectTool:
-    """Materials Project API 工具类 / Materials Project API Tool Class
+    """Materials Project API Tool Class.
     
-    支持多种无机材料的查询和验证：
-    1. 纯金属材料
-    2. 金属氧化物
-    3. 金属硫化物
-    4. 金属氮化物/碳化物
-    5. MOF/COF材料
-    6. 其他无机化合物
+    Supports querying and validation for various inorganic materials:
+    1. Pure metal materials
+    2. Metal oxides
+    3. Metal sulfides
+    4. Metal nitrides/carbides
+    5. MOF/COF materials
+    6. Other inorganic compounds
     """
     
     def __init__(self, api_key: Optional[str] = None):
         """
-        初始化Materials Project工具 / Initialize Materials Project tool
+        Initialize Materials Project tool.
         
         Args:
-            api_key (str, optional): Materials Project API密钥 / Materials Project API key
+            api_key (str, optional): Materials Project API key
         """
         if not MP_API_AVAILABLE:
-            raise ImportError("mp-api客户端未安装，请运行 'pip install mp-api'")
+            raise ImportError("mp-api client not installed, please run 'pip install mp-api'")
             
         self.api_key = api_key or os.getenv('MATERIALS_PROJECT_API_KEY')
         if not self.api_key:
-            raise ValueError("Materials Project API密钥未设置")
+            raise ValueError("Materials Project API key not set")
             
-        # 初始化MPRester客户端
+        # Initialize MPRester client
         self.mpr = MPRester(self.api_key)
         self._cache = {
             "search": {},
@@ -73,20 +72,20 @@ class MaterialsProjectTool:
                         skip: int = 0,
                         fields: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        搜索材料 / Search materials
+        Search materials.
         
         Args:
-            formula (str, optional): 化学式 / Chemical formula
-            elements (List[str], optional): 必须包含的元素 / Required elements
-            exclude_elements (List[str], optional): 要排除的元素 / Elements to exclude
-            crystal_system (str, optional): 晶体系统 / Crystal system
-            limit (int): 返回结果的最大数量 / Maximum number of results to return
+            formula (str, optional): Chemical formula
+            elements (List[str], optional): Required elements
+            exclude_elements (List[str], optional): Elements to exclude
+            crystal_system (str, optional): Crystal system
+            limit (int): Maximum number of results to return
             
         Returns:
-            Dict: 材料搜索结果 / Material search results
+            Dict: Material search results
         """
         try:
-            # 添加调用间隔控制和重试机制
+            # Add call interval control and retry mechanism
             global _last_call_time, _call_interval, _max_retries
             retries = 0
             
@@ -98,7 +97,7 @@ class MaterialsProjectTool:
                         time.sleep(_call_interval - time_since_last_call)
                     _last_call_time = time.time()
                     
-                    # 构建搜索参数
+                    # Build search parameters
                     kwargs = {}
                     
                     if formula:
@@ -110,7 +109,7 @@ class MaterialsProjectTool:
                     if crystal_system:
                         kwargs["crystal_system"] = crystal_system
                         
-                    chunk_size = min(limit, 50) if elements else min(limit, 100)  # 减少chunk_size
+                    chunk_size = min(limit, 50) if elements else min(limit, 100)  # Reduce chunk_size
                     
                     default_fields = [
                         "material_id", 
@@ -123,7 +122,7 @@ class MaterialsProjectTool:
                         tuple(exclude_elements) if exclude_elements else (),
                         crystal_system or ""
                     )
-                    # 优先尝试规范化缓存：忽略limit/skip，按需切片与字段子集
+                    # Try normalized cache first: ignore limit/skip, slice and subset fields on demand
                     norm_entry = self._cache["search_norm"].get(normalized_key)
                     now = time.time()
                     if norm_entry and now - norm_entry["timestamp"] < self._ttl_seconds:
@@ -132,11 +131,11 @@ class MaterialsProjectTool:
                         requested_fields_set = set(fields)
                         if requested_fields_set.issubset(cached_fields_set) and len(cached_materials) >= (skip + limit):
                             slice_materials = cached_materials[skip:skip+limit]
-                            # 根据请求字段返回子集
+                            # Return subset based on requested fields
                             subset_list = []
                             for m in slice_materials:
                                 subset = {k: v for k, v in m.items() if k in requested_fields_set or k in {"material_id", "formula"}}
-                                # 确保存在formula字段
+                                # Ensure formula field exists
                                 if "formula" not in subset and "formula" in m:
                                     subset["formula"] = m.get("formula")
                                 subset_list.append(subset)
@@ -161,7 +160,7 @@ class MaterialsProjectTool:
                     if cached and now - cached[0] < self._ttl_seconds:
                         return cached[1]
                     
-                    # 执行搜索
+                    # Execute search
                     docs = self.mpr.materials.search(
                         **kwargs,
                         num_chunks=1,
@@ -169,15 +168,15 @@ class MaterialsProjectTool:
                         fields=fields
                     )
                     
-                    # 手动限制结果数量
+                    # Manually limit result count
                     if len(docs) > limit:
                         docs = docs[:limit]
                     
-                    # 应用skip参数，跳过前skip个结果
+                    # Apply skip parameter, skip first `skip` results
                     if skip > 0:
                         docs = docs[skip:]
                     
-                    # 转换为字典格式
+                    # Convert to dictionary format
                     materials_data = []
                     for doc in docs:
                         material_dict = {
@@ -203,14 +202,14 @@ class MaterialsProjectTool:
                         }
                     }
                     self._cache["search"][cache_key] = (time.time(), result)
-                    # 更新规范化缓存：保存更大的列表与字段并供后续切片复用
+                    # Update normalized cache: save larger list and fields for reuse in slicing
                     prev = self._cache["search_norm"].get(normalized_key)
                     merged_list = materials_data
                     fields_set = set()
                     for item in merged_list:
                         fields_set.update(item.keys())
                     if prev and now - prev["timestamp"] < self._ttl_seconds:
-                        # 若已有缓存，合并并取更大的结果集
+                        # If cache exists, merge and take larger result set
                         if len(prev["materials"]) > len(merged_list):
                             merged_list = prev["materials"]
                             fields_set.update(prev.get("fields_set", set()))
@@ -224,32 +223,32 @@ class MaterialsProjectTool:
                 except Exception as e:
                     retries += 1
                     if retries >= _max_retries:
-                        logger.error(f"搜索材料时出错: {e}")
-                        return {"error": f"搜索材料时出错: {str(e)}"}
+                        logger.error(f"Error searching materials: {e}")
+                        return {"error": f"Error searching materials: {str(e)}"}
                     else:
-                        logger.warning(f"搜索材料时出错，正在重试 ({retries}/{_max_retries}): {e}")
-                        time.sleep(_call_interval * retries)  # 指数退避
+                        logger.warning(f"Error searching materials, retrying ({retries}/{_max_retries}): {e}")
+                        time.sleep(_call_interval * retries)  # Exponential backoff
             
         except Exception as e:
-            logger.error(f"搜索材料时出错: {e}")
-            return {"error": f"搜索材料时出错: {str(e)}"}
+            logger.error(f"Error searching materials: {e}")
+            return {"error": f"Error searching materials: {str(e)}"}
     
     def get_material_by_id(self, material_id: str) -> Dict[str, Any]:
         """
-        通过材料ID获取特定材料的详细信息
+        Get detailed info for a specific material by ID.
         
         Args:
-            material_id (str): 材料唯一标识符
+            material_id (str): Material unique identifier
             
         Returns:
-            Dict: 材料详细信息
+            Dict: Material detailed info
         """
         try:
-            # 验证material_id格式
+            # Validate material_id format
             if not material_id or material_id == "N/A" or material_id == "":
-                return {"error": f"无效的材料ID: {material_id}"}
+                return {"error": f"Invalid material ID: {material_id}"}
             
-            # 添加调用间隔控制和重试机制
+            # Add call interval control and retry mechanism
             global _last_call_time, _call_interval, _max_retries
             retries = 0
             
@@ -265,7 +264,7 @@ class MaterialsProjectTool:
                         time.sleep(_call_interval - time_since_last_call)
                     _last_call_time = time.time()
                     
-                    # 获取材料文档，限制只获取需要的字段
+                    # Get material document, limit to only required fields
                     fields = [
                         "material_id", 
                         "formula_pretty", 
@@ -279,29 +278,29 @@ class MaterialsProjectTool:
                     docs = self.mpr.materials.search(material_ids=[material_id], fields=fields)
                     
                     if not docs:
-                        return {"error": f"未找到材料ID: {material_id}"}
+                        return {"error": f"Material ID not found: {material_id}"}
                         
                     doc = docs[0]
                     
-                    # 验证获取到的材料ID是否与查询的ID匹配
+                    # Verify retrieved material ID matches query ID
                     retrieved_material_id = str(getattr(doc, "material_id", ""))
                     if retrieved_material_id != material_id:
-                        return {"error": f"材料ID不匹配: 查询 {material_id}, 获取到 {retrieved_material_id}"}
+                        return {"error": f"Material ID mismatch: queried {material_id}, got {retrieved_material_id}"}
                     
-                    # 提取关键信息并处理缺失值，确保所有值都能被JSON序列化
+                    # Extract key information and handle missing values, ensure all values are JSON serializable
                     def safe_getattr(obj, attr, default="N/A"):
-                        """安全获取属性值，确保能被JSON序列化"""
+                        """Safely get attribute value, ensure JSON serializable."""
                         try:
                             value = getattr(obj, attr, default)
                             if value is None or value == "":
                                 return default
-                            # 转换为字符串以确保能被JSON序列化
+                            # Convert to string to ensure JSON serializable
                             return str(value)
                         except Exception:
                             return default
                     
                     def safe_get_nested_attr(obj, attr_chain, default="N/A"):
-                        """安全获取嵌套属性值"""
+                        """Safely get nested attribute value."""
                         try:
                             current = obj
                             for attr in attr_chain:
@@ -314,14 +313,14 @@ class MaterialsProjectTool:
                         except Exception:
                             return default
                     
-                    # 为数值数据添加单位信息
+                    # Add unit information for numerical data
                     volume_value = safe_getattr(doc, "volume", "N/A")
                     volume_with_unit = f"{volume_value} Å³" if volume_value != "N/A" else "N/A"
                     
                     density_value = safe_getattr(doc, "density", "N/A")
                     density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
                     
-                    # 安全获取嵌套的晶体系统属性
+                    # Safely get nested crystal system attribute
                     crystal_system_value = safe_get_nested_attr(doc, ["symmetry", "crystal_system"], "N/A")
                     
                     material_info = {
@@ -341,28 +340,28 @@ class MaterialsProjectTool:
                 except Exception as e:
                     retries += 1
                     if retries >= _max_retries:
-                        logger.error(f"获取材料详情时出错: {e}")
-                        return {"error": f"获取材料详情时出错: {str(e)}"}
+                        logger.error(f"Error getting material details: {e}")
+                        return {"error": f"Error getting material details: {str(e)}"}
                     else:
-                        logger.warning(f"获取材料详情时出错，正在重试 ({retries}/{_max_retries}): {e}")
-                        time.sleep(_call_interval * retries)  # 指数退避
+                        logger.warning(f"Error getting material details, retrying ({retries}/{_max_retries}): {e}")
+                        time.sleep(_call_interval * retries)  # Exponential backoff
             
         except Exception as e:
-            logger.error(f"获取材料详情时出错: {e}")
-            return {"error": f"获取材料详情时出错: {str(e)}"}
+            logger.error(f"Error getting material details: {e}")
+            return {"error": f"Error getting material details: {str(e)}"}
     
     def validate_material_id(self, material_id: Any) -> bool:
         """
-        验证材料ID是否有效
+        Validate if material ID is valid.
         
         Args:
-            material_id: 材料ID
+            material_id: Material ID
             
         Returns:
-            材料ID是否有效
+            Whether material ID is valid
         """
         try:
-            # 材料ID应该是以"mp-"开头的字符串
+            # Material ID should be a string starting with "mp-"
             if material_id is None or material_id == "" or material_id == "N/A":
                 return False
             material_id_str = str(material_id)
@@ -372,19 +371,19 @@ class MaterialsProjectTool:
     
     def verify_material_id_exists(self, material_id: str) -> bool:
         """
-        验证材料ID在Materials Project数据库中是否存在
+        Verify if material ID exists in Materials Project database.
         
         Args:
-            material_id (str): 材料ID
+            material_id (str): Material ID
             
         Returns:
-            bool: 材料ID是否存在
+            bool: Whether material ID exists
         """
         try:
             if not self.validate_material_id(material_id):
                 return False
             
-            # 添加调用间隔控制
+            # Add call interval control
             global _last_call_time, _call_interval
             now = time.time()
             cached_by_id = self._cache["by_id"].get(material_id)
@@ -399,10 +398,10 @@ class MaterialsProjectTool:
                 time.sleep(_call_interval - time_since_last_call)
             _last_call_time = time.time()
             
-            # 使用Materials Project API验证材料ID是否存在
+            # Use Materials Project API to verify material ID existence
             docs = self.mpr.materials.search(material_ids=[material_id], fields=["material_id"])
             
-            # 如果返回了结果且第一个结果的material_id与查询的ID匹配，则材料存在
+            # If results returned and first result's material_id matches queried ID, material exists
             if docs and len(docs) > 0:
                 retrieved_material_id = str(getattr(docs[0], "material_id", ""))
                 result = retrieved_material_id == material_id
@@ -411,30 +410,30 @@ class MaterialsProjectTool:
             self._cache["verify"][material_id] = (time.time(), False)
             return False
         except Exception as e:
-            logger.warning(f"验证材料ID时出错: {e}")
+            logger.warning(f"Error verifying material ID: {e}")
             return False
     
     def get_materials_summary(self, 
                              elements: Optional[List[str]] = None,
                              limit: int = 100) -> Dict[str, Any]:
         """
-        获取材料摘要信息
+        Get material summary info.
         
         Args:
-            elements (List[str], optional): 元素列表
-            limit (int): 返回结果的最大数量
+            elements (List[str], optional): Element list
+            limit (int): Maximum number of results to return
             
         Returns:
-            Dict: 材料摘要信息
+            Dict: Material summary info
         """
         try:
-            # 构建搜索参数
+            # Build search parameters
             kwargs = {}
             if elements:
                 kwargs["elements"] = elements
                 
-            # 优化：只获取需要的字段以提高查询速度
-            # 使用API支持的字段
+            # Optimization: only get required fields to improve query speed
+            # Use fields supported by API
             fields = [
                 "material_id", 
                 "formula_pretty", 
@@ -442,17 +441,17 @@ class MaterialsProjectTool:
                 "density"
             ]
                 
-            # 执行搜索
+            # Execute search
             docs = self.mpr.materials.search(
                 **kwargs,
                 chunk_size=min(limit, 1000),
                 fields=fields
             )
             
-            # 转换为摘要格式
+            # Convert to summary format
             materials_data = []
             for doc in docs:
-                # 为数值数据添加单位信息
+                # Add unit information for numerical data
                 density_value = getattr(doc, "density", "N/A")
                 density_with_unit = f"{density_value} g/cm³" if density_value != "N/A" else "N/A"
                 
@@ -473,21 +472,21 @@ class MaterialsProjectTool:
             }
             
         except Exception as e:
-            logger.error(f"获取材料摘要时出错: {e}")
-            return {"error": f"获取材料摘要时出错: {str(e)}"}
+            logger.error(f"Error getting material summary: {e}")
+            return {"error": f"Error getting material summary: {str(e)}"}
 
-# 创建全局实例
+# Create global instance
 materials_project_tool = None
 
 def get_materials_project_tool(api_key: Optional[str] = None) -> MaterialsProjectTool:
     """
-    获取Materials Project工具实例
+    Get Materials Project tool instance.
     
     Args:
-        api_key (str, optional): Materials Project API密钥
+        api_key (str, optional): Materials Project API key
         
     Returns:
-        MaterialsProjectTool: 工具实例
+        MaterialsProjectTool: Tool instance
     """
     global materials_project_tool
     if materials_project_tool is None:

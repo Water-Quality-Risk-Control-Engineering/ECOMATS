@@ -5,21 +5,21 @@ import random
 import os
 from typing import Dict, Any, List, Optional
 
-# 配置日志 / Configure logging
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class MolPortTool:
-    """MolPort数据库查询工具 / MolPort database query tool
+    """MolPort database query tool.
     
-    支持功能：
-    1. 通过SMILES搜索化合物（精确、相似性、子结构等）
-    2. 通过MolPort ID获取详细信息
-    3. 获取供应商、库存和价格信息
-    4. 评估化合物的商业可获得性
+    Supported features:
+    1. Search compounds by SMILES (exact, similarity, substructure, etc.)
+    2. Get detailed information by MolPort ID
+    3. Get supplier, inventory and price information
+    4. Assess compound commercial availability
     """
     
-    # 搜索类型常量 / Search type constants
+    # Search type constants
     SEARCH_TYPE_EXACT = 3
     SEARCH_TYPE_SIMILARITY = 4
     SEARCH_TYPE_SUBSTRUCTURE = 1
@@ -29,40 +29,40 @@ class MolPortTool:
     
     def __init__(self, api_key: str = None):
         """
-        初始化MolPort工具 / Initialize MolPort tool
+        Initialize MolPort tool.
         
         Args:
-            api_key: MolPort API密钥，如果不提供则从环境变量读取 / MolPort API key
+            api_key: MolPort API key, reads from environment variable if not provided
         """
         self.base_url = "https://api.molport.com/api"
         self.api_key = api_key or os.getenv('MOLPORT_API_KEY', '')
         self.session = requests.Session()
         
-        # 设置请求头 / Set request headers
+        # Set request headers
         self.session.headers.update({
             "User-Agent": "ECOMATS-MolPort-Tool/1.0",
             "Content-Type": "application/json",
             "Accept": "application/json"
         })
         
-        # 请求频率控制 / Request rate control
+        # Request rate control
         self.last_request_time = 0
-        self.min_request_interval = 1.0  # MolPort API限制较宽松
+        self.min_request_interval = 1.0  # MolPort API has relaxed rate limits
     
     def _make_get_request(self, endpoint: str, params: Dict = None, timeout: int = 30, max_retries: int = 3) -> Dict[str, Any]:
         """
-        发送GET请求，带重试机制 / Send GET request with retry mechanism
+        Send GET request with retry mechanism.
         
         Args:
-            endpoint: API端点 / API endpoint
-            params: URL参数 / URL parameters
-            timeout: 超时时间（秒） / Timeout (seconds)
-            max_retries: 最大重试次数 / Maximum retry attempts
+            endpoint: API endpoint
+            params: URL parameters
+            timeout: Timeout in seconds
+            max_retries: Maximum retry attempts
             
         Returns:
-            API响应数据 / API response data
+            API response data
         """
-        # 请求频率控制 / Request rate control
+        # Request rate control
         current_time = time.time()
         time_since_last_request = current_time - self.last_request_time
         if time_since_last_request < self.min_request_interval:
@@ -71,9 +71,9 @@ class MolPortTool:
         for attempt in range(max_retries):
             try:
                 url = f"{self.base_url}/{endpoint}"
-                logger.debug(f"请求MolPort API (GET): {url}")
+                logger.debug(f"Requesting MolPort API (GET): {url}")
                 
-                # 更新最后请求时间 / Update last request time
+                # Update last request time
                 self.last_request_time = time.time()
                 
                 response = self.session.get(url, params=params, timeout=timeout)
@@ -82,34 +82,34 @@ class MolPortTool:
                 return response.json()
                 
             except requests.exceptions.RequestException as e:
-                logger.warning(f"MolPort API请求失败 (尝试 {attempt + 1}/{max_retries}): {e}")
+                logger.warning(f"MolPort API request failed (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)
-                    logger.info(f"等待 {delay:.2f} 秒后重试")
+                    logger.info(f"Waiting {delay:.2f} seconds before retry")
                     time.sleep(delay)
                 else:
-                    logger.error(f"MolPort API请求最终失败: {e}")
-                    return {"error": f"API请求失败: {str(e)}"}
+                    logger.error(f"MolPort API request finally failed: {e}")
+                    return {"error": f"API request failed: {str(e)}"}
             except Exception as e:
-                logger.error(f"处理响应时出错: {e}")
-                return {"error": f"处理响应时出错: {str(e)}"}
+                logger.error(f"Error processing response: {e}")
+                return {"error": f"Error processing response: {str(e)}"}
         
-        return {"error": "请求失败"}
+        return {"error": "Request failed"}
     
     def _make_post_request(self, endpoint: str, data: Dict = None, timeout: int = 60, max_retries: int = 3) -> Dict[str, Any]:
         """
-        发送POST请求，带重试机制 / Send POST request with retry mechanism
+        Send POST request with retry mechanism.
         
         Args:
-            endpoint: API端点 / API endpoint
-            data: 请求体数据 / Request body data
-            timeout: 超时时间（秒） / Timeout (seconds)
-            max_retries: 最大重试次数 / Maximum retry attempts
+            endpoint: API endpoint
+            data: Request body data
+            timeout: Timeout in seconds
+            max_retries: Maximum retry attempts
             
         Returns:
-            API响应数据 / API response data
+            API response data
         """
-        # 请求频率控制 / Request rate control
+        # Request rate control
         current_time = time.time()
         time_since_last_request = current_time - self.last_request_time
         if time_since_last_request < self.min_request_interval:
@@ -118,9 +118,9 @@ class MolPortTool:
         for attempt in range(max_retries):
             try:
                 url = f"{self.base_url}/{endpoint}"
-                logger.debug(f"请求MolPort API (POST): {url}")
+                logger.debug(f"Requesting MolPort API (POST): {url}")
                 
-                # 更新最后请求时间 / Update last request time
+                # Update last request time
                 self.last_request_time = time.time()
                 
                 response = self.session.post(url, json=data, timeout=timeout)
@@ -129,34 +129,34 @@ class MolPortTool:
                 return response.json()
                 
             except requests.exceptions.RequestException as e:
-                logger.warning(f"MolPort API请求失败 (尝试 {attempt + 1}/{max_retries}): {e}")
+                logger.warning(f"MolPort API request failed (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     delay = (2 ** attempt) + (random.randint(0, 1000) / 1000)
-                    logger.info(f"等待 {delay:.2f} 秒后重试")
+                    logger.info(f"Waiting {delay:.2f} seconds before retry")
                     time.sleep(delay)
                 else:
-                    logger.error(f"MolPort API请求最终失败: {e}")
-                    return {"error": f"API请求失败: {str(e)}"}
+                    logger.error(f"MolPort API request finally failed: {e}")
+                    return {"error": f"API request failed: {str(e)}"}
             except Exception as e:
-                logger.error(f"处理响应时出错: {e}")
-                return {"error": f"处理响应时出错: {str(e)}"}
+                logger.error(f"Error processing response: {e}")
+                return {"error": f"Error processing response: {str(e)}"}
         
-        return {"error": "请求失败"}
+        return {"error": "Request failed"}
     
     def load_molecule_by_id(self, molecule_id: str) -> Dict[str, Any]:
         """
-        通过MolPort ID加载分子详细信息 / Load molecule details by MolPort ID
+        Load molecule details by MolPort ID.
         
         Args:
-            molecule_id: MolPort分子ID（如 "2325020" 或 "Molport-002-325-020"）
+            molecule_id: MolPort molecule ID (e.g., "2325020" or "Molport-002-325-020")
             
         Returns:
-            分子详细信息，包括SMILES、供应商、价格、库存等
+            Molecule details including SMILES, suppliers, prices, inventory, etc.
         """
         if not self.api_key:
-            return {"error": "未配置MOLPORT_API_KEY，请在.env文件中设置"}
+            return {"error": "MOLPORT_API_KEY not configured, please set it in .env file"}
         
-        # 移除可能的"Molport-"前缀，只保留数字
+        # Remove possible "Molport-" prefix, keep only numbers
         if isinstance(molecule_id, str) and molecule_id.startswith("Molport-"):
             molecule_id = molecule_id.replace("Molport-", "").replace("-", "")
         
@@ -177,25 +177,25 @@ class MolPortTool:
         max_search_time: int = 60000
     ) -> Dict[str, Any]:
         """
-        通过SMILES进行化学结构搜索 / Search by SMILES structure
+        Search by SMILES structure.
         
         Args:
-            smiles: SMILES字符串 / SMILES string
-            search_type: 搜索类型（1-6），默认为4（相似性搜索）
-            similarity_index: 相似度阈值（0-1），仅用于相似性搜索
-            max_results: 最大返回结果数（最大10000）
-            max_search_time: 最大搜索时间（毫秒）
+            smiles: SMILES string
+            search_type: Search type (1-6), defaults to 4 (similarity search)
+            similarity_index: Similarity threshold (0-1), only for similarity search
+            max_results: Maximum number of results (max 10000)
+            max_search_time: Maximum search time in milliseconds
             
         Returns:
-            搜索结果列表，包含匹配的分子ID、SMILES和相似度指数
+            Search result list containing matched molecule IDs, SMILES and similarity indices
         """
         if not self.api_key:
-            return {"error": "未配置MOLPORT_API_KEY，请在.env文件中设置"}
+            return {"error": "MOLPORT_API_KEY not configured, please set it in .env file"}
         
         if search_type is None:
             search_type = self.SEARCH_TYPE_SIMILARITY
         
-        # 验证参数 / Validate parameters
+        # Validate parameters
         if max_results > 10000:
             max_results = 10000
         if similarity_index < 0 or similarity_index > 1:
@@ -215,13 +215,13 @@ class MolPortTool:
     
     def get_availability_info(self, molecule_id: str) -> Dict[str, Any]:
         """
-        获取化合物的商业可获得性信息（简化版）/ Get commercial availability info
+        Get commercial availability info (simplified version).
         
         Args:
-            molecule_id: MolPort分子ID
+            molecule_id: MolPort molecule ID
             
         Returns:
-            包含可获得性、供应商数量、价格范围等信息的字典
+            Dict containing availability, supplier count, price range, etc.
         """
         molecule_data = self.load_molecule_by_id(molecule_id)
         
@@ -231,7 +231,7 @@ class MolPortTool:
         try:
             data = molecule_data.get("Data", {}).get("Molecule", {})
             
-            # 提取关键可获得性信息
+            # Extract key availability information
             availability_info = {
                 "molport_id": data.get("Molport Id", ""),
                 "status": data.get("Status", ""),
@@ -248,7 +248,7 @@ class MolPortTool:
                 "currency": None
             }
             
-            # 统计供应商和价格信息
+            # Count suppliers and price information
             catalogues = data.get("Catalogues", {})
             all_suppliers = []
             
@@ -258,7 +258,7 @@ class MolPortTool:
             
             availability_info["supplier_count"] = len(all_suppliers)
             
-            # 收集价格信息
+            # Collect price information
             prices = []
             for supplier in all_suppliers:
                 for catalogue in supplier.get("Catalogues", []):
@@ -274,31 +274,31 @@ class MolPortTool:
                             })
             
             if prices:
-                # 假设所有价格使用同一货币（通常是USD）
+                # Assume all prices use the same currency (usually USD)
                 availability_info["currency"] = prices[0]["currency"]
                 price_values = [p["price"] for p in prices]
                 availability_info["min_price"] = min(price_values)
                 availability_info["max_price"] = max(price_values)
-                availability_info["price_details"] = prices[:5]  # 只保留前5个价格信息
+                availability_info["price_details"] = prices[:5]  # Keep only first 5 price entries
             
             return availability_info
             
         except Exception as e:
-            logger.error(f"解析可获得性信息时出错: {e}")
-            return {"error": f"解析数据失败: {str(e)}"}
+            logger.error(f"Error parsing availability info: {e}")
+            return {"error": f"Failed to parse data: {str(e)}"}
     
     def check_compound_availability(self, smiles: str, similarity_threshold: float = 0.95) -> Dict[str, Any]:
         """
-        检查化合物的商业可获得性（通过SMILES）/ Check compound commercial availability by SMILES
+        Check compound commercial availability by SMILES.
         
         Args:
-            smiles: SMILES字符串
-            similarity_threshold: 相似度阈值，用于判断是否为"可获得"
+            smiles: SMILES string
+            similarity_threshold: Similarity threshold for determining "available"
             
         Returns:
-            可获得性评估结果
+            Availability assessment result
         """
-        # 首先进行精确搜索
+        # First perform exact search
         exact_result = self.search_by_smiles(smiles, search_type=self.SEARCH_TYPE_EXACT, max_results=10)
         
         if "error" in exact_result:
@@ -316,7 +316,7 @@ class MolPortTool:
         }
         
         if molecules:
-            # 有精确匹配
+            # Has exact match
             assessment["availability_status"] = "available"
             best_match = molecules[0]
             assessment["best_match"] = {
@@ -327,7 +327,7 @@ class MolPortTool:
                 "unverified_amount": best_match.get("Unverified Amount", 0)
             }
         else:
-            # 尝试相似性搜索
+            # Try similarity search
             similar_result = self.search_by_smiles(
                 smiles, 
                 search_type=self.SEARCH_TYPE_SIMILARITY,
@@ -355,18 +355,18 @@ class MolPortTool:
         return assessment
 
 
-# 单例模式 / Singleton pattern
+# Singleton pattern
 _molport_tool_instance = None
 
 def get_molport_tool(api_key: str = None) -> MolPortTool:
     """
-    获取MolPort工具单例 / Get MolPort tool singleton
+    Get MolPort tool singleton.
     
     Args:
-        api_key: MolPort API密钥（可选）/ MolPort API key (optional)
+        api_key: MolPort API key (optional)
         
     Returns:
-        MolPortTool实例 / MolPortTool instance
+        MolPortTool instance
     """
     global _molport_tool_instance
     if _molport_tool_instance is None:

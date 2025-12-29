@@ -26,12 +26,12 @@ This is a high-performance multi-agent system built using the **CrewAI 1.7.0** f
 - Agent task allocation mechanism with automatic mode detection
 
 ### 🛠️ Tools & Integration
-- 13+ specialized AI tools for material property querying
+- 14 specialized AI tools for material property querying
 - Async PubChem and Materials Project tools
 - MolPort API for commercial availability assessment
 - Comprehensive data validation and structure verification
 - Supports Alibaba Cloud EAS self-deployed model integration
-- Detailed Prompt files define expert behaviors
+- Multi-language prompt system (English/Chinese)
 
 ## Project Structure
 
@@ -52,16 +52,14 @@ ECOMATS/
 │   │   └── task_organizing_agent.py   # Task organizing agent with intent recognition & agent registry
 │   ├── config/                # Configuration files
 │   │   └── config.py
-│   ├── prompts/               # Prompt files
-│   │   ├── coordinator_prompt.md
-│   │   ├── enhanced_final_validator_prompt.md  # ASA Overall synthesis prompt
-│   │   ├── expert_template_prompt.md           # Parameterized template for A/B/C experts
-│   │   ├── intent_recognition_prompt.md        # User intent recognition
-│   │   ├── literature_processor_prompt.md
-│   │   ├── material_designer_prompt.md
-│   │   ├── mechanism_expert_prompt.md          # Mechanism analysis expert
-│   │   ├── operation_suggesting_prompt.md
-│   │   └── synthesis_expert_prompt.md
+│   ├── locales/               # Multi-language support
+│   │   ├── en/                # English prompts and tasks
+│   │   │   ├── prompts/       # English agent prompts
+│   │   │   └── tasks/         # English task definitions
+│   │   ├── zh/                # Chinese prompts and tasks
+│   │   │   ├── prompts/       # Chinese agent prompts
+│   │   │   └── tasks/         # Chinese task definitions
+│   │   └── texts.py           # UI text translations
 │   ├── tasks/                 # Task definitions
 │   │   ├── base_task.py
 │   │   ├── design_task.py
@@ -294,10 +292,30 @@ The system integrates the following database query tools that agents can automat
 ### Tool Factory Pattern
 
 All tools are managed through the **ToolFactory** class (`src/tools/factory.py`), which provides specialized tool sets for different agent types:
-- **Unified Assessment Tools** (4 tools) - Materials Project, PubChem, PNEC, MolPort (shared by ASA A/B/C)
-- **Material Design Tools** (2 tools) - Materials Project, PubChem for design
-- **Material Search Tools** (2 tools) - For synthesis method exploration
-- **Literature Extraction Tools** (3 tools) - Chemical information extraction and validation
+
+- **Unified Assessment Tools** (4 tools) - Materials Project, PubChem, PNEC, MolPort
+  - Shared by Assessment Screening Agents A/B/C
+  - Covers all 5 evaluation dimensions
+
+- **Material Design Tools** (2 tools) - Materials Project, PubChem
+  - Used by Creative Designing Agent
+  - Core material structure and property queries
+
+- **Material Search Tools** (2 tools) - Materials Project, PubChem
+  - Used by Synthesis Guiding Agent
+  - Material synthesis and reagent safety data
+
+- **Literature Extraction Tools** (3 tools) - Materials Project, PubChem, Data Validator
+  - Used by Extracting Agent
+  - Chemical information extraction and validation
+
+- **Mechanism Analysis Tools** (2 tools) - Materials Project, PubChem
+  - Used by Mechanism Mining Agent
+  - Material structure and chemical reactivity
+
+- **Operation Guidance Tools** (3 tools) - PubChem, Materials Project, PNEC
+  - Used by Operation Suggesting Agent
+  - Safety data, cost data, environmental impact
 
 ## Iterative Design Mechanism
 

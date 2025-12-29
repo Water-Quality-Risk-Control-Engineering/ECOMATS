@@ -27,31 +27,18 @@ pip install -r requirements.txt
 python scripts/main_async.py
 ```
 
-## System Architecture
+## Agents
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Task Organizing Agent                        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   Creative    │   │  Extracting   │   │  Mechanism    │
-│   Designing   │   │    Agent      │   │   Mining      │
-└───────────────┘   └───────────────┘   └───────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────────┐
-│          Assessment Screening Agents (A, B, C) — Parallel       │
-└─────────────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│   ASA Overall │──▶│   Synthesis   │──▶│   Operation   │
-│  (Validator)  │   │   Guiding     │   │  Suggesting   │
-└───────────────┘   └───────────────┘   └───────────────┘
-```
+| Agent | Role |
+|-------|------|
+| Task Organizing | Coordinates agents (autonomous mode only) |
+| Creative Designing | Designs material solutions |
+| Assessment Screening A/B/C | Parallel evaluation experts |
+| Assessment Screening Overall | Synthesizes evaluation results |
+| Mechanism Mining | Analyzes catalytic mechanisms |
+| Synthesis Guiding | Designs synthesis methods |
+| Operation Suggesting | Provides operational guidance |
+| Extracting | Processes technical literature |
 
 ## Evaluation Dimensions
 

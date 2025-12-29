@@ -1,19 +1,17 @@
 # ECOMATS - 基于CrewAI的水处理材料设计多智能体系统
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](#)
+[![Python Version](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
 [![Async](https://img.shields.io/badge/Async-Enabled-orange)](#)
 
 这是一个基于 **CrewAI 1.7.0** 框架构建的高性能多智能体系统，支持**异步执行**，专门用于水处理材料的设计、评估和优化。该系统集成了Materials Project和PubChem等化学数据库工具，能够基于真实材料数据实现智能化材料设计。
 
-**⚡ 性能**: 通过异步执行和并行任务处理，速度提升高达 **7.5 倍**。
-
 ## 项目特性
 
 ### 🚀 性能与架构
-- **CrewAI 1.7.0** 完整异步支持（性能提升 2-10 倍）
-- **并行任务执行** - 3 位评估专家并行运行（快 2.6 倍）
+- **CrewAI 1.7.0** 完整异步支持
+- **并行任务执行** - 3 位评估专家并行运行
 - **异步工具** - 非阻塞 API 调用（PubChem、Materials Project）
 - **批量处理** 支持多材料设计
 - 多智能体协作系统，智能任务调度
@@ -28,12 +26,12 @@
 - 代理任务分配机制，支持自动模式检测
 
 ### 🛠️ 工具与集成
-- 13+ 专业 AI 工具用于材料属性查询
+- 14 个专业 AI 工具用于材料属性查询
 - 异步 PubChem 和 Materials Project 工具
 - MolPort API 用于商业可用性评估
 - 全面的数据验证和结构校验
 - 支持阿里云 EAS 自部署模型集成
-- 详细的 Prompt 文件定义专家行为
+- 多语言提示词系统（英文/中文）
 
 ## 项目结构
 
@@ -54,16 +52,14 @@ ECOMATS/
 │   │   └── task_organizing_agent.py   # 任务协调器，支持意图识别和智能体调度
 │   ├── config/                # 配置文件
 │   │   └── config.py
-│   ├── prompts/               # Prompt文件
-│   │   ├── coordinator_prompt.md
-│   │   ├── enhanced_final_validator_prompt.md  # ASA Overall 综合分析提示词
-│   │   ├── expert_template_prompt.md           # A/B/C 专家参数化模板
-│   │   ├── intent_recognition_prompt.md        # 用户意图识别
-│   │   ├── literature_processor_prompt.md
-│   │   ├── material_designer_prompt.md
-│   │   ├── mechanism_expert_prompt.md          # 机理分析专家
-│   │   ├── operation_suggesting_prompt.md
-│   │   └── synthesis_expert_prompt.md
+│   ├── locales/               # 多语言支持
+│   │   ├── en/                # 英文提示词和任务
+│   │   │   ├── prompts/       # 英文代理提示词
+│   │   │   └── tasks/         # 英文任务定义
+│   │   ├── zh/                # 中文提示词和任务
+│   │   │   ├── prompts/       # 中文代理提示词
+│   │   │   └── tasks/         # 中文任务定义
+│   │   └── texts.py           # UI 文本翻译
 │   ├── tasks/                 # 任务定义
 │   │   ├── base_task.py
 │   │   ├── design_task.py
@@ -75,7 +71,7 @@ ECOMATS/
 │   ├── tools/                 # 工具实现
 │   │   ├── __init__.py
 │   │   ├── factory.py                          # 工具工厂，集中管理
-│   │   ├── async_pubchem_tool.py               # ⚡ 异步 PubChem（快 3 倍）
+│   │   ├── async_pubchem_tool.py               # ⚡ 异步 PubChem
 │   │   ├── async_materials_project_tool.py     # ⚡ 异步 Materials Project
 │   │   ├── pubchem_tool.py                     # PubChem API 集成
 │   │   ├── materials_project_tool.py           # Materials Project API 集成
@@ -115,7 +111,7 @@ ECOMATS/
 │       └── assessment_scoring_logic.py   # 评估评分计算
 ├── scripts/                   # 脚本文件
 │   ├── main.py                # 主程序入口（同步模式）
-│   ├── main_async.py          # ⚡ 异步主程序（推荐，快 2-3 倍）
+│   ├── main_async.py          # ⚡ 异步主程序（推荐）
 │   ├── test_molport_tool.py   # MolPort API 连接测试
 │   └── (其他脚本)
 ├── tests/                     # 统一测试目录
@@ -184,6 +180,12 @@ ECOMATS/
 
 ## 使用说明
 
+### 要求
+
+- **Python 3.11 或 3.12**（推荐）
+  - ⚠️ Python 3.13 在 Windows 上与 `chromadb` 存在已知兼容性问题
+  - Python 3.10 可能可以运行但未经测试
+
 ### 平台兼容性
 
 **推荐**: Linux / macOS / WSL2  
@@ -244,7 +246,7 @@ ECOMATS/
 
 5. 运行系统：
    
-   **选项 A：异步模式（⚡ 推荐，快 2-3 倍）**
+   **选项 A：异步模式（⚡ 推荐）**
    ```bash
    python scripts/main_async.py
    ```
@@ -253,11 +255,6 @@ ECOMATS/
    ```bash
    python scripts/main.py
    ```
-   
-   **性能对比**：
-   - 异步模式：完整工作流约 21 秒
-   - 同步模式：完整工作流约 33 秒
-   - 批量设计（10个材料）：43秒 vs 326秒（快 7.5 倍）
 
 ## 代理工具集成
 
@@ -295,10 +292,30 @@ ECOMATS/
 ### 工具工厂模式
 
 所有工具通过 **ToolFactory** 类（`src/tools/factory.py`）管理，为不同类型的代理提供专业工具集：
-- **统一评估工具**（4个工具） - Materials Project、PubChem、PNEC、MolPort（ASA A/B/C 共用）
-- **材料设计工具**（2个工具） - Materials Project、PubChem 用于设计
-- **材料搜索工具**（2个工具） - 用于合成方法探索
-- **文献提取工具**（3个工具） - 化学信息提取与验证
+
+- **统一评估工具**（4个工具） - Materials Project、PubChem、PNEC、MolPort
+  - 由评估筛选代理 A/B/C 共用
+  - 覆盖所有 5 个评估维度
+
+- **材料设计工具**（2个工具） - Materials Project、PubChem
+  - 由创意设计代理使用
+  - 核心材料结构和属性查询
+
+- **材料搜索工具**（2个工具） - Materials Project、PubChem
+  - 由合成指导代理使用
+  - 材料合成和试剂安全数据
+
+- **文献提取工具**（3个工具） - Materials Project、PubChem、Data Validator
+  - 由提取代理使用
+  - 化学信息提取与验证
+
+- **机理分析工具**（2个工具） - Materials Project、PubChem
+  - 由机理挖掘代理使用
+  - 材料结构和化学反应性
+
+- **操作指导工具**（3个工具） - PubChem、Materials Project、PNEC
+  - 由操作建议代理使用
+  - 安全数据、成本数据、环境影响
 
 ## 迭代设计机制
 
@@ -348,49 +365,6 @@ ECOMATS/
 4. 更新相关代理的prompt文件以指导其使用新工具
 
 
-
-## 最近更新 (2025-12-20)
-
-### 🚀 重大升级：CrewAI 1.7.0
-- ✅ **异步执行** - 完整 async/await 支持，使用 `crew.akickoff()`
-- ✅ **并行任务** - 3 位评估专家并行运行（快 2.6 倍）
-- ✅ **异步工具** - 非阻塞 PubChem 和 Materials Project 工具
-- ✅ **性能提升** - 根据工作负载快 2-10 倍
-- ✅ **向后兼容** - 原始同步模式仍然支持
-
-### 新功能
-- ✅ **异步主程序** - `main_async.py` 支持 4 种执行模式
-- ✅ **批量处理** - 10 个材料 43 秒完成（vs 同步 326 秒）
-- ✅ **MolPort 集成** - 商业可用性评估
-- ✅ **增强测试** - 60+ 测试文件，结构整齐
-- ✅ **整洁架构** - 移除冗余文件，优化结构
-
-### 性能指标
-```
-单个工作流:    33秒 → 21秒  (快 1.57 倍)
-批量 10 设计:   326秒 → 43秒 (快 7.5 倍)
-3 个评估:       12秒 → 4.6秒 (快 2.6 倍)
-5 个 API 查询: 12秒 → 4.2秒 (快 3.0 倍)
-```
-
-### 文档
-- 📚 **[CrewAI 升级报告](docs/CrewAI升级完成报告.md)** - 完整升级指南
-- 📚 **[异步 Crew 示例](examples/async_crew_example.py)** - 学习异步用法
-- 📚 **[文档中心](docs/README.md)** - 所有文档
-- 📚 **[项目状态](docs/项目状态总览.md)** - 当前状态概览
-- 📚 **[MolPort 集成](docs/molport_integration_guide.md)** - MolPort 指南
-
-### 异步模式快速开始
-```bash
-# 运行异步版本（推荐）
-python scripts/main_async.py
-
-# 选择模式:
-# 1. 预设工作流（同步）
-# 2. 预设工作流（异步）⚡ - 快 2 倍
-# 3. 自主模式（同步）
-# 4. 自主模式（异步）⚡ - 推荐
-```
 
 ## [英文版本](README.md)
 

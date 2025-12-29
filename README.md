@@ -366,41 +366,6 @@ The system implements triple-blind review and consistency analysis mechanisms:
 
 
 
-## Recent Updates (2025-12-20)
-
-### 🚀 Major Upgrade: CrewAI 1.7.0
-- ✅ **Async Execution** - Full async/await support with `crew.akickoff()`
-- ✅ **Parallel Tasks** - 3 evaluation experts run concurrently
-- ✅ **Async Tools** - Non-blocking PubChem and Materials Project tools
-- ✅ **Performance Boost** - Faster execution with async support
-- ✅ **Backward Compatible** - Original sync mode still supported
-
-### New Features
-- ✅ **Async Main Program** - `main_async.py` with 4 execution modes
-- ✅ **Batch Processing** - Support for processing multiple materials
-- ✅ **MolPort Integration** - Commercial availability assessment
-- ✅ **Enhanced Testing** - 60+ test files, organized structure
-- ✅ **Clean Architecture** - Removed redundant files, optimized structure
-
-### Documentation
-- 📚 **[CrewAI Upgrade Report](docs/CrewAI升级完成报告.md)** - Complete upgrade guide
-- 📚 **[Async Crew Example](examples/async_crew_example.py)** - Learn async usage
-- 📚 **[Documentation Center](docs/README.md)** - All documentation
-- 📚 **[Project Status](docs/项目状态总览.md)** - Current status overview
-- 📚 **[MolPort Integration](docs/molport_integration_guide.md)** - MolPort guide
-
-### Quick Start with Async
-```bash
-# Run async version (recommended)
-python scripts/main_async.py
-
-# Select mode:
-# 1. Preset workflow (sync)
-# 2. Preset workflow (async) ⚡ - recommended
-# 3. Autonomous mode (sync)
-# 4. Autonomous mode (async) ⚡ - recommended
-```
-
 ## [中文版本](README_zh.md)
 
 ## License

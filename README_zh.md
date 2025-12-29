@@ -69,11 +69,15 @@ ECOMATS/
 │   ├── tasks/           # 任务定义
 │   ├── tools/           # 14 个数据库查询工具
 │   ├── locales/         # 中英文提示词和任务
-│   └── utils/           # 工具函数和配置
+│   └── utils/           # 工具函数（日志、错误码、LLM配置）
 ├── scripts/
-│   ├── main.py          # 同步模式
-│   └── main_async.py    # 异步模式（推荐）
-└── docs/                # 文档
+│   ├── main.py          # 同步模式入口
+│   ├── main_async.py    # 异步模式入口（推荐）
+│   └── workflow/        # 模块化工作流组件
+│       ├── patches.py       # CrewAI异步兼容补丁
+│       ├── embeddings.py    # DashScope嵌入向量
+│       └── callback_factory.py
+└── .env.example         # 环境变量模板
 ```
 
 ## 环境要求

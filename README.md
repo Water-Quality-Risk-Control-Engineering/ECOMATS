@@ -69,11 +69,15 @@ ECOMATS/
 │   ├── tasks/           # Task definitions
 │   ├── tools/           # 14 database query tools
 │   ├── locales/         # EN/ZH prompts and tasks
-│   └── utils/           # Utilities and configs
+│   └── utils/           # Utilities (logging, error codes, LLM config)
 ├── scripts/
-│   ├── main.py          # Sync mode
-│   └── main_async.py    # Async mode (recommended)
-└── docs/                # Documentation
+│   ├── main.py          # Sync mode entry
+│   ├── main_async.py    # Async mode entry (recommended)
+│   └── workflow/        # Modular workflow components
+│       ├── patches.py       # CrewAI async compatibility
+│       ├── embeddings.py    # DashScope embedding
+│       └── callback_factory.py
+└── .env.example         # Environment template
 ```
 
 ## Requirements

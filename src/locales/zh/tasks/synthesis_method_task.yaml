@@ -12,9 +12,9 @@ description: |
   6. 质量控制指标：确定关键质量控制点和表征方法
   
   工具使用策略：
-  1. **复用上游结果**：检查是否已有Material Identifier和Structure Validator结果
-  2. **原材料信息**：仅在未缓存时调用PubChem查询原材料性质和安全性
-  3. **合成路线设计**：调用Material Search Tool查询类似材料合成方法
+  1. **复用上游结果**：检查上游任务结果
+  2. **Materials Project Tool**：查询合成相关材料属性
+  3. **PubChem Tool**：查询试剂性质和安全数据
   4. **可行性验证**：与上游工具结果交叉验证
   
   设计要点：

@@ -14,13 +14,11 @@ description: |
   3. 如果催化性能不符合标准，请明确指出问题并建议返回材料设计阶段重新设计
   4. 如果催化性能达标，再综合评估其他维度
   
-  工具使用策略（6个工具可用）：
-  1. **Material Identifier Tool**：评估前先识别材料类型
-  2. **Structure Validator Tool**：验证结构合理性和物理可行性
-  3. **Materials Project Tool**：查询材料结构和电子性质
-  4. **PubChem Tool**：查询毒性和环境影响数据
-  5. **PNEC Tool**：评估环境风险阈值
-  6. **MolPort Availability Tool**：检查前驱体商业可获得性，用于经济可行性评估
+  工具使用策略：
+  1. **Materials Project Tool**：查询材料结构和电子性质
+  2. **PubChem Tool**：查询毒性和环境影响数据
+  3. **PNEC Tool**：评估环境风险阈值
+  4. **MolPort Availability Tool**：检查商业可获得性，用于经济可行性评估
   
   评估要求：
   - 独立进行评估，重点关注材料的科学合理性和实际应用潜力

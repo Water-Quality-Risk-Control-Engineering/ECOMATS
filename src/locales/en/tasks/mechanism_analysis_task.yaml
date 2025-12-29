@@ -47,7 +47,5 @@ expected_output: |
   Tool Data Requirements (mandatory):
   - Materials Project data: Band gap, density, formation energy, material_id
   - PubChem data: Molecular structure, compound CID
-  - material_search_tool data: Similar material performance comparison
-  - structure_validator_tool data: Structure verification results
 
 user_requirement_prefix: "\n\nUser Specific Requirement: "

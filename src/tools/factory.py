@@ -54,17 +54,6 @@ class ToolFactory:
         return tools
     
     @staticmethod
-    def create_final_validation_tools():
-        """
-        Create final validation tool instances.
-        Note: ASA Final needs no tools, only aggregates A/B/C outputs.
-        
-        Returns:
-            list: Empty list (no tools needed)
-        """
-        return []  # Role reduction: Final only aggregates results
-    
-    @staticmethod
     def create_operation_guidance_tools():
         """
         Create operation guidance tool instances.

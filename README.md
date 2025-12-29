@@ -7,13 +7,11 @@
 
 This is a high-performance multi-agent system built using the **CrewAI 1.7.0** framework with **async support**, specifically designed for the design, evaluation, and optimization of water treatment materials. The system integrates chemical database tools such as Materials Project and PubChem, enabling intelligent material design based on real material data.
 
-**⚡ Performance**: Up to **7.5x faster** with async execution and parallel task processing.
-
 ## Project Features
 
 ### 🚀 Performance & Architecture
-- **CrewAI 1.7.0** with full async support (2-10x performance boost)
-- **Parallel task execution** for 3 evaluation experts (2.6x faster)
+- **CrewAI 1.7.0** with full async support
+- **Parallel task execution** for 3 evaluation experts
 - **Async tools** for non-blocking API calls (PubChem, Materials Project)
 - **Batch processing** support for multiple material designs
 - Multi-agent collaboration system with intelligent task scheduling
@@ -75,7 +73,7 @@ ECOMATS/
 │   ├── tools/                 # Tool implementations
 │   │   ├── __init__.py
 │   │   ├── factory.py                          # Tool factory for centralized management
-│   │   ├── async_pubchem_tool.py               # ⚡ Async PubChem (3x faster)
+│   │   ├── async_pubchem_tool.py               # ⚡ Async PubChem
 │   │   ├── async_materials_project_tool.py     # ⚡ Async Materials Project
 │   │   ├── pubchem_tool.py                     # PubChem API integration
 │   │   ├── materials_project_tool.py           # Materials Project API integration
@@ -115,7 +113,7 @@ ECOMATS/
 │       └── assessment_scoring_logic.py   # Assessment scoring calculations
 ├── scripts/                   # Script files
 │   ├── main.py                # Main program entry (sync mode)
-│   ├── main_async.py          # ⚡ Async main program (recommended, 2-3x faster)
+│   ├── main_async.py          # ⚡ Async main program (recommended)
 │   ├── test_molport_tool.py   # MolPort API connectivity test
 │   └── (other scripts)
 ├── tests/                     # Unified test directory
@@ -250,7 +248,7 @@ The coordinator dynamically determines task execution order for more flexible ta
 
 5. Run the system:
    
-   **Option A: Async Mode (⚡ Recommended, 2-3x faster)**
+   **Option A: Async Mode (⚡ Recommended)**
    ```bash
    python scripts/main_async.py
    ```
@@ -259,11 +257,6 @@ The coordinator dynamically determines task execution order for more flexible ta
    ```bash
    python scripts/main.py
    ```
-   
-   **Performance Comparison**:
-   - Async Mode: ~21 seconds for full workflow
-   - Sync Mode: ~33 seconds for full workflow
-   - Batch Design (10 materials): 43s vs 326s (7.5x faster)
 
 ## Agent Tool Integration
 
@@ -359,25 +352,17 @@ The system implements triple-blind review and consistency analysis mechanisms:
 
 ### 🚀 Major Upgrade: CrewAI 1.7.0
 - ✅ **Async Execution** - Full async/await support with `crew.akickoff()`
-- ✅ **Parallel Tasks** - 3 evaluation experts run concurrently (2.6x faster)
+- ✅ **Parallel Tasks** - 3 evaluation experts run concurrently
 - ✅ **Async Tools** - Non-blocking PubChem and Materials Project tools
-- ✅ **Performance Boost** - 2-10x faster depending on workload
+- ✅ **Performance Boost** - Faster execution with async support
 - ✅ **Backward Compatible** - Original sync mode still supported
 
 ### New Features
 - ✅ **Async Main Program** - `main_async.py` with 4 execution modes
-- ✅ **Batch Processing** - Process 10 materials in 43s (vs 326s sync)
+- ✅ **Batch Processing** - Support for processing multiple materials
 - ✅ **MolPort Integration** - Commercial availability assessment
 - ✅ **Enhanced Testing** - 60+ test files, organized structure
 - ✅ **Clean Architecture** - Removed redundant files, optimized structure
-
-### Performance Metrics
-```
-Single Workflow:  33s → 21s  (1.57x faster)
-Batch 10 designs: 326s → 43s (7.5x faster)
-3 Evaluations:    12s → 4.6s (2.6x faster)
-5 API Queries:    12s → 4.2s (3.0x faster)
-```
 
 ### Documentation
 - 📚 **[CrewAI Upgrade Report](docs/CrewAI升级完成报告.md)** - Complete upgrade guide
@@ -393,7 +378,7 @@ python scripts/main_async.py
 
 # Select mode:
 # 1. Preset workflow (sync)
-# 2. Preset workflow (async) ⚡ - 2x faster
+# 2. Preset workflow (async) ⚡ - recommended
 # 3. Autonomous mode (sync)
 # 4. Autonomous mode (async) ⚡ - recommended
 ```

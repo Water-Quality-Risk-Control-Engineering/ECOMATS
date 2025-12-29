@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
 
-**E**nvironmental **CO**ntaminant **MAT**erials design **S**ystem — 基于 CrewAI 1.7.0 的水处理材料设计多智能体系统。
+**ECOMATS** — 基于 CrewAI 1.7.0 的水处理材料设计多智能体系统。
 
 ## 特性
 

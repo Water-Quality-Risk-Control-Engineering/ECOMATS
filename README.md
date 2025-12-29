@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
 
-**E**nvironmental **CO**ntaminant **MAT**erials design **S**ystem — A multi-agent system for water treatment material design, built with CrewAI 1.7.0.
+**ECOMATS** — A multi-agent system for water treatment material design, built with CrewAI 1.7.0.
 
 ## Features
 

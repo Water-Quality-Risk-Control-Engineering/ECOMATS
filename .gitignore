@@ -76,6 +76,7 @@ docs/
 scripts/*
 !scripts/main.py
 !scripts/main_async.py
+!scripts/workflow/
 
 # Project-specific files (local only)
 CHANGELOG.md

@@ -1,271 +1,51 @@
 #!/usr/bin/env python3
 """
-ECOMATS - CrewAI 1.7.0 Async Version / ECOMATS - CrewAI 1.7.0异步版本
+ECOMATS - CrewAI 1.7.0 Async Version
 
 Supports async Crew execution with 2-3x performance improvement through:
 - Parallel task execution (evaluation agents run simultaneously)
 - Async crew kickoff (akickoff)
 - Memory system with DashScope embeddings
-
-支持异步Crew执行，通过以下方式显著提升2-3倍性能：
-- 并行任务执行（评估智能体同时运行）
-- 异步crew启动（akickoff）
-- 使用DashScope嵌入的记忆系统
 """
 
 import sys
 import os
 import json
 import asyncio
-import logging
-import signal
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Windows compatibility patch: SIGHUP signal support / Windows 兼容性补丁：SIGHUP 信号支持
-if sys.platform == 'win32':
-    if not hasattr(signal, 'SIGHUP'):
-        signal.SIGHUP = None  # Windows doesn't support SIGHUP, create placeholder / Windows 不支持 SIGHUP，创建占位符
-    # Set console encoding to UTF-8 to avoid Chinese garbled text / 设置控制台编码为 UTF-8，避免中文乱码
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
-    except Exception:
-        pass  # Python < 3.7 doesn't support reconfigure / Python < 3.7 不支持 reconfigure
+# Add project path BEFORE other imports
+project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, os.path.abspath(project_root))
 
-# Critical: Set environment variables BEFORE importing CrewAI! / 关键：在导入CrewAI之前设置环境变量！
-load_dotenv()  # Load .env first / 先加载.env
+# Load environment variables BEFORE importing CrewAI
+load_dotenv()
 
-# Set OpenAI-compatible environment variables (required for CrewAI async mode) / 设置 OpenAI 兼容的环境变量（CrewAI 异步模式需要）
+# Set OpenAI-compatible environment variables (required for CrewAI async mode)
 _api_key = os.getenv('QWEN_API_KEY') or 'dummy'
 _api_base = os.getenv('QWEN_API_BASE') or 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 os.environ['OPENAI_API_KEY'] = _api_key
 os.environ['OPENAI_API_BASE'] = _api_base
-os.environ['OPENAI_BASE_URL'] = _api_base  # CrewAI async client may use this variable / CrewAI 异步客户端可能使用此变量
+os.environ['OPENAI_BASE_URL'] = _api_base
 
-# Monkey patch: Fix CrewAI async memory bug / Monkey patch：修复CrewAI异步memory的bug
-# CrewAI 1.7.0's memory calls asearch() in async mode, but ChromaDB client is synchronous
-# This patch uses sync search directly to avoid async errors
-# CrewAI 1.7.0的memory在异步模式下会调用asearch()，但ChromaDB客户端是同步的
-# 这个patch直接使用同步搜索，避免异步错误
-
-# Patch 1: Fix ChromaDBClient.asearch() / 修复 ChromaDBClient.asearch()
-import crewai.rag.chromadb.client as chromadb_client_module
-original_ChromaDBClient = chromadb_client_module.ChromaDBClient
-
-class PatchedChromaDBClient(original_ChromaDBClient):
-    """
-    Patched ChromaDBClient - calls sync implementation in async method / 修复异步搜索的ChromaDBClient - 在异步方法中调用同步实现
-    """
-    async def asearch(self, **kwargs):
-        """
-        Async search directly uses synchronous search() / 异步搜索直接使用同步search()
-        """
-        # Call sync method directly, skip async client check / 直接调用同步方法，跳过异步客户端检查
-        return self.search(**kwargs)
-
-chromadb_client_module.ChromaDBClient = PatchedChromaDBClient
-
-# Patch 2: Fix RAGStorage.asearch() / 修复 RAGStorage.asearch()
-import crewai.memory.storage.rag_storage as rag_storage_module
-original_RAGStorage = rag_storage_module.RAGStorage
-
-class PatchedRAGStorage(original_RAGStorage):
-    """
-    Patched RAGStorage - directly uses sync method / 修复异步搜索的RAGStorage - 直接使用同步方法
-    """
-    async def asearch(self, query: str, limit: int = 5, filter = None, score_threshold: float = 0.6):
-        """
-        Async search directly uses synchronous search() / 异步搜索直接使用同步search()
-        """
-        # Call sync method directly, skip async call / 直接调用同步方法，跳过异步调用
-        return self.search(query, limit, filter, score_threshold)
-
-rag_storage_module.RAGStorage = PatchedRAGStorage
-
-print("✅ CrewAI 异步内存兼容性补丁已应用 / Async memory compatibility patch applied")
+# Apply CrewAI compatibility patches (must be before CrewAI imports)
+from workflow.patches import apply_crewai_patches
+apply_crewai_patches()
 
 from crewai import Crew, Process
 
-# Configure logging to suppress EAS-related ERROR messages / 配置日志，抑制EAS相关的ERROR提示
-logging.basicConfig(level=logging.WARNING)
-# Set src.agents log level to CRITICAL to avoid EAS error messages / 将src.agents的日志级别设为CRITICAL，避免EAS错误提示
-for logger_name in ['src.agents.Creative_Designing_agent',
-                     'src.agents.Assessment_Screening_agent_A',
-                     'src.agents.Assessment_Screening_agent_B', 
-                     'src.agents.Assessment_Screening_agent_C',
-                     'src.agents.Assessment_Screening_agent_Overall',
-                     'src.agents.Mechanism_Mining_agent',
-                     'src.agents.Synthesis_Guiding_agent',
-                     'src.agents.Operation_Suggesting_agent']:
-    logging.getLogger(logger_name).setLevel(logging.CRITICAL)
-
-# 添加项目路径
-project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.insert(0, os.path.abspath(project_root))
+# Setup unified logging
+from src.utils.logging_config import setup_logging
+setup_logging()
 
 from src.config.config import Config
 from src.utils.llm_config import create_llm
 from src.utils.workflow_monitor import WorkflowMonitor, create_monitor, get_monitor
 
-
-def create_dashscope_embedder():
-    """
-    Create DashScope Embedding class for CrewAI memory system / 创建DashScope Embedding类 - 用于CrewAI记忆系统
-    
-    Key points / 关键点:
-    1. Must inherit from both ChromaDB and CrewAI's EmbeddingFunction / 必须同时继承ChromaDB和CrewAI的EmbeddingFunction
-    2. Return type must be list[np.ndarray] / 返回类型必须是list[np.ndarray]
-    
-    Returns:
-        class: DashScopeEmbeddingFunction class (not instance) / DashScopeEmbeddingFunction类（不是实例）
-    """
-    # Import both base classes / 导入两个基类
-    from chromadb.api.types import EmbeddingFunction as ChromaEmbeddingFunction
-    from crewai.rag.embeddings.providers.custom.embedding_callable import CustomEmbeddingFunction
-    from crewai.rag.core.types import Documents, Embeddings
-    from openai import OpenAI
-    import numpy as np
-    import os
-    
-    class DashScopeEmbeddingFunction(CustomEmbeddingFunction, ChromaEmbeddingFunction):
-        """
-        Use OpenAI SDK to call DashScope Embedding API / 使用OpenAI SDK调用DashScope Embedding API
-        
-        Inherits from both ChromaDB and CrewAI base classes to satisfy Pydantic validation
-        同时继承ChromaDB和CrewAI的基类以满足Pydantic验证
-        """
-        
-        def __init__(self):
-            self.client = OpenAI(
-                api_key=os.getenv('QWEN_API_KEY'),
-                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-            )
-            self.model = "text-embedding-v2"
-            
-        def __call__(self, input: Documents) -> Embeddings:
-            """
-            Convert text to embedding vectors / 将文本转换为嵌入向量
-            
-            Args:
-                input: List of strings (Documents = list[str]) / 字符串列表 (Documents = list[str])
-                
-            Returns:
-                Embeddings: List of numpy arrays (list[np.ndarray]) / numpy数组列表 (list[np.ndarray])
-            """
-            try:
-                # DashScope text-embedding-v2 limit: 1-2048 characters / DashScope text-embedding-v2 限制：1-2048 字符
-                # Truncate overly long text / 截断超长文本
-                MAX_LENGTH = 2048  # Leave some margin / 留一些余量
-                truncated_input = [
-                    text[:MAX_LENGTH] if len(text) > MAX_LENGTH else text
-                    for text in input
-                ]
-                
-                response = self.client.embeddings.create(
-                    model=self.model,
-                    input=truncated_input
-                )
-                # Critical: Return list of numpy arrays! / 关键：返回numpy数组列表！
-                embeddings = [
-                    np.array(item.embedding, dtype=np.float32) 
-                    for item in response.data
-                ]
-                return embeddings
-            except Exception as e:
-                print(f"⚠️ DashScope Embedding Error / DashScope Embedding错误: {e}")
-                # Return zero vectors as default (dimension 1536, consistent with v2) / 返回空向量作为默认值（维度1536，与v2一致）
-                return [np.zeros(1536, dtype=np.float32) for _ in range(len(input))]
-    
-    return DashScopeEmbeddingFunction  # Return class, not instance! / 返回类而不是实例！
-
-
-# Generic task_callback creator (module level) / 通用 task_callback 创建器（模块级别）
-def create_task_callback_factory(monitor, task_start_times, current_agent_context, last_completed_agent):
-    """
-    Create task_callback factory function that supports parallel tasks / 创建支持并行任务的 task_callback 工厂函数
-    
-    This factory handles:
-    - Parallel task timing (evaluation agents A/B/C share start time) / 并行任务计时（评估智能体A/B/C共享开始时间）
-    - Agent interaction tracking / 智能体交互追踪
-    - Monitoring data collection / 监控数据收集
-    
-    Args:
-        monitor: Workflow monitor instance / 工作流监控器实例
-        task_start_times: Dict to store task start times / 存储任务开始时间的字典
-        current_agent_context: Thread-local storage for current agent / 当前智能体的线程本地存储
-        last_completed_agent: List containing last completed agent role / 包含最后完成的智能体角色的列表
-    
-    Returns:
-        function: Factory function that creates task_callback / 创建task_callback的工厂函数
-    """
-    import time
-    
-    def create_task_callback(task_completion_times, crew_start_time, task_counter, suffix=""):
-        eval_start_key = f'eval_start_time{suffix}'
-        
-        def task_callback(task_output):
-            task_counter[0] += 1
-            task_id = task_counter[0]
-            
-            agent_str = getattr(task_output, 'agent', None) or 'Unknown'
-            task_name = getattr(task_output, 'name', None) or f"{agent_str}_Task_{task_id}"
-            task_description = getattr(task_output, 'description', 'N/A')
-            agent_name = agent_str
-            agent_role = agent_str
-            
-            current_agent_context.role = agent_role
-            
-            json_output = None
-            if hasattr(task_output, 'json_dict') and task_output.json_dict:
-                json_output = task_output.json_dict
-            
-            if monitor:
-                current_time = time.time()
-                
-                # 检测并行任务：A/B/C 共享相同开始时间
-                is_parallel_eval = 'Assessment_Screening_agent_' in agent_role and agent_role[-1] in 'ABC'
-                
-                if is_parallel_eval:
-                    if eval_start_key not in task_start_times:
-                        if task_completion_times:
-                            task_start_times[eval_start_key] = task_completion_times[-1]
-                        elif crew_start_time[0]:
-                            task_start_times[eval_start_key] = crew_start_time[0]
-                        else:
-                            task_start_times[eval_start_key] = current_time
-                    actual_start = task_start_times[eval_start_key]
-                else:
-                    if task_completion_times:
-                        actual_start = task_completion_times[-1]
-                    elif crew_start_time[0]:
-                        actual_start = crew_start_time[0]
-                    else:
-                        actual_start = current_time
-                
-                task_completion_times.append(current_time)
-                
-                unique_task_key = f"{agent_role}_{task_id}"
-                if unique_task_key not in task_start_times:
-                    task_start_times[unique_task_key] = actual_start
-                    monitor.start_agent_execution(agent_name, agent_role, task_name, task_description)
-                    if monitor._current_execution:
-                        monitor._current_execution.start_time = actual_start
-                monitor.end_agent_execution(output=str(task_output), json_output=json_output, agent_role=agent_role)
-                
-                # 记录 Agent 之间的交互
-                if last_completed_agent[0] and last_completed_agent[0] != agent_role:
-                    monitor.record_interaction(
-                        from_agent=last_completed_agent[0],
-                        to_agent=agent_role,
-                        interaction_type="task_handoff",
-                        content=f"Task completed: {task_name}"
-                    )
-                last_completed_agent[0] = agent_role
-        
-        return task_callback
-    
-    return create_task_callback
+# Import modular components
+from workflow.embeddings import create_dashscope_embedder
+from workflow.callback_factory import create_task_callback_factory
 
 
 def get_ui_text(key):

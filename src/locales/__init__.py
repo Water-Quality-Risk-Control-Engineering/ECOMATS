@@ -104,17 +104,14 @@ def get_text(category: str, key: str, field: str) -> str:
 
 def load_prompt(prompt_name: str) -> str:
     """
-    加载prompt文件内容 / Load prompt file content
+    Load prompt file content.
+    Delegates to utils.prompt_loader for unified implementation.
     
     Args:
-        prompt_name: prompt文件名 / Prompt filename
+        prompt_name: prompt filename
         
     Returns:
-        prompt内容 / Prompt content
+        prompt content
     """
-    path = get_prompt_path(prompt_name)
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return f"[Prompt not found: {prompt_name}]"
+    from src.utils.prompt_loader import load_prompt as _load_prompt
+    return _load_prompt(prompt_name)

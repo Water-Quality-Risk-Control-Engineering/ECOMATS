@@ -768,9 +768,6 @@ async def main_async():
     """
     load_dotenv()
     
-    # Suppress EAS logs again / 再次确保EAS日志被抑制
-    logging.getLogger('src.agents').setLevel(logging.CRITICAL)
-    
     # Check environment variables / 检查环境变量
     if not Config.QWEN_API_KEY:
         print("❌ 错误: 未设置QWEN_API_KEY / Error: QWEN_API_KEY not set")

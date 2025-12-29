@@ -7,13 +7,13 @@ from src.utils.context_store import ContextStore
 
 class MaterialsProjectToolInput(BaseModel):
     """Materials Project Tool Input Model"""
-    action: str = Field(default="search", description="Action to perform ('search', 'get_material')")
+    action: str = Field(default="search", description="Action to perform ('search', 'get_material', 'get_summary')")
     material_id: Optional[str] = Field(default=None, description="Material ID (for get_material action)")
     formula: Optional[str] = Field(default=None, description="Chemical formula (for search)")
-    elements: Optional[List[str]] = Field(default=None, description="Elements that must be included (for search)")
+    elements: Optional[List[str]] = Field(default=None, description="Elements that must be included (for search/get_summary)")
     exclude_elements: Optional[List[str]] = Field(default=None, description="Elements to exclude (for search)")
     crystal_system: Optional[str] = Field(default=None, description="Crystal system (for search)")
-    limit: int = Field(default=100, description="Result limit (for search)")
+    limit: int = Field(default=100, description="Result limit (for search/get_summary)")
     skip: int = Field(default=0, description="Results to skip (for search)")
     fields: Optional[List[str]] = Field(default=None, description="Data fields to include")
 
@@ -22,8 +22,8 @@ class CrewAIMaterialsProjectTool(BaseTool):
     
     name: str = "Materials Project Database Access"
     description: str = (
-        "Access Materials Project database to search materials and get properties. "
-        "Search by formula, elements, crystal structure or properties. "
+        "Access Materials Project database. "
+        "Actions: 'search' (by formula/elements), 'get_material' (by ID), 'get_summary' (element-based summary). "
         "Usage: action='search', formula='C3N4'"
     )
     args_schema: type[BaseModel] = MaterialsProjectToolInput
@@ -123,24 +123,12 @@ class CrewAIMaterialsProjectTool(BaseTool):
                 fields = self._sanitize_fields(fields, action)
                 result = tool.get_material_by_id(material_id)
                 ContextStore.set(f"materials_project_get:{material_id}", result)
-            elif action == "get_structure":
-                if not material_id:
-                    return json.dumps({"error": "material_id required for get_structure action"})
-                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
-            elif action == "get_electronic":
-                if not material_id:
-                    return json.dumps({"error": "material_id required for get_electronic action"})
-                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
-            elif action == "get_thermo":
-                if not material_id:
-                    return json.dumps({"error": "material_id required for get_thermo action"})
-                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
-            elif action == "get_elastic":
-                if not material_id:
-                    return json.dumps({"error": "material_id required for get_elastic action"})
-                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
             elif action == "get_summary":
-                return json.dumps({"error": "Feature not implemented"}, ensure_ascii=False)
+                # Get material summary using underlying implementation
+                result = tool.get_materials_summary(
+                    elements=elements,
+                    limit=min(limit or 100, 100)
+                )
             else:
                 return json.dumps({"error": f"Unsupported action: {action}"})
                 

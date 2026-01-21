@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-ECOMATS - CrewAI 1.7.0 Async Version
+ECOMATS - CrewAI 1.8.1 Async Version
 
 Supports async Crew execution with 2-3x performance improvement through:
 - Parallel task execution (evaluation agents run simultaneously)
 - Async crew kickoff (akickoff)
 - Memory system with DashScope embeddings
+- Production-ready Flows architecture (1.8.0+)
+- HITL (Human-in-the-Loop) support (1.8.0+)
+- A2A (Agent-to-Agent) protocol (1.8.1+)
 """
 
 import sys
@@ -880,7 +883,7 @@ def save_result(result, user_requirement, mode, use_async, workflow_id=None):
 
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("ECOMATS - CrewAI 1.7.0 异步增强版")
+    print("ECOMATS - CrewAI 1.8.1 异步增强版")
     print("="*70)
     print("\n🚀 新特性:")
     print("  - 异步Crew执行 (akickoff)")

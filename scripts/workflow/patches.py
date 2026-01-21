@@ -1,6 +1,19 @@
 """
 CrewAI Compatibility Patches.
-Fixes for CrewAI 1.7.0 async memory issues.
+
+Originally created for CrewAI 1.7.0 async memory issues.
+
+[VERIFIED 2025-12-29] CrewAI 1.8.1 Test Results:
+- RAGStorage.asearch: ✅ Native support (patch NOT needed)
+- ChromaDBClient.asearch: ✅ Native support (patch NOT needed)
+- Windows signal handling: ✅ Fixed in 1.7.1 (patch NOT needed on Linux)
+
+These patches are kept for backward compatibility with older versions.
+For CrewAI >= 1.8.1, you can safely skip calling apply_crewai_patches().
+
+Version History:
+- 1.7.0: Original patches created
+- 1.8.1: All patches verified as unnecessary (native support added)
 """
 
 import sys
@@ -56,9 +69,24 @@ def apply_crewai_patches(verbose: bool = True):
     """
     Apply all CrewAI compatibility patches.
     
+    Note: As of CrewAI 1.8.1, these patches are NO LONGER NEEDED.
+    This function is kept for backward compatibility only.
+    
     Args:
         verbose: Whether to print confirmation message
     """
+    # Check CrewAI version - skip patches if >= 1.8.0
+    try:
+        import crewai
+        version = getattr(crewai, '__version__', '0.0.0')
+        major, minor = map(int, version.split('.')[:2])
+        if major >= 1 and minor >= 8:
+            if verbose:
+                print(f"✅ CrewAI {version} detected - patches not needed (native async support)")
+            return
+    except Exception:
+        pass  # Fall through to apply patches for safety
+    
     apply_windows_patches()
     apply_chromadb_async_patch()
     apply_rag_storage_async_patch()

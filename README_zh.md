@@ -2,9 +2,9 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
-[![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
+[![CrewAI](https://img.shields.io/badge/CrewAI-1.8.1-green)](#)
 
-**ECOMATS** — 基于 CrewAI 1.7.0 的水处理材料设计多智能体系统。
+**ECOMATS** — 基于 CrewAI 1.8.1 的水处理材料设计多智能体系统。
 
 ## 特性
 

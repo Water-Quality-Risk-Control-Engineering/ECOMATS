@@ -1,14 +1,14 @@
 # ═══════════════════════════════════════════════════════════════
 # ECOMATS - Water Treatment Material Design Multi-Agent System
-# Requirements File - Updated 2025-12-22
-# Python 3.11 / 3.12 | CrewAI 1.7.0 with Async Support
+# Requirements File - Updated 2025-12-29
+# Python 3.11 / 3.12 | CrewAI 1.8.1 (Production-ready Flows, HITL, A2A)
 # ═══════════════════════════════════════════════════════════════
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# CrewAI Framework (Async Support)
+# CrewAI Framework (1.8.1 - Async + HITL + A2A)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-crewai==1.7.0
-crewai-tools==1.7.0
+crewai==1.8.1
+crewai-tools==1.8.1
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # LLM API Clients
@@ -48,7 +48,8 @@ python-dotenv>=1.0.0    # Environment variable management
 # ═══════════════════════════════════════════════════════════════
 # Notes:
 # - Python 3.11 / 3.12 recommended (3.13 has chromadb issues on Windows)
-# - CrewAI 1.7.0: Async execution support (2-10x faster)
+# - CrewAI 1.8.1: Production-ready Flows, HITL, A2A protocol support
+# - Key fixes: Connection issues, async task termination, RPM controller
 # - httpx: Non-blocking API calls
 # - Batch processing: Up to 7.5x performance boost
 # ═══════════════════════════════════════════════════════════════

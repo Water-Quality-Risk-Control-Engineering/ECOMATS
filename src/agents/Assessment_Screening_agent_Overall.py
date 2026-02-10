@@ -15,7 +15,7 @@ class AssessmentScreeningAgentOverall(BaseAgent):
         super().__init__(
             llm=llm,
             role="Assessment_Screening_agent_Overall",  # Final validation expert 
-            goal="Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions",  # 综合各专家评估结果，进行加权计算并形成最终材料评估报告，同时提供改进建议
+            goal="Synthesize evaluation results from various experts, perform weighted calculations, and generate final material evaluation report, while providing improvement suggestions",
             prompt_file="assessment_screening_agent_overall_prompt.md",
             temperature=Config.FINAL_VALIDATOR_TEMPERATURE,
             max_iter=1  # Less is More: Reduced to 1 iteration (original: 8) - Only synthesize existing results, no iteration needed 

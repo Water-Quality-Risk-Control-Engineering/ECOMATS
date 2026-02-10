@@ -7,15 +7,6 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Memory-first usage guidance
-MEMORY_GUIDANCE_ZH = """
-
-## 工具使用优化策略 ##
-1. **Memory优先**: 在调用外部工具前，先检查是否已有相关信息在上下文或记忆中
-2. **避免重复查询**: 如果某材料/化学品信息已被之前的任务查询过，直接复用结果
-3. **最小化工具调用**: 只查询必要的信息，避免过度使用工具
-4. **结果复用**: 将查询结果整理后传递给下游任务，供其复用
-"""
-
 MEMORY_GUIDANCE_EN = """
 
 ## Tool Usage Optimization Strategy ##
@@ -67,12 +58,9 @@ class BaseAgent:
         
         try:
             from src.config.config import Config
-            if Config.LANGUAGE == 'en':
-                backstory += MEMORY_GUIDANCE_EN
-            else:
-                backstory += MEMORY_GUIDANCE_ZH
+            backstory += MEMORY_GUIDANCE_EN
         except Exception:
-            backstory += MEMORY_GUIDANCE_ZH
+            backstory += MEMORY_GUIDANCE_EN
 
         return Agent(
             role=self.role,

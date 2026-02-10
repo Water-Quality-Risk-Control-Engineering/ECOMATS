@@ -172,7 +172,7 @@ class WorkflowMonitor:
         self.agent_executions.append(execution)
         
         # Silent mode: do not output monitoring info to console, only record to report
-        # print(f"📊 [Monitor] Agent开始执行: {agent_role} - {task_name}")
+        # print(f"📊 [Monitor] Agent: {agent_role} - {task_name}")
     
     def end_agent_execution(self, output: str = "", json_output: Dict = None, 
                            error: str = "", agent_role: str = None) -> None:
@@ -210,7 +210,7 @@ class WorkflowMonitor:
             
             # Silent mode
             # duration = execution._format_duration()
-            # print(f"✅ [Monitor] Agent执行完成: {execution.agent_role} - 耗时: {duration}")
+            # print(f"✅ [Monitor] Agent: {execution.agent_role} - : {duration}")
             
             if execution == self._current_execution:
                 self._current_execution = None
@@ -366,7 +366,7 @@ class WorkflowMonitor:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
         
-        # print(f"📊 [Monitor] 监控报告已保存: {filepath}")
+        # print(f"📊 [Monitor] : {filepath}")
         return filepath
     
     def save_readable_report(self, filename: str = None) -> str:
@@ -387,36 +387,36 @@ class WorkflowMonitor:
         
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write("=" * 80 + "\n")
-            f.write("ECOMATS 工作流监控报告 / Workflow Monitor Report\n")
+            f.write("ECOMATS Workflow Monitor Report\n")
             f.write("=" * 80 + "\n\n")
             
             # 1. Workflow basic information
-            f.write("📋 工作流信息 / Workflow Info\n")
+            f.write("📋 Workflow Info\n")
             f.write("-" * 40 + "\n")
             info = summary["workflow_info"]
-            f.write(f"  工作流ID: {info['workflow_id']}\n")
-            f.write(f"  用户需求: {info['user_requirement'][:100]}...\n" if len(info['user_requirement']) > 100 else f"  用户需求: {info['user_requirement']}\n")
-            f.write(f"  工作模式: {info['workflow_mode']} ({'异步' if info['is_async'] else '同步'})\n")
-            f.write(f"  开始时间: {info['start_time']}\n")
-            f.write(f"  结束时间: {info['end_time']}\n")
-            f.write(f"  总耗时: {info['total_duration_formatted']}\n")
-            f.write(f"  状态: {info['status']}\n")
+            f.write(f"  Workflow ID: {info['workflow_id']}\n")
+            f.write(f"  User Requirement: {info['user_requirement'][:100]}...\n" if len(info['user_requirement']) > 100 else f"  User Requirement: {info['user_requirement']}\n")
+            f.write(f"  Workflow Mode: {info['workflow_mode']} ({'async' if info['is_async'] else 'sync'})\n")
+            f.write(f"  Start Time: {info['start_time']}\n")
+            f.write(f"  End Time: {info['end_time']}\n")
+            f.write(f"  Total Duration: {info['total_duration_formatted']}\n")
+            f.write(f"  Status: {info['status']}\n")
             if info['error_message']:
-                f.write(f"  错误: {info['error_message']}\n")
+                f.write(f"  Error: {info['error_message']}\n")
             f.write("\n")
             
             # 2. Agent statistics
-            f.write("📊 Agent统计 / Agent Statistics\n")
+            f.write("📊 Agent Statistics\n")
             f.write("-" * 40 + "\n")
             stats = summary["agent_statistics"]
-            f.write(f"  总Agent数: {stats['total_agents']}\n")
-            f.write(f"  总任务数: {stats['total_tasks']}\n")
-            f.write(f"  最慢Agent: {stats['slowest_agent']}\n")
-            f.write(f"  最快Agent: {stats['fastest_agent']}\n")
+            f.write(f"  Total Agents: {stats['total_agents']}\n")
+            f.write(f"  Total Tasks: {stats['total_tasks']}\n")
+            f.write(f"  Slowest Agent: {stats['slowest_agent']}\n")
+            f.write(f"  Fastest Agent: {stats['fastest_agent']}\n")
             f.write("\n")
             
             # 3. Detailed Agent durations
-            f.write("⏱️ Agent耗时详情 / Agent Duration Details\n")
+            f.write("⏱️ Agent Duration Details\n")
             f.write("-" * 40 + "\n")
             if stats['agent_durations'] and max(stats['agent_durations'].values()) > 0:
                 max_duration = max(stats['agent_durations'].values())
@@ -425,46 +425,46 @@ class WorkflowMonitor:
                     bar = "█" * bar_length + "░" * (30 - bar_length)
                     f.write(f"  {role[:30]:<30} | {bar} | {duration:.2f}s\n")
             else:
-                f.write("  (无Agent耗时数据 / No agent duration data)\n")
+                f.write("  (No agent duration data)\n")
             f.write("\n")
             
             # 4. Task execution timeline
-            f.write("📜 任务执行时间线 / Task Execution Timeline\n")
+            f.write("📜 Task Execution Timeline\n")
             f.write("-" * 40 + "\n")
             for i, execution in enumerate(summary["agent_executions"], 1):
                 status_icon = "✅" if execution["status"] == "completed" else "❌"
                 f.write(f"  {i}. [{status_icon}] {execution['agent_role']}\n")
-                f.write(f"     任务: {execution['task_name']}\n")
-                f.write(f"     开始: {execution['start_time']} | 结束: {execution['end_time']}\n")
-                f.write(f"     耗时: {execution['duration_formatted']}\n")
+                f.write(f"     Task: {execution['task_name']}\n")
+                f.write(f"     Start: {execution['start_time']} | End: {execution['end_time']}\n")
+                f.write(f"     Duration: {execution['duration_formatted']}\n")
                 if execution["error_message"]:
-                    f.write(f"     错误: {execution['error_message']}\n")
+                    f.write(f"     Error: {execution['error_message']}\n")
                 f.write("\n")
             
             # 5. Agent interaction records
             if summary["interactions"]:
-                f.write("🔗 Agent交互记录 / Agent Interactions\n")
+                f.write("🔗 Agent Interactions\n")
                 f.write("-" * 40 + "\n")
                 for i, interaction in enumerate(summary["interactions"], 1):
                     f.write(f"  {i}. [{interaction['timestamp']}]\n")
                     f.write(f"     {interaction['from_agent']} → {interaction['to_agent']}\n")
-                    f.write(f"     类型: {interaction['interaction_type']}\n")
-                    f.write(f"     内容: {interaction['content'][:100]}...\n" if len(interaction['content']) > 100 else f"     内容: {interaction['content']}\n")
+                    f.write(f"     Type: {interaction['interaction_type']}\n")
+                    f.write(f"     Content: {interaction['content'][:100]}...\n" if len(interaction['content']) > 100 else f"     Content: {interaction['content']}\n")
                     f.write("\n")
             
             # 6. Final result summary
-            f.write("📝 最终结果摘要 / Final Result Summary\n")
+            f.write("📝 Final Result Summary\n")
             f.write("-" * 40 + "\n")
             if summary["final_result"]:
                 result_preview = summary["final_result"][:1000] + "..." if len(summary["final_result"]) > 1000 else summary["final_result"]
                 f.write(f"{result_preview}\n")
             else:
-                f.write("  (无结果)\n")
+                f.write("  (No results)\n")
             
             f.write("\n" + "=" * 80 + "\n")
-            f.write("报告生成时间: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
+            f.write("Report Generated: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
         
-        # print(f"📊 [Monitor] 可读报告已保存: {filepath}")
+        # print(f"📊 [Monitor] : {filepath}")
         return filepath
     
     def print_summary(self) -> None:
@@ -472,20 +472,20 @@ class WorkflowMonitor:
         summary = self.get_summary()
         
         print("\n" + "=" * 70)
-        print("📊 工作流执行摘要 / Workflow Execution Summary")
+        print("📊 Workflow Execution Summary")
         print("=" * 70)
         
         # Basic information
         info = summary["workflow_info"]
-        print(f"\n⏱️ 总耗时: {info['total_duration_formatted']}")
-        print(f"📌 状态: {info['status']}")
+        print(f"\n⏱️ Total Duration: {info['total_duration_formatted']}")
+        print(f"📌 Status: {info['status']}")
         
         # Agent statistics
         stats = summary["agent_statistics"]
-        print(f"\n📋 执行了 {stats['total_tasks']} 个任务，涉及 {stats['total_agents']} 个Agent")
+        print(f"\n📋 Executed {stats['total_tasks']} tasks with {stats['total_agents']} agents")
         
         # Duration ranking
-        print("\n⏱️ Agent耗时排行:")
+        print("\n⏱️ Agent Duration Ranking:")
         for i, (role, duration) in enumerate(sorted(stats['agent_durations'].items(), 
                                                       key=lambda x: x[1], reverse=True), 1):
             print(f"   {i}. {role}: {duration:.2f}s")

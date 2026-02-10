@@ -70,7 +70,7 @@ class CreativeDesigningAgent(BaseAgent):
         
         return agent
 
-# Create instance / 创建实例
+# Create instance
 material_designer_instance = None
 
 def get_material_designer(llm=None):

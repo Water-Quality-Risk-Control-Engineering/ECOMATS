@@ -83,8 +83,7 @@ ECOMATS/
 ## Requirements
 
 - Python 3.11 or 3.12
-- Linux / macOS / WSL2 (Windows: see [compatibility guide](docs/Windows_Compatibility_Guide.md))
-
+  
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.

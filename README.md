@@ -1,6 +1,6 @@
 # ECOMATS
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](#)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.0-green)](#)
 
@@ -86,4 +86,6 @@ ECOMATS/
   
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+This project is licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE) for details.
+
+This means any derivative works must also be open-sourced under the same license.
